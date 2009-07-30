@@ -19,40 +19,40 @@ class Cond(object):
         self.lh = lh
         self.oper = oper
         self.rh = rh
-    def glue(self):
+    def __str__(self):
         return _triple_expr(
             quote(self.lh),
             self.oper,
             quote_value(self.rh)
         )
 
-class EqCond(Cond):
+class Eq(Cond):
     def __init__(self, lh, rh):
-        super(EqCond, self).__init__(lh, '=', rh)
+        super(Eq, self).__init__(lh, '=', rh)
 
-class NotCond(object):
-    def __init__(self, lh, rh):
-        self.lh = lh
-        self.rh = rh
-    def glue(self):
-        return _triple_expr(quote(self.lh), 'NOT', self.rh)
-    
-class ScopedCond(object):
+#class NotCond(object):
+#    def __init__(self, lh, rh):
+#        self.lh = lh
+#        self.rh = rh
+#    def __str__(self):
+#        return _triple_expr(quote(self.lh), 'NOT', self.rh)
+#
+class Scoped(object):
     def __init__(self, cond):
         self.cond = cond
-    def glue(self):
-        return '(%s)' % self.cond.glue()
+    def __str__(self):
+        return '(%s)' % self.cond
 
-class AndCond(object):
+class And(object):
     def __init__(self, lh, rh):
         self.lh = lh
         self.rh = rh
-    def glue(self):
-        return _triple_expr(self.lh.glue(), 'AND', self.rh.glue())
+    def __str__(self):
+        return _triple_expr(self.lh, 'AND', self.rh)
 
-class OrCond(object):
+class Or(object):
     def __init__(self, lh, rh):
         self.lh = lh
         self.rh = rh
-    def glue(self):
-        return _triple_expr(self.lh.glue(), 'OR', self.rh.glue())
+    def __str__(self):
+        return _triple_expr(self.lh, 'OR', self.rh)
