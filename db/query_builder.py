@@ -3,13 +3,13 @@ from cond import quote, quote_list, quote_value
 def __where(cond):
     return '' if cond is None else 'WHERE %s' % cond.glue()
 
-def select(table, columns=None, cond=None, group_by=None, order_by=None, limit=0, offset=0, for_update=False):
+def select(table, columns=None, cond=None, group_by=None, order_by=None, limit=None, offset=0, for_update=False):
     tpl = {}
     tpl['target']   = '*' if columns == None else quote_list(columns)
     tpl['table']    = quote(table)
     tpl['where']    = __where(cond)
     tpl['group_by'] = ''  if group_by == None else 'GROUP BY %s' % quote_list(group_by)
-    tpl['limit']    = ''  if limit == 0 else 'LIMIT %d' % limit
+    tpl['limit']    = ''  if limit == None else 'LIMIT %d' % limit
     tpl['offset']   = ''  if offset == 0 else 'OFFSET %d' % offset
     tpl['order_by'] = ''
     tpl['locking']  = ''  if not for_update else 'FOR UPDATE'

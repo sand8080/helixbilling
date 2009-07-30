@@ -27,6 +27,10 @@ class QueryBuilderTestCase(unittest.TestCase):
             select('billing', order_by=['id', 'ammount'], limit=4)
         )
         self.assertEqual(
+            'SELECT * FROM "billing"    LIMIT 0',
+            select('billing', limit=0)
+        )
+        self.assertEqual(
             'SELECT * FROM "billing"   ORDER BY "id","ammount" ASC LIMIT 5 OFFSET 6',
             select('billing', order_by=['id', 'ammount'], limit=5, offset=6)
         )
