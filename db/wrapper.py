@@ -4,9 +4,20 @@ from functools import partial
 
 get_connection = partial(psycopg2.connect, DSN)
 
+def fetchall_dicts(cursor):
+    """
+    Fetches all results and makes list of dicts with column names as keys
+    """
+    records = cursor.fetchall()
+    columns = [info[0] for info in cursor.description]
+    return [dict_from_lists(columns, rec) for rec in records]
+
+def dict_from_lists(names, values):
+    return dict(zip(names, values))
+
 def transaction(get_conn=get_connection):
-    def do_transn(fun):
-        def scoped_trans(*args, **kwargs):
+    def decorator(fun):
+        def decorated(*args, **kwargs):
             conn = get_conn()
             kwargs['conn'] = conn
             try:
@@ -16,5 +27,5 @@ def transaction(get_conn=get_connection):
                 conn.rollback()
                 raise
             return result
-        return scoped_trans
-    return do_transn
+        return decorated
+    return decorator
