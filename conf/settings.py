@@ -1,5 +1,1 @@
-DB_USER = 'sandbox'
-DB_PASSWORD = 'qazwsx'
-DB_HOST = 'localhost'
-DB_NAME = 'sandbox'
-
+DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
