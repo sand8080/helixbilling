@@ -4,11 +4,20 @@ from time import sleep
 from datetime import datetime
 
 from conf.settings import DSN
-from wrapper import transaction, get_connection, fetchall_dicts, dict_from_lists
+from wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists
 
 class WrapperTestCase(unittest.TestCase):
 
     table = 'test_wrapper'
+    
+    def setUp(self):
+        try:
+            self.create_table()
+        except psycopg2.Error:
+            pass
+    
+    def tearDown(self):
+        self.drop_table()
 
     def test_dict_from_lists(self):
         names = ['id', 'name', 'code']
@@ -27,102 +36,121 @@ class WrapperTestCase(unittest.TestCase):
         self.assertEqual(should_be, d[dup_name])
 
     @transaction()
-    def fetch_data(self, conn):
-        curs = conn.cursor()
+    def test_fetchall_dicts(self, curs=None):
+        num_records = 4
+        self.fill_table(num_records=num_records)
         curs.execute('SELECT * FROM %s' % self.table)
         result = fetchall_dicts(curs)
-        curs.close()
-        return result
-
-    def test_fetchall_dicts(self):
-        try:
-            self.create_table()
-            num_records = 4
-            self.fill_table(num_records=num_records)
-            result = self.fetch_data()
-            self.assertEqual(num_records, len(result))
-            data = result[0]
-            self.assertEqual(3, len(data))
-            self.assertTrue('id' in data)
-            self.assertTrue('name' in data)
-            self.assertTrue('date' in data)
-        finally:
-            self.drop_table()
+        self.assertEqual(num_records, len(result))
+        data = result[0]
+        self.assertEqual(3, len(data))
+        self.assertTrue('id' in data)
+        self.assertTrue('name' in data)
+        self.assertTrue('date' in data)
 
     @transaction()
-    def create_table(self, conn):
+    def test_fetchall_dicts_not_found(self, curs=None):
+        curs.execute('SELECT * FROM %s' % self.table)
+        self.assertEqual(0, len(fetchall_dicts(curs)))
+
+    @transaction()
+    def test_fetchone_dict(self, curs=None):
+        self.fill_table(num_records=4)
+        curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, 1))
+        fetchone_dict(curs)
+        
+    def test_fetchone_dict_raise(self):
+        conn = get_connection()
         curs = conn.cursor()
         try:
+            curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, 1))
+            self.assertRaises(psycopg2.ProgrammingError, fetchone_dict, curs)
+            curs.close()
+            conn.commit()
+        except:
+            curs.close()
+            conn.rollback()
+
+    @transaction()
+    def create_table(self, curs=None):
+        curs.execute(
+            'CREATE TABLE %s (id serial, name varchar, date timestamp)' %
+            self.table
+        )
+
+    @transaction()
+    def drop_table(self, curs=None):
+        curs.execute('DROP TABLE IF EXISTS %s' % self.table)
+
+    @transaction()
+    def fill_table(self, num_records=5, curs=None):
+        for i in xrange(num_records):
             curs.execute(
-                'CREATE TABLE %s (id serial, name varchar, date timestamp)' %
-                self.table
+                'INSERT INTO ' + self.table + ' (name, date) VALUES (%(name)s, %(date)s)',
+                {'name': i, 'date': datetime.now()}
             )
-        finally:
-            curs.close()
+
+    def do_fetchall_dicts(self, curs=None):
+        curs.execute('SELECT * FROM %s' % self.table)
+        return fetchall_dicts(curs)
+    
+    @transaction()
+    def test_dict_from_list(self, curs=None):
+        num_records = 7
+        self.fill_table(num_records)
+        curs.execute('SELECT * FROM %s' % self.table)
+        self.assertEqual(num_records, len(fetchall_dicts(curs)))
 
     @transaction()
-    def drop_table(self, conn):
+    def slow_task(self, report, id, pause, curs=None):
+        curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
+        curs.execute("UPDATE %s SET name='%s' WHERE id=%d" % (self.table, 'substituted', id))
+        curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, id))
+        report['slow_task'] = fetchone_dict(curs)
+        sleep(pause)
+
+    def fast_task(self, report, id, pause, conn=None):
         curs = conn.cursor()
         try:
-            curs.execute('DROP TABLE IF EXISTS %s' % self.table)
-        finally:
+            sleep(pause)
+            curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, id))
+            report['fast_task'] = fetchone_dict(curs)
             curs.close()
-
-    def test_table_creation(self):
-        try:
-            self.create_table()
-        except psycopg2.Error, e:
-            print e
-        finally:
-            self.drop_table()
+            conn.commit()
+        except:
+            curs.close()
+            conn.rollback()
 
     @transaction()
-    def fill_table(self, num_records=5, conn=None):
-        curs = conn.cursor()
-        try:
-            for i in xrange(num_records):
-                curs.execute(
-                    'INSERT INTO ' + self.table + ' (name, date) VALUES (%(name)s, %(date)s)',
-                    {'name': i, 'date': datetime.now()}
-                )
-
-        finally:
-            curs.close()
-
-    @transaction()
-    def task_with_trans(self, report, id, conn):
-        curs = conn.cursor()
-        try:
-            curs.execute('SELECT * FROM %s' % self.table)
-            curs.fetchall()
-            print curs.description
-            report[id] = 'task_with_trans'
-            sleep(0.5)
-        finally:
-            curs.close()
-
-    def task_no_trans(self, report, id, conn):
-        report[id] = 'task_no_trans', conn
+    def task_wait_before(self, report, id, pause, curs=None):
+        sleep(pause)
+        curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
+        report['task_wait_before'] = fetchone_dict(curs)
 
     def test_data_isolation(self):
-        try:
-            self.create_table()
-            self.fill_table()
-
-            from threading import Thread
-            report = {}
-
-            trans_id = 1
-            no_trans_id = 2
-            t_slow = Thread(target=self.task_with_trans, args=(report, trans_id))
-            t_fast = Thread(target=self.task_no_trans, args=(report, no_trans_id, get_connection()))
-            t_slow.start()
-            t_fast.start()
-            t_slow.join()
-
-            print report
-        finally:
-            self.drop_table()
+        self.fill_table()
+        from threading import Thread
+        report = {}
+        id = 1
+        t_slow = Thread(target=self.slow_task, args=(report, id, 0.5))
+        t_fast = Thread(target=self.fast_task, args=(report, id, 0.25, get_connection()))
+        t_slow.start()
+        t_fast.start()
+        t_slow.join()
+        self.assertNotEqual(report['slow_task']['name'], report['fast_task']['name'])
+    
+    def test_data_consistency(self):
+        self.fill_table()
+        from threading import Thread
+        report = {}
+        id = 1
+        t_one = Thread(target=self.slow_task, args=(report, id, 0.5))
+        t_two = Thread(target=self.task_wait_before, args=(report, id, 0.25))
+        t_one.start()
+        t_two.start()
+        t_one.join()
+        t_two.join()
+        self.assertEqual(report['slow_task']['name'], report['task_wait_before']['name'])
 
 if __name__ == '__main__':
     unittest.main()
