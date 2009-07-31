@@ -26,13 +26,16 @@ def transaction(get_conn=get_connection):
     def decorator(fun):
         def decorated(*args, **kwargs):
             conn = get_conn()
-            kwargs['conn'] = conn
+            curs = conn.cursor()
+            kwargs['curs'] = curs
             try:
                 result = fun(*args, **kwargs)
+                curs.close()
                 conn.commit()
+                return result
             except:
+                curs.close()
                 conn.rollback()
                 raise
-            return result
         return decorated
     return decorator

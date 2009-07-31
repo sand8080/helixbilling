@@ -36,18 +36,11 @@ class WrapperTestCase(unittest.TestCase):
         self.assertEqual(should_be, d[dup_name])
 
     @transaction()
-    def fetch_data(self, conn):
-        curs = conn.cursor()
-        try:
-            curs.execute('SELECT * FROM %s' % self.table)
-            return fetchall_dicts(curs)
-        finally:
-            curs.close()
-
-    def test_fetchall_dicts(self):
+    def test_fetchall_dicts(self, curs=None):
         num_records = 4
         self.fill_table(num_records=num_records)
-        result = self.fetch_data()
+        curs.execute('SELECT * FROM %s' % self.table)
+        result = fetchall_dicts(curs)
         self.assertEqual(num_records, len(result))
         data = result[0]
         self.assertEqual(3, len(data))
@@ -55,22 +48,16 @@ class WrapperTestCase(unittest.TestCase):
         self.assertTrue('name' in data)
         self.assertTrue('date' in data)
 
-    def test_fetchall_dicts_not_found(self):
-        self.assertEqual(0, len(self.fetch_data()))
+    @transaction()
+    def test_fetchall_dicts_not_found(self, curs=None):
+        curs.execute('SELECT * FROM %s' % self.table)
+        self.assertEqual(0, len(fetchall_dicts(curs)))
 
-    def test_fetchone_dict(self):
+    @transaction()
+    def test_fetchone_dict(self, curs=None):
         self.fill_table(num_records=4)
-        conn = get_connection()
-        curs = conn.cursor()
-        try:
-            curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, 1))
-            fetchone_dict(curs)
-            curs.close()
-            conn.commit()
-        except:
-            curs.close()
-            conn.rollback()
-            raise
+        curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, 1))
+        fetchone_dict(curs)
         
     def test_fetchone_dict_raise(self):
         conn = get_connection()
@@ -85,64 +72,44 @@ class WrapperTestCase(unittest.TestCase):
             conn.rollback()
 
     @transaction()
-    def create_table(self, conn):
-        curs = conn.cursor()
-        try:
+    def create_table(self, curs=None):
+        curs.execute(
+            'CREATE TABLE %s (id serial, name varchar, date timestamp)' %
+            self.table
+        )
+
+    @transaction()
+    def drop_table(self, curs=None):
+        curs.execute('DROP TABLE IF EXISTS %s' % self.table)
+
+    @transaction()
+    def fill_table(self, num_records=5, curs=None):
+        for i in xrange(num_records):
             curs.execute(
-                'CREATE TABLE %s (id serial, name varchar, date timestamp)' %
-                self.table
+                'INSERT INTO ' + self.table + ' (name, date) VALUES (%(name)s, %(date)s)',
+                {'name': i, 'date': datetime.now()}
             )
-        finally:
-            curs.close()
 
-    @transaction()
-    def drop_table(self, conn):
-        curs = conn.cursor()
-        try:
-            curs.execute('DROP TABLE IF EXISTS %s' % self.table)
-        finally:
-            curs.close()
-
-    @transaction()
-    def fill_table(self, num_records=5, conn=None):
-        curs = conn.cursor()
-        try:
-            for i in xrange(num_records):
-                curs.execute(
-                    'INSERT INTO ' + self.table + ' (name, date) VALUES (%(name)s, %(date)s)',
-                    {'name': i, 'date': datetime.now()}
-                )
-        finally:
-            curs.close()
-
-    @transaction()
-    def do_fetchall_dicts(self, conn):
-        curs = conn.cursor()
-        try:
-            curs.execute('SELECT * FROM %s' % self.table)
-            return fetchall_dicts(curs)
-        finally:
-            curs.close()
+    def do_fetchall_dicts(self, curs=None):
+        curs.execute('SELECT * FROM %s' % self.table)
+        return fetchall_dicts(curs)
     
-    def test_dict_from_list(self):
+    @transaction()
+    def test_dict_from_list(self, curs=None):
         num_records = 7
         self.fill_table(num_records)
-        result = self.do_fetchall_dicts()
-        self.assertEqual(num_records, len(result))
+        curs.execute('SELECT * FROM %s' % self.table)
+        self.assertEqual(num_records, len(fetchall_dicts(curs)))
 
     @transaction()
-    def slow_task(self, report, id, pause, conn):
-        curs = conn.cursor()
-        try:
-            curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
-            curs.execute("UPDATE %s SET name='%s' WHERE id=%d" % (self.table, 'substituted', id))
-            curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, id))
-            report['slow_task'] = fetchone_dict(curs)
-            sleep(pause)
-        finally:
-            curs.close()
+    def slow_task(self, report, id, pause, curs=None):
+        curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
+        curs.execute("UPDATE %s SET name='%s' WHERE id=%d" % (self.table, 'substituted', id))
+        curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, id))
+        report['slow_task'] = fetchone_dict(curs)
+        sleep(pause)
 
-    def fast_task(self, report, id, pause, conn):
+    def fast_task(self, report, id, pause, conn=None):
         curs = conn.cursor()
         try:
             sleep(pause)
@@ -155,17 +122,10 @@ class WrapperTestCase(unittest.TestCase):
             conn.rollback()
 
     @transaction()
-    def task_wait_before(self, report, id, pause, conn):
-        curs = conn.cursor()
-        try:
-            sleep(pause)
-            curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
-            report['task_wait_before'] = fetchone_dict(curs)
-            curs.close()
-            conn.commit()
-        except:
-            curs.close()
-            conn.rollback()
+    def task_wait_before(self, report, id, pause, curs=None):
+        sleep(pause)
+        curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
+        report['task_wait_before'] = fetchone_dict(curs)
 
     def test_data_isolation(self):
         self.fill_table()
@@ -189,6 +149,7 @@ class WrapperTestCase(unittest.TestCase):
         t_one.start()
         t_two.start()
         t_one.join()
+        t_two.join()
         self.assertEqual(report['slow_task']['name'], report['task_wait_before']['name'])
 
 if __name__ == '__main__':
