@@ -1,7 +1,7 @@
 from cond import quote, quote_list, quote_value
 
 def __where(cond):
-    return '' if cond is None else 'WHERE %s' % cond.glue()
+    return '' if cond is None else 'WHERE %s' % cond
 
 def select(table, columns=None, cond=None, group_by=None, order_by=None, limit=None, offset=0, for_update=False):
     tpl = {}

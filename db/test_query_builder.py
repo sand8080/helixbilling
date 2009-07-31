@@ -1,6 +1,6 @@
 import unittest
 
-from db.cond import AndCond, Cond, EqCond
+from db.cond import And, Cond, Eq
 from db.query_builder import select, update, delete, insert
 
 class QueryBuilderTestCase(unittest.TestCase):
@@ -35,7 +35,7 @@ class QueryBuilderTestCase(unittest.TestCase):
             select('billing', order_by=['id', 'ammount'], limit=5, offset=6)
         )
 
-        cond_and = AndCond(
+        cond_and = And(
             Cond('billing.amount', '>', 10),
             Cond('billing.amount', '<', 100)
         )
@@ -45,19 +45,19 @@ class QueryBuilderTestCase(unittest.TestCase):
         )
         self.assertEqual(
             'SELECT * FROM "billing" WHERE "id" = 5     FOR UPDATE',
-            select('billing', cond=EqCond('id', 5), for_update=True)
+            select('billing', cond=Eq('id', 5), for_update=True)
         )
 
     def test_update(self):
         self.assertEqual(
             'UPDATE "balance" SET "currency" = \'rur\',"client_id" = 4 WHERE "id" = 1',
-            update('balance', {'client_id': 4, 'currency': 'rur'}, EqCond('id', 1))
+            update('balance', {'client_id': 4, 'currency': 'rur'}, Eq('id', 1))
         )
 
     def test_delete(self):
         self.assertEqual(
             'DELETE FROM "balance_lock" WHERE "balance_id" = 7',
-            delete('balance_lock', EqCond('balance_id', 7))
+            delete('balance_lock', Eq('balance_id', 7))
         )
 
     def test_insert(self):
