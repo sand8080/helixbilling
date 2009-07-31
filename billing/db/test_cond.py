@@ -4,7 +4,7 @@ import unittest
 from cond import quote, quote_list
 from cond import Leaf, Eq, And, Or, Scoped
 
-class LeafTestCase(unittest.TestCase):
+class CondTestCase(unittest.TestCase):
     def test_quote(self):
         self.assertEqual('"id"', quote('id'))
         self.assertEqual('"id"', quote('"id"'))
