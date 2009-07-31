@@ -5,17 +5,19 @@ from datetime import datetime
 
 from conf.settings import DSN
 from wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists
+from query_builder import select, update, insert
+from cond import Eq
 
 class WrapperTestCase(unittest.TestCase):
 
     table = 'test_wrapper'
-    
+
     def setUp(self):
         try:
             self.create_table()
         except psycopg2.Error:
             pass
-    
+
     def tearDown(self):
         self.drop_table()
 
@@ -39,7 +41,7 @@ class WrapperTestCase(unittest.TestCase):
     def test_fetchall_dicts(self, curs=None):
         num_records = 4
         self.fill_table(num_records=num_records)
-        curs.execute('SELECT * FROM %s' % self.table)
+        curs.execute(*select(self.table))
         result = fetchall_dicts(curs)
         self.assertEqual(num_records, len(result))
         data = result[0]
@@ -50,20 +52,20 @@ class WrapperTestCase(unittest.TestCase):
 
     @transaction()
     def test_fetchall_dicts_not_found(self, curs=None):
-        curs.execute('SELECT * FROM %s' % self.table)
+        curs.execute(*select(self.table))
         self.assertEqual(0, len(fetchall_dicts(curs)))
 
     @transaction()
     def test_fetchone_dict(self, curs=None):
         self.fill_table(num_records=4)
-        curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, 1))
+        curs.execute(*select(self.table, cond=Eq('id', 1)))
         fetchone_dict(curs)
-        
+
     def test_fetchone_dict_raise(self):
         conn = get_connection()
         curs = conn.cursor()
         try:
-            curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, 1))
+            curs.execute(*select(self.table, cond=Eq('id', 1)))
             self.assertRaises(psycopg2.ProgrammingError, fetchone_dict, curs)
             curs.close()
             conn.commit()
@@ -85,27 +87,21 @@ class WrapperTestCase(unittest.TestCase):
     @transaction()
     def fill_table(self, num_records=5, curs=None):
         for i in xrange(num_records):
-            curs.execute(
-                'INSERT INTO ' + self.table + ' (name, date) VALUES (%(name)s, %(date)s)',
-                {'name': i, 'date': datetime.now()}
-            )
+            curs.execute(*insert(self.table, {'name': i, 'date': datetime.now()}))
 
-    def do_fetchall_dicts(self, curs=None):
-        curs.execute('SELECT * FROM %s' % self.table)
-        return fetchall_dicts(curs)
-    
     @transaction()
     def test_dict_from_list(self, curs=None):
         num_records = 7
         self.fill_table(num_records)
-        curs.execute('SELECT * FROM %s' % self.table)
+        curs.execute(*select(self.table))
         self.assertEqual(num_records, len(fetchall_dicts(curs)))
 
     @transaction()
     def slow_task(self, report, id, pause, curs=None):
-        curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
-        curs.execute("UPDATE %s SET name='%s' WHERE id=%d" % (self.table, 'substituted', id))
-        curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, id))
+        q_sel, params = select(self.table, cond=Eq('id', id), for_update=True)
+        curs.execute(q_sel, params)
+        curs.execute(*update(self.table, updates={'name': 'substituted'}, cond=Eq('id', id)))
+        curs.execute(q_sel, params)
         report['slow_task'] = fetchone_dict(curs)
         sleep(pause)
 
@@ -113,7 +109,7 @@ class WrapperTestCase(unittest.TestCase):
         curs = conn.cursor()
         try:
             sleep(pause)
-            curs.execute('SELECT * FROM %s WHERE id=%d' % (self.table, id))
+            curs.execute(*select(self.table, cond=Eq('id', id)))
             report['fast_task'] = fetchone_dict(curs)
             curs.close()
             conn.commit()
@@ -124,7 +120,7 @@ class WrapperTestCase(unittest.TestCase):
     @transaction()
     def task_wait_before(self, report, id, pause, curs=None):
         sleep(pause)
-        curs.execute('SELECT * FROM %s WHERE id=%d FOR UPDATE' % (self.table, id))
+        curs.execute(*select(self.table, cond=Eq('id', id), for_update=True))
         report['task_wait_before'] = fetchone_dict(curs)
 
     def test_data_isolation(self):
@@ -132,20 +128,20 @@ class WrapperTestCase(unittest.TestCase):
         from threading import Thread
         report = {}
         id = 1
-        t_slow = Thread(target=self.slow_task, args=(report, id, 0.5))
-        t_fast = Thread(target=self.fast_task, args=(report, id, 0.25, get_connection()))
+        t_slow = Thread(target=self.slow_task, args=(report, id, 0.2))
+        t_fast = Thread(target=self.fast_task, args=(report, id, 0.1, get_connection()))
         t_slow.start()
         t_fast.start()
         t_slow.join()
         self.assertNotEqual(report['slow_task']['name'], report['fast_task']['name'])
-    
+
     def test_data_consistency(self):
         self.fill_table()
         from threading import Thread
         report = {}
         id = 1
-        t_one = Thread(target=self.slow_task, args=(report, id, 0.5))
-        t_two = Thread(target=self.task_wait_before, args=(report, id, 0.25))
+        t_one = Thread(target=self.slow_task, args=(report, id, 0.2))
+        t_two = Thread(target=self.task_wait_before, args=(report, id, 0.1))
         t_one.start()
         t_two.start()
         t_one.join()
