@@ -4,9 +4,9 @@ from time import sleep
 from datetime import datetime
 
 from conf.settings import DSN
-from wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists
-from query_builder import select, update, insert
-from cond import Eq
+from db.wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists
+from db.query_builder import select, update, insert
+from db.cond import Eq
 
 class WrapperTestCase(unittest.TestCase):
 
