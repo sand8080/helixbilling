@@ -3,7 +3,9 @@ import psycopg2
 from time import sleep
 from datetime import datetime
 
-from conf.settings import DSN
+import conf.settings
+conf.settings.DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
+
 from db.wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists
 from db.query_builder import select, update, insert
 from db.cond import Eq

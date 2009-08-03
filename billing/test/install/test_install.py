@@ -1,6 +1,9 @@
 import unittest
 import os
 
+import conf.settings
+conf.settings.DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
+
 from install.install import filter_diapasone, filter_patches, filter_backward, filter_forward
 from install.install import get_patches, apply, revert, get_last_applyed, patch_table_name
 
