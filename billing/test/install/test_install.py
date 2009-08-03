@@ -2,7 +2,7 @@ import unittest
 import os
 
 from install.install import filter_diapasone, filter_patches, filter_backward, filter_forward
-from install.install import get_patches
+from install.install import get_patches, apply, revert, get_last_applyed, patch_table_name
 
 class InstallTestCase(unittest.TestCase):
 
@@ -40,12 +40,59 @@ class InstallTestCase(unittest.TestCase):
     def test_get_patches(self):
         patches = get_patches(os.path.join(
             os.path.realpath(os.path.dirname(__file__)),
-            'patches'
+            'patches_no_action'
         ))
         self.assertEqual(
             ['1', '1-1', '4', '37'],
             filter_forward(None, None, patches)
         )
+
+    def test_apply_calls(self):
+        patches_path = os.path.join(
+            os.path.realpath(os.path.dirname(__file__)),
+            'patches_no_action'
+        )
+        apply(patches_path, None)
+
+    def test_revert_calls(self):
+        patches_path = os.path.join(
+            os.path.realpath(os.path.dirname(__file__)),
+            'patches_no_action'
+        )
+        revert(patches_path, None)
+
+
+from install.install import is_table_exist
+from db.wrapper import get_connection, transaction
+
+class DbPatchesTestCase(unittest.TestCase):
+
+    patches_path = os.path.join(
+        os.path.realpath(os.path.dirname(__file__)),
+        'patches_db'
+    )
+
+    def test_patches(self):
+        try:
+            apply(self.patches_path, None)
+        finally:
+            revert(self.patches_path, None)
+
+    @transaction()
+    def test_table_not_exist(self, curs=None):
+        self.assertFalse(is_table_exist('fake_table', curs))
+
+    @transaction()
+    def test_table_exist(self, curs=None):
+        try:
+            curs.execute('CREATE TABLE fake_test_table (id int)')
+            self.assertTrue(is_table_exist('fake_test_table', curs))
+        finally:
+            curs.execute('DROP TABLE fake_test_table')
+
+    @transaction()
+    def test_get_last_applyed(self, curs=None):
+        print get_last_applyed(patch_table_name, curs)
 
 if __name__ == '__main__':
     unittest.main()
