@@ -64,9 +64,9 @@ class InstallTestCase(unittest.TestCase):
         )
         revert(patches_path, None)
 
-
-from install.install import is_table_exist
-from db.wrapper import get_connection, transaction
+from install.install import is_table_exist, patch_table_name
+from db.wrapper import get_connection, transaction, fetchall_dicts
+from db.query_builder import select
 
 class DbPatchesTestCase(unittest.TestCase):
 
@@ -75,9 +75,15 @@ class DbPatchesTestCase(unittest.TestCase):
         'patches_db'
     )
 
+    @transaction()
+    def get_patches_list(self, curs=None):
+        curs.execute(*select(patch_table_name, order_by=['-id']))
+        return fetchall_dicts(curs)
+
     def test_patches(self):
         try:
             apply(self.patches_path, None)
+            self.assertEqual(len(get_patches(self.patches_path)), len(self.get_patches_list()))
         finally:
             revert(self.patches_path, None)
 
@@ -93,9 +99,13 @@ class DbPatchesTestCase(unittest.TestCase):
         finally:
             curs.execute('DROP TABLE fake_test_table')
 
-    @transaction()
-    def test_get_last_applyed(self, curs=None):
-        print get_last_applyed(patch_table_name, curs)
+    def test_get_last_applyed(self):
+        try:
+            apply(self.patches_path, None)
+            last_applyed = get_last_applyed(patch_table_name)
+            self.assertEqual('2', last_applyed['name'])
+        finally:
+            revert(self.patches_path, None)
 
 if __name__ == '__main__':
     unittest.main()

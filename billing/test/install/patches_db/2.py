@@ -1,9 +1,7 @@
-from db.wrapper import transaction
-
-#@transaction()
-def apply():
+def apply(curs):
+#    print 'Patch 2. Apply do nothing.'
     pass
 
-#@transaction()
-def revert():
+def revert(curs):
+#    print 'Patch 2. Revert do nothing.'
     pass

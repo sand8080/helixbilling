@@ -1,10 +1,10 @@
-from db.wrapper import transaction
+from install.install import patch_table_name
 
-@transaction()
-def apply(curs=None):
-    curs.execute('SELECT 1')
+def apply(curs):
+    print 'Creating table %s' % patch_table_name
+    curs.execute('CREATE TABLE %s (id serial, name varchar, path varchar, date timestamp)' % patch_table_name)
 
-@transaction()
-def revert(curs=None):
-    curs.execute('SELECT 2')
+def revert(curs):
+    print 'Dropping table %s' % patch_table_name
+    curs.execute('DROP TABLE %s' % patch_table_name)
 

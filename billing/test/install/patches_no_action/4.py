@@ -1,5 +1,5 @@
-def apply():
+def apply(curs):
     print 'apply 4'
 
-def revert():
+def revert(curs):
     print 'revert 4'
