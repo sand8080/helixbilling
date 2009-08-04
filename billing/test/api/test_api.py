@@ -2,7 +2,7 @@ import unittest
 from pprint import pformat
 import cjson
 
-from api import FormatError, ValidationError, handle_request
+from api.api import FormatError, ValidationError, handle_request
 
 
 class RequestHandlingTestCase(unittest.TestCase):
