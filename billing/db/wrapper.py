@@ -6,6 +6,9 @@ from utils import dict_from_lists
 
 get_connection = partial(psycopg2.connect, DSN)
 
+class EmptyResultSetError(Exception):
+    pass
+
 def fetchall_dicts(curs):
     """
     Fetches all results and makes list of dicts with column names as keys
@@ -18,7 +21,7 @@ def fetchone_dict(curs):
     columns = [info[0] for info in curs.description]
     values = curs.fetchone()
     if values is None:
-        raise psycopg2.ProgrammingError('Nothing to be fetched')
+        raise EmptyResultSetError('Nothing to be fetched')
     return dict_from_lists(columns, values)
 
 def transaction(get_conn=get_connection):

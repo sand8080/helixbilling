@@ -6,7 +6,7 @@ from datetime import datetime
 import conf.settings
 conf.settings.DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
 
-from db.wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists
+from db.wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists, EmptyResultSetError
 from db.query_builder import select, update, insert
 from db.cond import Eq
 
@@ -68,7 +68,7 @@ class WrapperTestCase(unittest.TestCase):
         curs = conn.cursor()
         try:
             curs.execute(*select(self.table, cond=Eq('id', 1)))
-            self.assertRaises(psycopg2.ProgrammingError, fetchone_dict, curs)
+            self.assertRaises(EmptyResultSetError, fetchone_dict, curs)
             curs.close()
             conn.commit()
         except:
