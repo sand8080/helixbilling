@@ -4,19 +4,19 @@ import os
 import conf.settings
 conf.settings.DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
 
-from install.install import filter_diapasone, filter_patches, filter_backward, filter_forward
-from install.install import get_patches, apply, revert, get_last_applyed, patch_table_name
+from install.install import in_diapasone, filter_patches, filter_backward, filter_forward
+from install.install import get_patches, apply, revert, get_last_applied, patch_table_name
 
 class InstallTestCase(unittest.TestCase):
 
-    def test_filter_diapasone(self):
-        self.assertTrue(filter_diapasone('1', '5', '4-6-7'))
-        self.assertTrue(filter_diapasone('1', None, '5'))
-        self.assertTrue(filter_diapasone(None, '7', '5'))
-        self.assertTrue(filter_diapasone('4', '7', '5'))
-        self.assertFalse(filter_diapasone('4', '7', '2-3'))
-        self.assertFalse(filter_diapasone('4', None, '2-3'))
-        self.assertFalse(filter_diapasone(None, '2', '2-3'))
+    def test_in_diapasone(self):
+        self.assertTrue(in_diapasone('1', '5', '4-6-7'))
+        self.assertTrue(in_diapasone('1', None, '5'))
+        self.assertTrue(in_diapasone(None, '7', '5'))
+        self.assertTrue(in_diapasone('4', '7', '5'))
+        self.assertFalse(in_diapasone('4', '7', '2-3'))
+        self.assertFalse(in_diapasone('4', None, '2-3'))
+        self.assertFalse(in_diapasone(None, '2', '2-3'))
 
     def test_filter_patches(self):
         patches = ['1', '2-2', '37', '4', '4-1', '4-1-0', '35', '35-0']
@@ -99,11 +99,11 @@ class DbPatchesTestCase(unittest.TestCase):
         finally:
             curs.execute('DROP TABLE fake_test_table')
 
-    def test_get_last_applyed(self):
+    def test_get_last_applied(self):
         try:
             apply(self.patches_path, None)
-            last_applyed = get_last_applyed(patch_table_name)
-            self.assertEqual('2', last_applyed['name'])
+            last_applied = get_last_applied(patch_table_name)
+            self.assertEqual('2', last_applied['name'])
         finally:
             revert(self.patches_path, None)
 

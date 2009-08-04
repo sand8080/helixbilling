@@ -1,6 +1,8 @@
 import psycopg2
-from conf.settings import DSN
 from functools import partial
+
+from conf.settings import DSN
+from utils import dict_from_lists
 
 get_connection = partial(psycopg2.connect, DSN)
 
@@ -18,9 +20,6 @@ def fetchone_dict(curs):
     if values is None:
         raise psycopg2.ProgrammingError('Nothing to be fetched')
     return dict_from_lists(columns, values)
-
-def dict_from_lists(names, values):
-    return dict(zip(names, values))
 
 def transaction(get_conn=get_connection):
     def decorator(fun):
