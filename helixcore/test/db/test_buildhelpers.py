@@ -1,6 +1,6 @@
 import unittest
 
-from db.buildhelpers import quote, quote_list
+from helixcore.db.buildhelpers import quote, quote_list
 
 class BuildhelpersTestCase(unittest.TestCase):
     def test_quote(self):

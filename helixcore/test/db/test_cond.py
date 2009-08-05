@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-#from db.cond import quote, quote_list
-from db.cond import Leaf, Eq, And, Or, Scoped
+from helixcore.db.cond import Leaf, Eq, And, Or, Scoped
 
 class CondTestCase(unittest.TestCase):
     def test_cond(self):

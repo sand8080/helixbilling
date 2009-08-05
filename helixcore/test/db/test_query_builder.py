@@ -1,7 +1,7 @@
 import unittest
 
-from db.cond import Leaf, Eq, And
-from db.query_builder import select, update, delete, insert
+from helixcore.db.cond import Leaf, Eq, And
+from helixcore.db.query_builder import select, update, delete, insert
 
 class QueryBuilderTestCase(unittest.TestCase):
     def test_select(self):

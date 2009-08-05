@@ -1,10 +1,4 @@
-import psycopg2
-from functools import partial
-
-from conf.settings import DSN
 from utils import dict_from_lists
-
-get_connection = partial(psycopg2.connect, DSN)
 
 class EmptyResultSetError(Exception):
     pass
@@ -24,7 +18,7 @@ def fetchone_dict(curs):
         raise EmptyResultSetError('Nothing to be fetched')
     return dict_from_lists(columns, values)
 
-def transaction(get_conn=get_connection):
+def transaction(get_conn):
     def decorator(fun):
         def decorated(*args, **kwargs):
             conn = get_conn()
@@ -35,7 +29,7 @@ def transaction(get_conn=get_connection):
                 curs.close()
                 conn.commit()
                 return result
-            except:
+            except :
                 curs.close()
                 conn.rollback()
                 raise

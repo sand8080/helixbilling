@@ -1,11 +1,13 @@
 import unittest
 from datetime import datetime
 
-from db.wrapper import transaction, EmptyResultSetError
-from db.query_builder import insert
-from db.cond import Eq
-from mapping.objects import Mapped
-from mapping import actions
+from helixcore.db.wrapper import transaction, EmptyResultSetError
+from helixcore.db.query_builder import insert
+from helixcore.db.cond import Eq
+from helixcore.mapping.objects import Mapped
+from helixcore.mapping import actions
+
+from helixcore.test.helpers import transaction
 
 class ActionsTestCase(unittest.TestCase):
     class T(Mapped):
@@ -13,11 +15,14 @@ class ActionsTestCase(unittest.TestCase):
         table = 'test_actions'
 
     @transaction()
-    def setUp(self, curs=None):
+    def do_setUp(self, curs=None):
         curs.execute('DROP TABLE IF EXISTS %s' % self.T.table)
         curs.execute('CREATE TABLE %s (id serial, PRIMARY KEY (id), name varchar, date timestamp)' % self.T.table)
         for i in range(10):
             curs.execute(*insert(self.T.table, {'name': '%d' % i, 'date': datetime.now()}))
+
+    def setUp(self):
+        self.do_setUp()
 
     @transaction()
     def test_get(self, curs=None):

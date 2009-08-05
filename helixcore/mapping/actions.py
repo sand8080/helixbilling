@@ -1,7 +1,6 @@
-from db import query_builder
-from db.wrapper import fetchone_dict
-from db.cond import Eq
-import objects
+from helixcore.db import query_builder
+from helixcore.db.wrapper import fetchone_dict
+from helixcore.db.cond import Eq
 
 class MappingError(Exception):
     pass

@@ -3,12 +3,10 @@ import psycopg2
 from time import sleep
 from datetime import datetime
 
-import conf.settings
-conf.settings.DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
-
-from db.wrapper import transaction, get_connection, fetchall_dicts, fetchone_dict, dict_from_lists, EmptyResultSetError
-from db.query_builder import select, update, insert
-from db.cond import Eq
+from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, dict_from_lists, EmptyResultSetError
+from helixcore.db.query_builder import select, update, insert
+from helixcore.db.cond import Eq
+from helixcore.test.helpers import transaction, get_connection
 
 class WrapperTestCase(unittest.TestCase):
 
@@ -17,8 +15,8 @@ class WrapperTestCase(unittest.TestCase):
     def setUp(self):
         try:
             self.create_table()
-        except psycopg2.Error:
-            pass
+        except psycopg2.Error, e:
+            print e
 
     def tearDown(self):
         self.drop_table()
@@ -71,9 +69,10 @@ class WrapperTestCase(unittest.TestCase):
             self.assertRaises(EmptyResultSetError, fetchone_dict, curs)
             curs.close()
             conn.commit()
-        except:
+        except Exception:
             curs.close()
             conn.rollback()
+            raise
 
     @transaction()
     def create_table(self, curs=None):
@@ -115,9 +114,10 @@ class WrapperTestCase(unittest.TestCase):
             report['fast_task'] = fetchone_dict(curs)
             curs.close()
             conn.commit()
-        except:
+        except Exception:
             curs.close()
             conn.rollback()
+            raise
 
     @transaction()
     def task_wait_before(self, report, id, pause, curs=None):

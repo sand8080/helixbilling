@@ -1,4 +1,6 @@
 class Mapped(object):
+    __slots__ = []
+
     def __init__(self, **kwargs):
         for k in kwargs:
             if k in self.__slots__:
@@ -6,6 +8,6 @@ class Mapped(object):
             else:
                 raise TypeError('Property "%s" undefinded' % k)
 
-class Patch(Mapped):
-    __slots__ = ['id', 'name', 'path', 'date']
-    table = 'patch'
+#class Patch(Mapped):
+#    __slots__ = ['id', 'name', 'path', 'date']
+#    table = 'patch'

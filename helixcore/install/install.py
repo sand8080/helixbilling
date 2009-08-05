@@ -4,9 +4,9 @@ import sys
 import imp
 from datetime import datetime
 
-from db.cond import Eq, And
-from db.query_builder import select, insert, delete
-from db.wrapper import transaction, fetchone_dict
+from helixcore.db.cond import Eq, And
+from helixcore.db.query_builder import select, insert, delete
+from helixcore.db.wrapper import fetchone_dict
 
 patch_table_name = 'patch'
 
