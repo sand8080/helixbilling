@@ -1,7 +1,5 @@
-def apply(curs):
-#    print 'Patch 2. Apply do nothing.'
+def apply(curs): #IGNORE:W0613
     pass
 
-def revert(curs):
-#    print 'Patch 2. Revert do nothing.'
+def revert(curs): #IGNORE:W0613
     pass

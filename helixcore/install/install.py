@@ -1,72 +1,71 @@
-from functools import partial
 import glob
 import sys
 import imp
 from datetime import datetime
 
 from helixcore.db.cond import Eq, And
-from helixcore.db.query_builder import select, insert, delete
-from helixcore.db.wrapper import fetchone_dict
+from helixcore.db import query_builder, wrapper
+from helixcore.db.wrapper import transaction_with_dynamic_connection_getter as transaction
 
-patch_table_name = 'patch'
+import filtering
 
-def get_patches(path):
-    names = glob.glob1(path, '[1-9\-]*.py')
-    return map(lambda x: x.replace('.py', ''), names)
+class PatchProcessor(object):
+    def __init__(self, get_connection, table, path, patch_like='[1-9\-]*.py'):
+        self.get_connection = get_connection
+        self.table = table
+        self.path = path
+        self.patch_like = patch_like
+        sys.path.append(self.path)
 
-def in_diapasone(begin, end, value):
-    return (begin == None or value > begin) and (end == None or value < end)
+    def get_patches(self):
+        names = glob.glob1(self.path, self.patch_like)
+        return map(lambda x: x.replace('.py', ''), names)
 
-def version2int(v):
-    return map(int, v.split('-'))
+    def apply(self, last_applied):
+        patches = filtering.filter_forward(last_applied, None, self.get_patches())
+        self.dynamic_patch_call(patches, 'apply', self.register_patch)
 
-def filter_patches(begin, end, patches, reverse=False):
-    lst = [p for p in patches if in_diapasone(begin, end, p)]
-    lst.sort(key=version2int, reverse=reverse)
-    return lst
+    def apply_all(self):
+        self.apply(None)
 
-filter_forward = filter_patches
-filter_backward = partial(filter_patches, reverse=True)
+    def revert(self, last_applied):
+        patches = filtering.filter_backward(None, last_applied, self.get_patches())
+        self.dynamic_patch_call(patches, 'revert', self.unregister_patch)
 
-def apply(patches_path, last_applied):
-    patches = filter_forward(last_applied, None, get_patches(patches_path))
-    dynamic_patch_call(patches_path, patches, 'apply', register_patch)
+    def revert_all(self):
+        self.revert(None)
 
-def revert(patches_path, last_applied):
-    patches = filter_backward(None, last_applied, get_patches(patches_path))
-    dynamic_patch_call(patches_path, patches, 'revert',  unregister_patch)
+    def dynamic_patch_call(self, patches, executor_name, registrator):
+        for p in patches:
+            (file, pathname, description) = imp.find_module(p)
+            try:
+                m = imp.load_module(p, file, pathname, description)
+                self.process_patch(p, getattr(m, executor_name), registrator)
+            finally:
+                file.close()
 
-def dynamic_patch_call(path, patches, executor_name, registrator):
-    sys.path.append(path)
-    for p in patches:
-        (file, pathname, description) = imp.find_module(p)
-        try:
-            m = imp.load_module(p, file, pathname, description)
-            process_patch(p, pathname, getattr(m, executor_name), registrator)
-        finally:
-            file.close()
+    @transaction()
+    def process_patch(self, name, executor, registrator, curs=None):
+        executor(curs)
+        if self.is_table_exist(curs):
+            registrator(curs, name)
 
-@transaction()
-def process_patch(patch_name, patch_path, fun, registrator, curs=None):
-    fun(curs)
-    if is_table_exist(patch_table_name, curs):
-        registrator(patch_name, patch_path, curs)
+    def register_patch(self, curs, name):
+        curs.execute(*query_builder.insert(self.table, {'name': name, 'path': self.path, 'date': datetime.now()}))
 
-def register_patch(name, path, curs):
-    curs.execute(*insert(patch_table_name, {'name': name, 'path': path, 'date': datetime.now()}))
+    def unregister_patch(self, curs, name):
+        cond = And(Eq('name', name), Eq('path', self.path))
+        curs.execute(*query_builder.delete(self.table, cond=cond))
 
-def unregister_patch(name, path, curs):
-    cond = And(Eq('name', name), Eq('path', path))
-    curs.execute(*delete(patch_table_name, cond=cond))
+    def is_table_exist(self, curs):
+        curs.execute(*query_builder.select('pg_tables', cond=Eq('tablename', self.table)))
+        return len(curs.fetchall()) > 0
 
-def is_table_exist(table_name, curs):
-    curs.execute(*select('pg_tables', cond=Eq('tablename', table_name)))
-    return len(curs.fetchall()) > 0
-
-@transaction()
-def get_last_applied(table_name, curs=None):
-    if not is_table_exist(table_name, curs):
-        return None
-    else:
-        curs.execute(*select(table_name, order_by=['-id'], limit=1))
-        return fetchone_dict(curs)
+    @transaction()
+    def get_last_applied(self, curs=None):
+        if not self.is_table_exist(curs):
+            return None
+        else:
+            curs.execute(*query_builder.select(self.table, order_by=['-id'], limit=1))
+            result = wrapper.fetchall_dicts(curs)
+            return result[0] if len(result) else None

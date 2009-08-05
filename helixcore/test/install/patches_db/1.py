@@ -1,10 +1,18 @@
-from install.install import patch_table_name
+from helixcore.test.install.test_install import PatchProcessorTestCase
+table = PatchProcessorTestCase.table
 
 def apply(curs):
-    print 'Creating table %s' % patch_table_name
-    curs.execute('CREATE TABLE %s (id serial, name varchar, path varchar, date timestamp)' % patch_table_name)
+    print 'Creating table %s' % table
+    curs.execute(
+        'CREATE TABLE %s ('
+        'id serial,'
+        'name varchar,'
+        'path varchar,'
+        'date timestamp'
+        ')' % table
+    )
 
 def revert(curs):
-    print 'Dropping table %s' % patch_table_name
-    curs.execute('DROP TABLE %s' % patch_table_name)
+    print 'Dropping table %s' % table
+    curs.execute('DROP TABLE IF EXISTS %s' % table)
 

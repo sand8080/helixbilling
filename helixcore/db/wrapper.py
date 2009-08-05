@@ -35,3 +35,23 @@ def transaction(get_conn):
                 raise
         return decorated
     return decorator
+
+def transaction_with_dynamic_connection_getter():
+    def decorator(fun):
+        def decorated(self, *args, **kwargs):
+            assert hasattr(self, 'get_connection')
+            conn = self.get_connection()
+            curs = conn.cursor()
+            kwargs['curs'] = curs
+            try:
+                result = fun(self, *args, **kwargs)
+                curs.close()
+                conn.commit()
+                return result
+            except :
+                curs.close()
+                conn.rollback()
+                raise
+        return decorated
+    return decorator
+

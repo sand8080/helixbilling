@@ -1,111 +1,64 @@
 import unittest
 import os
 
-import conf.settings
-conf.settings.DSN = 'dbname=sandbox host=localhost user=sandbox password=qazwsx'
+from helixcore.install.install import PatchProcessor
+from helixcore.test.helpers import get_connection, transaction
+from helixcore.db import query_builder, wrapper
 
-from install.install import in_diapasone, filter_patches, filter_backward, filter_forward
-from install.install import get_patches, apply, revert, get_last_applied, patch_table_name
-
-class InstallTestCase(unittest.TestCase):
-
-    def test_in_diapasone(self):
-        self.assertTrue(in_diapasone('1', '5', '4-6-7'))
-        self.assertTrue(in_diapasone('1', None, '5'))
-        self.assertTrue(in_diapasone(None, '7', '5'))
-        self.assertTrue(in_diapasone('4', '7', '5'))
-        self.assertFalse(in_diapasone('4', '7', '2-3'))
-        self.assertFalse(in_diapasone('4', None, '2-3'))
-        self.assertFalse(in_diapasone(None, '2', '2-3'))
-
-    def test_filter_patches(self):
-        patches = ['1', '2-2', '37', '4', '4-1', '4-1-0', '35', '35-0']
-        self.assertEqual(
-            ['2-2', '4', '4-1', '4-1-0', '35', '35-0', '37'],
-            filter_patches('2', '7-9-1', patches, reverse=False)
-        )
-        self.assertEqual(
-            ['1', '2-2', '4', '4-1', '4-1-0', '35', '35-0', '37'],
-            filter_patches(None, '7-9-1', patches, reverse=False)
-        )
-        self.assertEqual(
-            ['37', '35-0', '35', '4-1-0', '4-1', '4', '2-2', '1'],
-            filter_patches(None, '7-9-1', patches, reverse=True)
-        )
-
-    def test_filter_backward(self):
-        patches = ['1', '2-2', '3', '7-9-9', '6']
-        self.assertEqual(
-            ['7-9-9', '6', '3', '2-2', '1'],
-            filter_backward(None, None, patches)
-        )
-
-    def test_get_patches(self):
-        patches = get_patches(os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            'patches_no_action'
-        ))
-        self.assertEqual(
-            ['1', '1-1', '4', '37'],
-            filter_forward(None, None, patches)
-        )
-
-    def test_apply_calls(self):
-        patches_path = os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            'patches_no_action'
-        )
-        apply(patches_path, None)
-
-    def test_revert_calls(self):
-        patches_path = os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            'patches_no_action'
-        )
-        revert(patches_path, None)
-
-from install.install import is_table_exist, patch_table_name
-from db.wrapper import get_connection, transaction, fetchall_dicts
-from db.query_builder import select
-
-class DbPatchesTestCase(unittest.TestCase):
-
-    patches_path = os.path.join(
+class PatchProcessorTestCase(unittest.TestCase):
+    path = os.path.join(
         os.path.realpath(os.path.dirname(__file__)),
         'patches_db'
     )
 
+    table = 'test_patch'
+
+    def setUp(self):
+        self.processor = PatchProcessor(get_connection, self.table, self.path)
+#        self.processor.revert(self.processor.get_last_applied())
+
     @transaction()
     def get_patches_list(self, curs=None):
-        curs.execute(*select(patch_table_name, order_by=['-id']))
-        return fetchall_dicts(curs)
+        curs.execute(*query_builder.select(self.processor.table, order_by=['-id']))
+        return wrapper.fetchall_dicts(curs)
 
-    def test_patches(self):
+    def test_get_patches(self):
         try:
-            apply(self.patches_path, None)
-            self.assertEqual(len(get_patches(self.patches_path)), len(self.get_patches_list()))
+            self.processor.apply_all()
+            self.assertEqual(len(self.processor.get_patches()), len(self.get_patches_list()))
         finally:
-            revert(self.patches_path, None)
+            self.processor.revert_all()
 
     @transaction()
     def test_table_not_exist(self, curs=None):
-        self.assertFalse(is_table_exist('fake_table', curs))
+        self.processor = PatchProcessor(get_connection, 'fake_table', self.path)
+        self.assertFalse(self.processor.is_table_exist(curs))
 
     @transaction()
     def test_table_exist(self, curs=None):
+        self.processor = PatchProcessor(get_connection, 'fake_test_table', self.path)
         try:
-            curs.execute('CREATE TABLE fake_test_table (id int)')
-            self.assertTrue(is_table_exist('fake_test_table', curs))
+            curs.execute('CREATE TABLE %s (id int)' % self.processor.table)
+            self.assertTrue(self.processor.is_table_exist(curs))
         finally:
-            curs.execute('DROP TABLE fake_test_table')
+            curs.execute('DROP TABLE %s' % self.processor.table)
 
     def test_get_last_applied(self):
         try:
-            apply(self.patches_path, None)
-            last_applied = get_last_applied(patch_table_name)
+            self.processor.apply_all()
+            last_applied = self.processor.get_last_applied()
             self.assertEqual('2', last_applied['name'])
         finally:
-            revert(self.patches_path, None)
+            self.processor.revert_all()
+
+    def test_patches_without_db(self):
+        patches_path = os.path.join(
+            os.path.realpath(os.path.dirname(__file__)),
+            'patches_no_action'
+        )
+        processor = PatchProcessor(get_connection, '___', patches_path)
+        processor.apply_all()
+        processor.revert_all()
 
 if __name__ == '__main__':
     unittest.main()
