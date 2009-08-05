@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from db.cond import quote, quote_list
+#from db.cond import quote, quote_list
 from db.cond import Leaf, Eq, And, Or, Scoped
 
 class CondTestCase(unittest.TestCase):
-    def test_quote(self):
-        self.assertEqual('"id"', quote('id'))
-        self.assertEqual('"id"', quote('"id"'))
-        self.assertEqual('""id"', quote('"id'))
-        self.assertEqual('"id""', quote('id"'))
-        self.assertEqual('"billing"."id"', quote('billing.id'))
-        self.assertEqual('"billing"."id"', quote('"billing"."id"'))
-        self.assertEqual('""billing"."id""', quote('"billing.id"'))
-        self.assertEqual('"billing"."id"."cd"', quote('billing.id.cd'))
-
-    def test_quote_list(self):
-        self.assertEqual(('"1"."1","1"."2","1"."2"."1"'), quote_list(('1.1', '1.2', '1.2.1')))
-
     def test_cond(self):
         (cond, params) = Leaf('billing.id', '<', 0).glue()
         self.assertEqual('"billing"."id" < %s', cond)

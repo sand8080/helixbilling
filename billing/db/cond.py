@@ -1,9 +1,4 @@
-def quote(val):
-    q, s = '"', '.'
-    return  s.join(x.startswith(q) and x.endswith(q) and x or '"%s"' % x for x in val.split(s))
-
-def quote_list(lst, separator=','):
-    return separator.join(map(quote, lst))
+import buildhelpers
 
 class Leaf(object):
     """
@@ -15,7 +10,7 @@ class Leaf(object):
         self.rh = rh
     def glue(self):
         return (
-            '%s %s %%s' % (quote(self.lh), self.oper),
+            '%s %s %%s' % (buildhelpers.quote(self.lh), self.oper),
             [self.rh]
         )
 
