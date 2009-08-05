@@ -20,20 +20,21 @@ COMMANDS = {
     'revert': revert,
 }
 
-def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in COMMANDS:
-        print 'usage: %s %s' % (sys.argv[0], '|'.join(COMMANDS))
-        sys.exit(1)
-    
+def execute(cmd_name):
     patches_path = os.path.join(
         os.path.realpath(os.path.dirname(__file__)), 
         'patches'
     )
     patch_processor = PatchProcessor(get_connection, patch_table_name, patches_path)
-    cmd_name = sys.argv[1]
     COMMANDS[cmd_name](patch_processor)
     
     print 'executed command: %s' % cmd_name
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in COMMANDS:
+        print 'usage: %s %s' % (sys.argv[0], '|'.join(COMMANDS))
+        sys.exit(1)
+    execute(sys.argv[1])
     
 if __name__ == '__main__':        
     main()

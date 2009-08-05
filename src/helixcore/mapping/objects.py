@@ -9,7 +9,7 @@ class Mapped(object):
                 raise TypeError('Property "%s" undefinded' % k)
     
     def update(self, data):
-        self.__dict__.update(data)
+        for (attr, v) in data.iteritems(): setattr(self, attr, v)
     
 #class Patch(Mapped):
 #    __slots__ = ['id', 'name', 'path', 'date']

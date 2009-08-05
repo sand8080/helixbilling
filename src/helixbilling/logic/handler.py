@@ -1,10 +1,11 @@
 
-from helixcore.db.wrapper import transaction, EmptyResultSetError
+from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.db.cond import Eq
-from helixcore.mapping.actions import get, insert, update
+from helixcore.mapping.actions import get, insert, update, delete
+
+from helixbilling.conf.db import transaction
 
 from helixbilling.domain.objects import Currency
-
 from helixbilling.logic.exceptions import  DataIntegrityError
 
 class Handler(object):
@@ -26,4 +27,13 @@ class Handler(object):
         
         curr.update(data)
         update(curs, curr)
+    
+    @transaction()
+    def delete_currency(self, data, curs=None):
+        try:
+            curr = get(curs, Currency, Eq('name', data['name']), True)
+        except EmptyResultSetError:
+            raise DataIntegrityError('Currency with name %s not found in system' % data['name'])
+        
+        delete(curs, curr)
     
