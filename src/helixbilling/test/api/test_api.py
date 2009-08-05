@@ -1,8 +1,7 @@
 import unittest
-from pprint import pformat
 import cjson
 
-from api.api import FormatError, ValidationError, handle_request
+from helixbilling.api.api import FormatError, ValidationError, handle_request
 
 
 class RequestHandlingTestCase(unittest.TestCase):
@@ -14,7 +13,7 @@ class RequestHandlingTestCase(unittest.TestCase):
         }
         '''
         
-        def test_handler(action_name, data): pass
+        def test_handler(action_name, data): pass #IGNORE:W0613
         
         self.assertRaises(FormatError, handle_request, raw_data, test_handler)
     
@@ -25,7 +24,7 @@ class RequestHandlingTestCase(unittest.TestCase):
             'param2': 'foo bar',
         }
         
-        def test_handler(action_name, data): pass
+        def test_handler(action_name, data): pass #IGNORE:W0613
         
         raw_data = cjson.encode(bad_data)
         self.assertRaises(ValidationError, handle_request, raw_data, test_handler)
@@ -46,5 +45,5 @@ class RequestHandlingTestCase(unittest.TestCase):
         handle_request(raw_data, test_handler)
 
 if __name__ == '__main__':
-   unittest.main()
+    unittest.main()
    

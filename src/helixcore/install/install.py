@@ -68,4 +68,4 @@ class PatchProcessor(object):
         else:
             curs.execute(*query_builder.select(self.table, order_by=['-id'], limit=1))
             result = wrapper.fetchall_dicts(curs)
-            return result[0] if len(result) else None
+            return result[0]['name'] if len(result) else None

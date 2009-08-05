@@ -47,7 +47,7 @@ class PatchProcessorTestCase(unittest.TestCase):
         try:
             self.processor.apply_all()
             last_applied = self.processor.get_last_applied()
-            self.assertEqual('2', last_applied['name'])
+            self.assertEqual('2', last_applied)
         finally:
             self.processor.revert_all()
 

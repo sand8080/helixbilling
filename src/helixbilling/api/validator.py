@@ -19,6 +19,7 @@ DELETE_CURRENCY = {
 action_to_scheme_map = {
     'add_currency': Scheme(ADD_CURRENCY),
     'modify_currency': Scheme(MODIFY_CURRENCY),
+    'delete_currency': Scheme(DELETE_CURRENCY),
 }
 
 class ValidationError(Exception):
