@@ -1,4 +1,8 @@
 from validol import Optional, AnyOf, Scheme
+from helixbilling.error.errors import RequestProcessingError
+
+PING = {
+}
 
 ADD_CURRENCY = {
     'name': AnyOf(str, unicode),
@@ -17,13 +21,15 @@ DELETE_CURRENCY = {
 }
 
 action_to_scheme_map = {
+    'ping': Scheme(PING),
     'add_currency': Scheme(ADD_CURRENCY),
     'modify_currency': Scheme(MODIFY_CURRENCY),
     'delete_currency': Scheme(DELETE_CURRENCY),
 }
 
-class ValidationError(Exception):
-    pass
+class ValidationError(RequestProcessingError):
+    def __init__(self, msg):
+        RequestProcessingError.__init__(self, RequestProcessingError.Categories.validation, msg)
 
 def validate(action_name, data):
     '''

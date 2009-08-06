@@ -1,7 +1,8 @@
 import unittest
 import cjson
 
-from helixbilling.api.api import FormatError, ValidationError, handle_request
+from helixbilling.api.api import handle_request, handle_response, FormatError
+from helixbilling.api.validator import ValidationError
 
 
 class RequestHandlingTestCase(unittest.TestCase):
@@ -13,9 +14,7 @@ class RequestHandlingTestCase(unittest.TestCase):
         }
         '''
         
-        def test_handler(action_name, data): pass #IGNORE:W0613
-        
-        self.assertRaises(FormatError, handle_request, raw_data, test_handler)
+        self.assertRaises(FormatError, handle_request, raw_data)
     
     def test_request_validation_error(self):
         bad_data = {
@@ -24,10 +23,8 @@ class RequestHandlingTestCase(unittest.TestCase):
             'param2': 'foo bar',
         }
         
-        def test_handler(action_name, data): pass #IGNORE:W0613
-        
         raw_data = cjson.encode(bad_data)
-        self.assertRaises(ValidationError, handle_request, raw_data, test_handler)
+        self.assertRaises(ValidationError, handle_request, raw_data)
     
     def test_add_currency(self):
         good_data = {
@@ -37,13 +34,14 @@ class RequestHandlingTestCase(unittest.TestCase):
             'cent_factor': 100,
         }
         
-        def test_handler(action_name, data):
-            self.assertEquals(action_name, good_data.pop('action'))
-            self.assertEquals(data, good_data)
-        
         raw_data = cjson.encode(good_data)
-        handle_request(raw_data, test_handler)
+        action_name, data = handle_request(raw_data)
+        self.assertEquals(action_name, good_data.pop('action'))
+        self.assertEquals(data, good_data)
+        
+        good_response = {'status': 'ok'}
+        res = cjson.decode(handle_response(good_response))
+        self.assertEquals(res, good_response)
 
 if __name__ == '__main__':
     unittest.main()
-   
