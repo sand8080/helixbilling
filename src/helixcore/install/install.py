@@ -30,10 +30,11 @@ class PatchProcessor(object):
 
     def revert(self, last_applied):
         patches = filtering.filter_backward(None, last_applied, self.get_patches())
+        print 'patches', patches
         self.dynamic_patch_call(patches, 'revert', self.unregister_patch)
 
     def revert_all(self):
-        self.revert(None)
+        self.revert(self.get_last_applied())
 
     def dynamic_patch_call(self, patches, executor_name, registrator):
         for p in patches:
