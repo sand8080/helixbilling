@@ -3,7 +3,7 @@ from helixbilling.error.errors import RequestProcessingError
 
 PING = {
 }
-
+# --- currency ---
 ADD_CURRENCY = {
     'name': AnyOf(str, unicode),
     'designation': AnyOf(str, unicode),
@@ -20,11 +20,37 @@ DELETE_CURRENCY = {
     'name': AnyOf(str, unicode),
 }
 
+# --- balance ---
+CREATE_BALANCE = {
+    'client_id': int,
+    'active': AnyOf(0, 1),
+    'currency_name': AnyOf(str, unicode),
+    'overdraft_limit': (int, int),
+}
+
+MODIFY_BALANCE = {
+    'client_id': int,
+    Optional('active'): AnyOf(0, 1),
+    Optional('overdraft_limit'): (int, int),
+}
+
+# --- operations ---
+ENROLL_RECEIPT = {
+    'client_id': int,
+    'amount': (int, int),
+}
+
 action_to_scheme_map = {
     'ping': Scheme(PING),
+    
     'add_currency': Scheme(ADD_CURRENCY),
     'modify_currency': Scheme(MODIFY_CURRENCY),
     'delete_currency': Scheme(DELETE_CURRENCY),
+    
+    'create_balance': Scheme(CREATE_BALANCE),
+    'modify_balance': Scheme(MODIFY_BALANCE),
+    
+    'enroll_receipt': Scheme(ENROLL_RECEIPT),
 }
 
 class ValidationError(RequestProcessingError):
