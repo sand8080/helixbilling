@@ -1,32 +1,21 @@
 # -*- coding: utf-8 -*-
-import unittest
-import install
 
-from helixcore.db.cond import Eq
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.mapping.actions import get
 
-from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.logic.exceptions import DataIntegrityError
-from helixbilling.domain.objects import Currency
 
-class CurrencyTestCase(unittest.TestCase):
+from common import LogicTestCase
+
+class CurrencyTestCase(LogicTestCase):
     
     def __init__(self, methodName):
-        unittest.TestCase.__init__(self, methodName)
+        LogicTestCase.__init__(self, methodName)
         self.typical_data = {
             'name': 'USD',
             'designation': '$',
         }
         
-    def setUp(self):
-        install.execute('reinit')
-    
-    @transaction()
-    def _get_currency(self, name, curs=None):
-        return get(curs, Currency, Eq('name', name))
-    
     def test_add_currency_ok(self):
         handle_action('add_currency', self.typical_data)
         curr = self._get_currency(self.typical_data['name'])
