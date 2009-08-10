@@ -1,12 +1,9 @@
 
-from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.db.cond import Eq
-from helixcore.mapping.actions import get, insert, update, delete
+from helixcore.mapping.actions import insert, update, delete
 
 from helixbilling.conf.db import transaction
 
 from helixbilling.domain.objects import Currency, Balance, Receipt
-from helixbilling.logic.exceptions import  DataIntegrityError
 from helixbilling.logic.response import response_ok
 
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, compose_amount, decompose_amount 
@@ -72,7 +69,7 @@ class Handler(object):
         
         data['amount'] = compose_amount(currency, *data['amount'])
         
-        receipt = Receipt(*data)
+        receipt = Receipt(**data)
         insert(curs, receipt)
         
         balance.available_amount += receipt.amount #IGNORE:E1101

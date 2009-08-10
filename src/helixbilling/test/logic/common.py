@@ -2,10 +2,10 @@ import unittest
 import install
 
 from helixcore.db.cond import Eq
-from helixcore.mapping.actions import get, insert
+from helixcore.mapping.actions import get, get_list, insert
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import Currency, Balance
+from helixbilling.domain.objects import Currency, Balance, Receipt
 
 class LogicTestCase(unittest.TestCase):
     '''
@@ -26,3 +26,7 @@ class LogicTestCase(unittest.TestCase):
     @transaction()
     def _get_currency(self, name, curs=None):
         return get(curs, Currency, Eq('name', name))
+    
+    @transaction()
+    def _get_receipts(self, client_id, curs=None):
+        return get_list(curs, Receipt, Eq('client_id', client_id))
