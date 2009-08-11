@@ -1,3 +1,9 @@
+python-helixbilling (1.0.45) unstable; urgency=low
+
+  * [Alexander Kislitsky] First step in debianization. Debconfig required for complete.
+
+ -- Webdrive Developers <developers@webdrive.ru>  Tue, 11 Aug 2009 16:42:47 +0400
+
 python-helixbilling (1.0.44) unstable; urgency=low
 
   * [Alexander Kislitsky] Added test environment for connecting to helixtest db.
@@ -50,6 +56,7 @@ python-helixbilling (1.0.38) unstable; urgency=low
   * [Alexander Kislitsky] Initial commit
 
  -- Webdrive Developers <developers@webdrive.ru>  Mon, 10 Aug 2009 16:49:36 +0400
+
 
 
 
