@@ -1,0 +1,15 @@
+Source: python-helixbilling
+Section: non-free/python
+Priority: extra
+Maintainer: Webdrive Developers <developers@webdrive.ru>
+Build-Depends-Indep: debhelper (>= 7), python (>= 2.5), python2.5-helixcore
+Standards-Version: 3.7.3
+Homepage: http://webdrive.ru
+
+Package: python-helixbilling
+Provides: python2.5-helixbilling
+Architecture: all
+Depends: python (>= 2.5), python2.5-helixcore, python-setuptools, python-cjson (>= 1.0.5), supervisor, adduser
+XB-Python-Version: ${python:Versions}
+Description: Helix family billing package
+ Helix billing.

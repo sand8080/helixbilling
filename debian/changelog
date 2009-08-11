@@ -1,0 +1,55 @@
+python-helixbilling (1.0.44) unstable; urgency=low
+
+  * [Alexander Kislitsky] Added test environment for connecting to helixtest db.
+  * [Andrew Skryabin] Lock operation implemented, tested
+  * [Andrew Skryabin] Merge branch 'logic' of svn.loc:/usr/local/git/billing into logic
+  * [Andrew Skryabin] enroll_receipt implemented, tested
+  * [Andrew Skryabin] Implemented operations: create_balance and modify_balance; created table receipts, implementing enroll_receipt in process
+
+ -- Webdrive Developers <developers@webdrive.ru>  Tue, 11 Aug 2009 14:24:54 +0400
+
+python-helixbilling (1.0.38) unstable; urgency=low
+
+  * [Alexander Kislitsky] Helixcore code removed from helixbilling repository.
+  * [Andrew Skryabin] Patch system: fixed bugs
+  * [Andrew] Request handling pipeline refactored. Error categories standardized, PING action introduced for testing
+  * [Andrew] Logic: all currency-related methods implemented, tested
+  * [Andrew] Billing renames to helixbilling.
+  * [andrew] api tests moved to test module
+  * [Alexander Kislitsky] Patches processing refactored.
+  * [Alexander Kislitsky] Sources separated to helixcore.
+  * [Alexander Kislitsky] quote, quote_list moved into buildhelpers.
+  * [Alexander Kislitsky] Mappets show implemented.
+  * [Alexander Kislitsky] Naming refactoring.
+  * [Alexander Kislitsky] Patches system implemented.
+  * [Alexander Kislitsky] Fake test settings introduced.
+  * [Alexander Kislitsky] Implementing billing patch system.
+  * [Alexander Kislitsky] Tests from db moved to test.db
+  * [Alexander Kislitsky] Tests for patches system.
+  * [Alexander Kislitsky] Installation package system initial commit.
+  * [Alexander Kislitsky] Conditions test case renamed.
+  * [Alexander Kislitsky] Cond, sql builder handles parameters
+  * [Alexander Kislitsky] test_wrapper commited again
+  * [Alexander Kislitsky] .gitignore added
+  * [Alexander Kislitsky] Merge branch 'master' of svn.loc:/usr/local/git/billing
+  * [Alexander Kislitsky] Wrapper uses cursor instead connection in transaction decorator.
+  * [andrew] api: validation using validol and parsing requests implemented and tested
+  * [Alexander Kislitsky] All code moved to billing.
+  * [andrew] src folder renamed to billing
+  * [andrew] sources moved to src folder
+  * [Alexander Kislitsky] Wrapper tests implemented.
+  * [andrew] src folder renamed to billing
+  * [andrew] sources moved to src folder
+  * [Alexander Kislitsky] Cond classes renamed. glue renamed to __str__.
+  * [Alexander Kislitsky] Integration of psycopg2.
+  * [Alexander Kislitsky] Db working drafts.
+  * [Alexander Kislitsky] Limit = 0 handled.
+  * [Alexander Kislitsky] update, insert, delete requests implemented.
+  * [Alexander Kislitsky] Cond separated from sql builder.
+  * [sand] Trash pyc files deleted.
+  * [Alexander Kislitsky] Initial commit
+
+ -- Webdrive Developers <developers@webdrive.ru>  Mon, 10 Aug 2009 16:49:36 +0400
+
+
+
