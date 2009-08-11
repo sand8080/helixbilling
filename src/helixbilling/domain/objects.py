@@ -21,3 +21,11 @@ class Receipt(Mapped):
         'created_date', 'amount'
     ]
     table = 'receipt'
+
+class BalanceLock(Mapped):
+    __slots__ = [
+        'id',
+        'client_id', 'product_id', 
+        'locked_date', 'amount'
+    ]
+    table = 'balance_lock'

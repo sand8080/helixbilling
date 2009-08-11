@@ -40,6 +40,12 @@ ENROLL_RECEIPT = {
     'amount': (int, int),
 }
 
+LOCK = {
+    'client_id': int,
+    'product_id': int,
+    'amount': (int, int),
+}
+
 action_to_scheme_map = {
     'ping': Scheme(PING),
     
@@ -51,6 +57,7 @@ action_to_scheme_map = {
     'modify_balance': Scheme(MODIFY_BALANCE),
     
     'enroll_receipt': Scheme(ENROLL_RECEIPT),
+    'lock': Scheme(LOCK),
 }
 
 class ValidationError(RequestProcessingError):
