@@ -39,6 +39,8 @@ case "$1" in
 
         ln -sf /etc/supervisor/process-available/helixbilling.ini /etc/supervisor/process-enabled
         invoke-rc.d supervisor reload
+
+        chown -R helixbilling /var/log/python-helixbilling
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
