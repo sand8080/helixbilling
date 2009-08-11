@@ -1,4 +1,4 @@
-from validol import Optional, AnyOf, Scheme
+from helixcore.validol.validol import Optional, AnyOf, Scheme
 from helixbilling.error.errors import RequestProcessingError
 
 PING = {
@@ -48,14 +48,14 @@ LOCK = {
 
 action_to_scheme_map = {
     'ping': Scheme(PING),
-    
+
     'add_currency': Scheme(ADD_CURRENCY),
     'modify_currency': Scheme(MODIFY_CURRENCY),
     'delete_currency': Scheme(DELETE_CURRENCY),
-    
+
     'create_balance': Scheme(CREATE_BALANCE),
     'modify_balance': Scheme(MODIFY_BALANCE),
-    
+
     'enroll_receipt': Scheme(ENROLL_RECEIPT),
     'lock': Scheme(LOCK),
 }
@@ -70,10 +70,9 @@ def validate(action_name, data):
     @raise ValidationError: if validation failed for some reason
     '''
     scheme = scheme = action_to_scheme_map.get(action_name)
-    if scheme is None: 
+    if scheme is None:
         raise ValidationError('Unknown action: %s' % action_name)
-    
+
     result = scheme.validate(data)
     if not result:
         raise ValidationError('Validation failed for action %s' % action_name)
-    
