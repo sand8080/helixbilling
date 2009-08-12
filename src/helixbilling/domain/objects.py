@@ -37,3 +37,12 @@ class BalanceLock(Mapped):
         'locked_date', 'amount'
     ]
     table = 'balance_lock'
+
+class ChargeOff(Mapped):
+    __slots__ = [
+        'id',
+        'client_id', 'product_id',
+        'locked_date', 'chargeoff_date',
+        'amount'
+    ]
+    table = 'charge_off'

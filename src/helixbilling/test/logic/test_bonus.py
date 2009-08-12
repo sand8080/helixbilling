@@ -6,7 +6,7 @@ import helixbilling.test.test_environment #IGNORE:W0611
 
 from common import LogicTestCase
 
-from helixcore.mapping.actions import insert, update
+from helixcore.mapping.actions import insert
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
@@ -47,14 +47,14 @@ class BonusTestCase(LogicTestCase):
         self.assertEquals(bonus.client_id, data['client_id'])
         self.assertEquals(bonus.amount, 4588)
 
-    def test_enroll_bonus_no_balance(self):
+    def test_make_bonus_no_balance(self):
         data = {
             'client_id': 677676, #inexistent
             'amount': (1000000, 0),
         }
         self.assertRaises(DataIntegrityError, handle_action, 'make_bonus', data)
 
-    def test_enroll_bonus_not_active(self):
+    def test_make_bonus_not_active(self):
         self._make_balance_passive(self.balance)
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101

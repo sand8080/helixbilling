@@ -46,7 +46,7 @@ LOCK = {
     'amount': (int, int),
 }
 
-CHECK_LOCKED = {
+PRODUCT_STATUS = {
     'client_id': int,
     'product_id': int,
 }
@@ -54,6 +54,11 @@ CHECK_LOCKED = {
 MAKE_BONUS = {
     'client_id': int,
     'amount': (int, int),
+}
+
+CHARGE_OFF = {
+    'client_id': int,
+    'product_id': int,
 }
 
 action_to_scheme_map = {
@@ -69,9 +74,12 @@ action_to_scheme_map = {
     'enroll_receipt': Scheme(ENROLL_RECEIPT),
 
     'lock': Scheme(LOCK),
-    'check_locked': Scheme(CHECK_LOCKED),
+
+    'product_status': Scheme(PRODUCT_STATUS),
 
     'make_bonus': Scheme(MAKE_BONUS),
+
+    'charge_off': Scheme(CHARGE_OFF),
 }
 
 class ValidationError(RequestProcessingError):

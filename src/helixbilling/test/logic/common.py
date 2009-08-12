@@ -6,7 +6,7 @@ from helixcore.db.cond import Eq, And
 from helixcore.mapping.actions import get, get_list, insert, update
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus
+from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
 
 class LogicTestCase(RootTestCase):
     '''
@@ -39,6 +39,10 @@ class LogicTestCase(RootTestCase):
     @transaction()
     def _get_lock(self, client_id, product_id, curs=None):
         return get(curs, BalanceLock, And(Eq('client_id', client_id), Eq('product_id', product_id)))
+
+    @transaction()
+    def _get_charge_off(self, client_id, product_id, curs=None):
+        return get(curs, ChargeOff, And(Eq('client_id', client_id), Eq('product_id', product_id)))
 
     @transaction()
     def _make_balance_passive(self, balance, curs=None):

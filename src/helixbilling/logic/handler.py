@@ -4,11 +4,13 @@ from helixcore.db.wrapper import EmptyResultSetError
 
 from helixbilling.conf.db import transaction
 
-from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus
+from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
 from helixbilling.logic.response import response_ok
 from helixbilling.logic.exceptions import ActionNotAllowedError
+import helixbilling.logic.product_status as product_status
 
-from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, compose_amount, decompose_amount
+from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff
+from helper import compose_amount, decompose_amount
 
 class Handler(object):
     '''
@@ -105,18 +107,27 @@ class Handler(object):
         return response_ok()
 
     @transaction()
-    def check_locked(self, data, curs=None):
+    def product_status(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=False)
         currency = get_currency_by_balance(curs, balance)
 
-        response = {}
+        response = {'product_status': product_status.unknown}
         try:
             lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
-            response['locked'] = 1
+            response['product_status'] = product_status.locked
             response['locked_date'] = lock.locked_date
             response['amount'] = decompose_amount(currency, lock.amount)
-        except EmptyResultSetError:
-            response['locked'] = 0
+        except EmptyResultSetError: #IGNORE:W0704
+            pass
+
+        try:
+            chargeoff = try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
+            response['product_status'] = product_status.charged_off
+            response['locked_date'] = chargeoff.locked_date
+            response['chargeoff_date'] = chargeoff.chargeoff_date
+            response['amount'] = decompose_amount(currency, chargeoff.amount)
+        except EmptyResultSetError: #IGNORE:W0704
+            pass
 
         return response_ok(**response)
 
@@ -131,5 +142,23 @@ class Handler(object):
         insert(curs, bonus)
 
         balance.available_amount += bonus.amount #IGNORE:E1101
+        update(curs, balance)
+        return response_ok()
+
+    @transaction()
+    def charge_off(self, data, curs=None):
+        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+
+        try:
+            lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+        except EmptyResultSetError:
+            raise ActionNotAllowedError('Cannot charge off money for product %d: amount was not locked for this product' % data['product_id'])
+
+        chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock.amount, **data)
+
+        delete(curs, lock)
+        insert(curs, chargeoff)
+
+        balance.locked_amount -= lock.amount #IGNORE:E1101
         update(curs, balance)
         return response_ok()
