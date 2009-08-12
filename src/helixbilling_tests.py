@@ -1,5 +1,7 @@
 import unittest
 
+from helixbilling.test.server.test_server import ServerTestCase #IGNORE:W0611
+
 from helixbilling.test.api.test_api import RequestHandlingTestCase #IGNORE:W0611
 
 from helixbilling.test.logic.test_common import CommonLogicTestCase #IGNORE:W0611
