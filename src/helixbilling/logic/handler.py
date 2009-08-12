@@ -4,7 +4,7 @@ from helixcore.db.wrapper import EmptyResultSetError
 
 from helixbilling.conf.db import transaction
 
-from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock
+from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus
 from helixbilling.logic.response import response_ok
 from helixbilling.logic.exceptions import ActionNotAllowedError
 
@@ -119,3 +119,17 @@ class Handler(object):
             response['locked'] = 0
 
         return response_ok(**response)
+
+    @transaction()
+    def make_bonus(self, data, curs=None):
+        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+        currency = get_currency_by_balance(curs, balance)
+
+        data['amount'] = compose_amount(currency, 'bonus', *data['amount'])
+
+        bonus = Bonus(**data)
+        insert(curs, bonus)
+
+        balance.available_amount += bonus.amount #IGNORE:E1101
+        update(curs, balance)
+        return response_ok()
