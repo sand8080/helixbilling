@@ -4,3 +4,9 @@ patch_table_name = 'patches'
 
 server_http_addr = '0.0.0.0'
 server_http_port = 9999
+
+import logging
+log_filename = '/var/log/helixbilling.log'
+log_level = logging.DEBUG
+log_format = "%(asctime)s [%(levelname)s] - %(message)s"
+log_console = False

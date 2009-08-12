@@ -52,5 +52,36 @@ class LockTestCase(LogicTestCase):
         }
         self.assertRaises(ActionNotAllowedError, handle_action, 'lock', data)
 
+    def test_check_locked_yes(self):
+        lock_amount = (60, 00)
+        data = {
+            'client_id': self.balance.client_id, #IGNORE:E1101
+            'product_id': 555,
+            'amount': lock_amount,
+        }
+        handle_action('lock', data)
+        lock = self._get_lock(self.balance.client_id, data['product_id']) #IGNORE:E1101
+
+        del data['amount']
+        response = handle_action('check_locked', data)
+        self.assertEquals(1, response['locked'])
+        self.assertEquals(lock.locked_date, response['locked_date'])
+        self.assertEquals(lock_amount, response['amount'])
+
+    def test_check_locked_no(self):
+        lock_amount = (60, 00)
+        data = {
+            'client_id': self.balance.client_id, #IGNORE:E1101
+            'product_id': 555,
+            'amount': lock_amount,
+        }
+        handle_action('lock', data)
+
+        del data['amount']
+        data['product_id'] = 556
+        response = handle_action('check_locked', data)
+        self.assertEquals(0, response['locked'])
+
+
 if __name__ == '__main__':
     unittest.main()

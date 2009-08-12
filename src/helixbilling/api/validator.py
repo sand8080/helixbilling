@@ -46,6 +46,11 @@ LOCK = {
     'amount': (int, int),
 }
 
+CHECK_LOCKED = {
+    'client_id': int,
+    'product_id': int,
+}
+
 action_to_scheme_map = {
     'ping': Scheme(PING),
 
@@ -58,6 +63,7 @@ action_to_scheme_map = {
 
     'enroll_receipt': Scheme(ENROLL_RECEIPT),
     'lock': Scheme(LOCK),
+    'check_locked': Scheme(CHECK_LOCKED),
 }
 
 class ValidationError(RequestProcessingError):
