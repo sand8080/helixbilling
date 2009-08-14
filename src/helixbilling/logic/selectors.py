@@ -6,7 +6,9 @@ from helixcore.db.wrapper import fetchall_dicts
 from helixbilling.domain.objects import Receipt
 from helixbilling.conf.log import logger
 
-def select_receipts(curs, client_id, start_date_str=None, end_date_str=None):
+from helper import decompose_amount
+
+def select_receipts(curs, currency, client_id, start_date_str=None, end_date_str=None):
     '''
     @param start_date_ts: string (ISO8601) of start date or None
     @param end_date_ts: string (ISO8601) of end date or None
@@ -23,4 +25,9 @@ def select_receipts(curs, client_id, start_date_str=None, end_date_str=None):
     logger.debug("select_receipts: SQL: '%s', params: %s" % (req, params))
 
     curs.execute(req, params)
-    return fetchall_dicts(curs)
+    dicts = fetchall_dicts(curs)
+
+    for i in xrange(0, len(dicts)):
+        dicts[i]['amount'] = decompose_amount(currency, dicts[i]['amount'])
+    logger.debug("select_receipts: result: %s" % str(dicts))
+    return dicts

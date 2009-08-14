@@ -186,5 +186,6 @@ class Handler(object):
     @transaction()
     def list_receipts(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=False) #IGNORE:W0612
-        receipts = select_receipts(curs, data['client_id'], data.get('start_date'), data.get('end_date'))
+        currency = get_currency_by_balance(curs, balance)
+        receipts = select_receipts(curs, currency, data['client_id'], data.get('start_date'), data.get('end_date'))
         return response_ok(receipts=receipts)

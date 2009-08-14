@@ -36,7 +36,7 @@ class ListReceiptsTestCase(LogicTestCase):
 
     def _check_receipt(self, receipt_obj, sel_dict):
         self.assertEquals(receipt_obj.created_date, sel_dict['created_date'])
-        self.assertEquals(receipt_obj.amount, sel_dict['amount'])
+        self.assertEquals(receipt_obj.amount, sel_dict['amount'][0]*100 + sel_dict['amount'][1])
 
     def test_list_receipts_ok(self):
         start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)
