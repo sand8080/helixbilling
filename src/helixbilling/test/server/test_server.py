@@ -1,8 +1,8 @@
-
 import unittest
 import httplib
 import cjson
 from threading import Thread
+from time import sleep
 
 from helixbilling.test.root_test import RootTestCase
 from helixbilling.conf.settings import server_http_addr, server_http_port
@@ -15,6 +15,7 @@ class ServerTestCase(RootTestCase):
         t.setDaemon(True)
         t.start()
 
+        sleep(0.2)
         request_data = {'action': 'ping'}
 
         conn = httplib.HTTPConnection(server_http_addr, server_http_port)
