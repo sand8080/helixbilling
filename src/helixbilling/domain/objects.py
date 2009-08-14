@@ -8,7 +8,7 @@ class Currency(Mapped):
 class Balance(Mapped):
     __slots__ = [
         'id', 'active',
-        'client_id', 'currency_id', 
+        'client_id', 'currency_id',
         'created_date',
         'available_amount', 'locked_amount', 'overdraft_limit'
     ]
@@ -17,15 +17,32 @@ class Balance(Mapped):
 class Receipt(Mapped):
     __slots__ = [
         'id',
-        'client_id', 
+        'client_id',
         'created_date', 'amount'
     ]
     table = 'receipt'
 
+class Bonus(Mapped):
+    __slots__ = [
+        'id',
+        'client_id',
+        'created_date', 'amount'
+    ]
+    table = 'bonus'
+
 class BalanceLock(Mapped):
     __slots__ = [
         'id',
-        'client_id', 'product_id', 
+        'client_id', 'product_id',
         'locked_date', 'amount'
     ]
     table = 'balance_lock'
+
+class ChargeOff(Mapped):
+    __slots__ = [
+        'id',
+        'client_id', 'product_id',
+        'locked_date', 'chargeoff_date',
+        'amount'
+    ]
+    table = 'charge_off'

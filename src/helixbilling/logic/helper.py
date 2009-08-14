@@ -3,7 +3,7 @@ from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.db.cond import Eq, And
 from helixcore.mapping.actions import get
 
-from helixbilling.domain.objects import Currency, Balance, BalanceLock
+from helixbilling.domain.objects import Currency, Balance, BalanceLock, ChargeOff
 from helixbilling.logic.exceptions import  DataIntegrityError, ActionNotAllowedError, ApplicationError
 
 def get_currency_by_name(curs, name, for_update=False):
@@ -33,6 +33,12 @@ def try_get_lock(curs, client_id, product_id, for_update=False):
     @return: BalanceLock on success, raises EmptyResultSetError if no such lock
     '''
     return get(curs, BalanceLock, And(Eq('client_id', client_id), Eq('product_id', product_id)), for_update)
+
+def try_get_chargeoff(curs, client_id, product_id, for_update=False):
+    '''
+    @return: ChargeOff on success, raises EmptyResultSetError if no such charge-off
+    '''
+    return get(curs, ChargeOff, And(Eq('client_id', client_id), Eq('product_id', product_id)), for_update)
 
 def compose_amount(currency, amount_spec, int_part, cent_part):
     '''
