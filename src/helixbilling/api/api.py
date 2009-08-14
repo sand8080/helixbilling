@@ -1,4 +1,4 @@
-import cjson
+import cjson, datetime, copy, pytz
 from validator import validate
 from helixbilling.error.errors import RequestProcessingError
 
@@ -18,15 +18,15 @@ def handle_request(raw_data):
         parsed_data = cjson.decode(raw_data)
     except cjson.DecodeError, e:
         raise FormatError("Cannot parse request: %s" % e)
-    
+
     action_name = parsed_data.pop('action')
     if action_name is None:
         raise FormatError("'action' parameter is not found in request")
-    
+
     validate(action_name, parsed_data)
-    
+
     return (action_name, parsed_data)
-    
+
 def handle_response(response_dict):
     '''
     Validates (custom operation) and encodes response dict
@@ -35,5 +35,22 @@ def handle_response(response_dict):
     @raise ValidationError: if request validation fails
     @return: raw encoded response
     '''
-    return cjson.encode(response_dict)
-    
+
+    def postprocess_value(value):
+        if isinstance(value, datetime.datetime):
+            return value.astimezone(pytz.utc).isoformat()
+        return value
+
+    def postprocess_response(response, fun):
+        if isinstance(response, dict):
+            for k in response:
+                response[k] = postprocess_response(response[k], fun)
+            return response
+        if hasattr(response, '__iter__'):
+            for i in xrange(0, len(response)):
+                response[i] = postprocess_response(response[i], fun)
+            return response
+        return fun(response)
+
+    return cjson.encode(postprocess_response(copy.deepcopy(response_dict), postprocess_value))
+
