@@ -6,6 +6,7 @@ build-stamp
 configure-stamp
 dist
 debian/files
+debian/python-helixbilling.postrm.debhelper
 debian/python-helixbilling.debhelper.log
 debian/python-helixbilling.substvars
 debian/python-helixbilling
