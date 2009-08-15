@@ -92,6 +92,8 @@ LIST_RECEIPTS = {
     'client_id': id_validator,
     Optional('start_date'): iso_datetime_validator,
     Optional('end_date'): iso_datetime_validator,
+    'offset': NonNegative(int),
+    'limit': Positive(int),
 }
 
 action_to_scheme_map = {
