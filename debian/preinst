@@ -25,7 +25,9 @@ case "$1" in
 
         echo "Installing eventlet"
         easy_install eventlet
-        
+
+        echo "Installing iso8601"
+        easy_install iso8601
     ;;
 
     abort-upgrade)
