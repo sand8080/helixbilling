@@ -5,10 +5,11 @@ import unittest
 from common import LogicTestCase
 
 from helixcore.mapping.actions import insert
+from helixcore.db.wrapper import EmptyResultSetError
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import ActionNotAllowedError
+from helixbilling.logic.exceptions import ActionNotAllowedError, DataIntegrityError
 from helixbilling.domain.objects import Currency, Balance
 
 
@@ -51,6 +52,35 @@ class LockTestCase(LogicTestCase):
             'amount': (120, 43),
         }
         self.assertRaises(ActionNotAllowedError, handle_action, 'lock', data)
+
+    def test_unlock_ok(self):
+        data = {
+            'client_id': self.balance.client_id, #IGNORE:E1101
+            'product_id': 555,
+            'amount': (60, 00),
+        }
+        handle_action('lock', data)
+
+        del data['amount']
+        handle_action('unlock', data)
+
+        balance = self._get_balance(data['client_id'])
+
+        self.assertEquals(balance.available_amount, 5000)
+        self.assertEquals(balance.locked_amount, 0)
+        self.assertRaises(EmptyResultSetError, self._get_lock, self.balance.client_id, data['product_id']) #IGNORE:E1101
+
+    def test_unlock_inexistent(self):
+        data = {
+            'client_id': self.balance.client_id, #IGNORE:E1101
+            'product_id': 555,
+            'amount': (60, 00),
+        }
+        handle_action('lock', data)
+
+        del data['amount']
+        data['product_id'] = 444
+        self.assertRaises(DataIntegrityError, handle_action, 'unlock', data)
 
 if __name__ == '__main__':
     unittest.main()

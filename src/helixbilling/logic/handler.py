@@ -6,11 +6,12 @@ from helixbilling.conf.db import transaction
 
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
 from helixbilling.logic.response import response_ok
-from helixbilling.logic.exceptions import ActionNotAllowedError
+from helixbilling.logic.exceptions import ActionNotAllowedError, DataIntegrityError
 import helixbilling.logic.product_status as product_status
 
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff
 from helper import compose_amount, decompose_amount
+from selectors import select_receipts
 
 class Handler(object):
     '''
@@ -107,6 +108,23 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    def unlock(self, data, curs=None):
+        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+
+        try:
+            lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+        except EmptyResultSetError:
+            raise DataIntegrityError('Cannot unlock money for product %d: amount was not locked for this product' % data['product_id'])
+
+        delete(curs, lock)
+
+        balance.available_amount += lock.amount #IGNORE:E1101
+        balance.locked_amount -= lock.amount #IGNORE:E1101
+
+        update(curs, balance)
+        return response_ok()
+
+    @transaction()
     def product_status(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=False)
         currency = get_currency_by_balance(curs, balance)
@@ -162,3 +180,13 @@ class Handler(object):
         balance.locked_amount -= lock.amount #IGNORE:E1101
         update(curs, balance)
         return response_ok()
+
+    #list operations
+
+    @transaction()
+    def list_receipts(self, data, curs=None):
+        balance = get_balance(curs, data['client_id'], active_only=False, for_update=False) #IGNORE:W0612
+        currency = get_currency_by_balance(curs, balance)
+        receipts, total = select_receipts(curs, currency, data['client_id'],
+            data['offset'], data['limit'], data.get('start_date'), data.get('end_date'))
+        return response_ok(receipts=receipts, total=total)

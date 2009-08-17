@@ -1,5 +1,26 @@
-from helixcore.validol.validol import Optional, AnyOf, Scheme
+from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme
 from helixbilling.error.errors import RequestProcessingError
+import re
+
+amount_validator = (NonNegative(int), NonNegative(int))
+positive_amount_validator = (Positive(int), Positive(int))
+id_validator = Positive(int)
+iso_datetime_validator = re.compile(r"""
+    (\d{2,4})
+    (?:-?([01]\d))?
+    (?:-?([0-3]\d))?
+    (?:T
+        ([0-2]\d)
+        (?::?([0-5]\d))?
+        (?::?([0-5]\d))?
+        (?:[\,\.](\d+))?
+    )?
+    (Z|
+        ([+-][0-2]\d)
+        (?::?([0-5]\d))?
+    )?
+    """
+)
 
 PING = {
 }
@@ -7,13 +28,13 @@ PING = {
 ADD_CURRENCY = {
     'name': AnyOf(str, unicode),
     'designation': AnyOf(str, unicode),
-    Optional('cent_factor'): int,
+    Optional('cent_factor'): NonNegative(int),
 }
 
 MODIFY_CURRENCY = {
     'name': AnyOf(str, unicode),
     Optional('designation'): AnyOf(str, unicode),
-    Optional('cent_factor'): int,
+    Optional('cent_factor'): NonNegative(int),
 }
 
 DELETE_CURRENCY = {
@@ -22,43 +43,57 @@ DELETE_CURRENCY = {
 
 # --- balance ---
 CREATE_BALANCE = {
-    'client_id': int,
+    'client_id': id_validator,
     'active': AnyOf(0, 1),
     'currency_name': AnyOf(str, unicode),
-    'overdraft_limit': (int, int),
+    'overdraft_limit': amount_validator,
 }
 
 MODIFY_BALANCE = {
-    'client_id': int,
+    'client_id': id_validator,
     Optional('active'): AnyOf(0, 1),
-    Optional('overdraft_limit'): (int, int),
+    Optional('overdraft_limit'): amount_validator,
 }
 
 # --- operations ---
 ENROLL_RECEIPT = {
-    'client_id': int,
-    'amount': (int, int),
+    'client_id': id_validator,
+    'amount': positive_amount_validator,
 }
 
 LOCK = {
-    'client_id': int,
-    'product_id': int,
-    'amount': (int, int),
+    'client_id': id_validator,
+    'product_id': id_validator,
+    'amount': positive_amount_validator,
+}
+
+UNLOCK = {
+    'client_id': id_validator,
+    'product_id': id_validator,
 }
 
 PRODUCT_STATUS = {
-    'client_id': int,
-    'product_id': int,
+    'client_id': id_validator,
+    'product_id': id_validator,
 }
 
 MAKE_BONUS = {
-    'client_id': int,
-    'amount': (int, int),
+    'client_id': id_validator,
+    'amount': positive_amount_validator,
 }
 
 CHARGE_OFF = {
-    'client_id': int,
-    'product_id': int,
+    'client_id': id_validator,
+    'product_id': id_validator,
+}
+
+# --- list operations ---
+LIST_RECEIPTS = {
+    'client_id': id_validator,
+    Optional('start_date'): iso_datetime_validator,
+    Optional('end_date'): iso_datetime_validator,
+    'offset': NonNegative(int),
+    'limit': Positive(int),
 }
 
 action_to_scheme_map = {
@@ -72,14 +107,15 @@ action_to_scheme_map = {
     'modify_balance': Scheme(MODIFY_BALANCE),
 
     'enroll_receipt': Scheme(ENROLL_RECEIPT),
-
-    'lock': Scheme(LOCK),
-
-    'product_status': Scheme(PRODUCT_STATUS),
-
     'make_bonus': Scheme(MAKE_BONUS),
 
+    'lock': Scheme(LOCK),
+    'unlock': Scheme(UNLOCK),
+
     'charge_off': Scheme(CHARGE_OFF),
+
+    'product_status': Scheme(PRODUCT_STATUS),
+    'list_receipts': Scheme(LIST_RECEIPTS),
 }
 
 class ValidationError(RequestProcessingError):
