@@ -1,6 +1,8 @@
+import iso8601
 
 from helixcore.mapping.actions import insert, update, delete
 from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.db.cond import Eq, And, MoreEq, Less
 
 from helixbilling.conf.db import transaction
 
@@ -11,7 +13,7 @@ import helixbilling.logic.product_status as product_status
 
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff
 from helper import compose_amount, decompose_amount
-from selectors import select_receipts
+from selectors import select_receipts, select_chargeoffs
 
 class Handler(object):
     '''
@@ -187,6 +189,34 @@ class Handler(object):
     def list_receipts(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=False) #IGNORE:W0612
         currency = get_currency_by_balance(curs, balance)
-        receipts, total = select_receipts(curs, currency, data['client_id'],
-            data['offset'], data['limit'], data.get('start_date'), data.get('end_date'))
+
+        cond = Eq('client_id', data['client_id'])
+        if 'start_date' in data:
+            cond = And(cond, MoreEq('created_date', iso8601.parse_date(data['start_date'])))
+        if 'end_date' in data:
+            cond = And(cond, Less('created_date', iso8601.parse_date(data['end_date'])))
+
+        receipts, total = select_receipts(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(receipts=receipts, total=total)
+
+    @transaction()
+    def list_chargeoffs(self, data, curs=None):
+        balance = get_balance(curs, data['client_id'], active_only=False, for_update=False) #IGNORE:W0612
+        currency = get_currency_by_balance(curs, balance)
+
+        cond = Eq('client_id', data['client_id'])
+        if 'product_id' in data:
+            cond = And(cond, Eq('product_id', data['product_id']))
+
+        date_filters = (
+            ('locked_start_date', 'locked_end_date', 'locked_date'),
+            ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date')
+        )
+        for start_date, end_date, db_field in date_filters:
+            if start_date in data:
+                cond = And(cond, MoreEq(db_field, iso8601.parse_date(data[start_date])))
+            if end_date in data:
+                cond = And(cond, Less(db_field, iso8601.parse_date(data[end_date])))
+
+        chargeoffs, total = select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
+        return response_ok(chargeoffs=chargeoffs, total=total)
