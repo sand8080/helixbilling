@@ -107,6 +107,15 @@ LIST_CHARGEOFFS = {
     'limit': Positive(int),
 }
 
+LIST_BALANCE_LOCK = {
+    'client_id': id_validator,
+    Optional('product_id'): id_validator,
+    Optional('locked_start_date'): iso_datetime_validator,
+    Optional('locked_end_date'): iso_datetime_validator,
+    'offset': NonNegative(int),
+    'limit': Positive(int),
+}
+
 action_to_scheme_map = {
     'ping': Scheme(PING),
 
@@ -128,6 +137,7 @@ action_to_scheme_map = {
     'product_status': Scheme(PRODUCT_STATUS),
     'list_receipts': Scheme(LIST_RECEIPTS),
     'list_chargeoffs': Scheme(LIST_CHARGEOFFS),
+    'list_balance_locks': Scheme(LIST_BALANCE_LOCK),
 }
 
 class ValidationError(RequestProcessingError):

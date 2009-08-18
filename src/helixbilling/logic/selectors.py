@@ -1,10 +1,10 @@
 import helixcore.db.query_builder as query_builder
 from helixcore.db.wrapper import fetchall_dicts, fetchone_dict
 
-from helixbilling.domain.objects import Receipt, ChargeOff
+from helixbilling.domain.objects import Receipt, ChargeOff, BalanceLock
 from helixbilling.conf.log import logger
 
-from helper import decompose_amount
+import helper
 
 from functools import partial
 
@@ -30,6 +30,7 @@ def _select(curs, currency, cond, offset, limit, MAPPED_CLASS, FUNC_NAME, AMOUNT
 
 select_receipts = partial(_select, MAPPED_CLASS=Receipt, FUNC_NAME='select_receipts', AMOUNT_FIELD='amount')
 select_chargeoffs = partial(_select, MAPPED_CLASS=ChargeOff, FUNC_NAME='select_chargeoffs', AMOUNT_FIELD='amount')
+select_balance_locks = partial(_select, MAPPED_CLASS=BalanceLock, FUNC_NAME='select_balance_locks', AMOUNT_FIELD='amount')
 
 def get_count(curs, table, cond):
     req, params = query_builder.select(table, columns=[query_builder.Columns.COUNT_ALL], cond=cond)
@@ -44,6 +45,6 @@ def decompose_amounts(dicts, currency, data_field_name):
     result = []
     for d in dicts:
         copy = dict(d)
-        copy[data_field_name] = decompose_amount(currency, copy[data_field_name])
+        copy[data_field_name] = helper.decompose_amount(currency, copy[data_field_name])
         result.append(copy)
     return result

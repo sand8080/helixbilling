@@ -2,7 +2,7 @@ import iso8601
 
 from helixcore.mapping.actions import insert, update, delete
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.db.cond import Eq, And, MoreEq, Less
+from helixcore.db.cond import Eq, And, MoreEq, Less, NullLeaf
 
 from helixbilling.conf.db import transaction
 
@@ -13,7 +13,7 @@ import helixbilling.logic.product_status as product_status
 
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff
 from helper import compose_amount, decompose_amount
-from selectors import select_receipts, select_chargeoffs
+from selectors import select_receipts, select_chargeoffs, select_balance_locks
 
 class Handler(object):
     '''
@@ -187,21 +187,21 @@ class Handler(object):
 
     @transaction()
     def list_receipts(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False, for_update=False) #IGNORE:W0612
+        balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
         currency = get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
-        if 'start_date' in data:
-            cond = And(cond, MoreEq('created_date', iso8601.parse_date(data['start_date'])))
-        if 'end_date' in data:
-            cond = And(cond, Less('created_date', iso8601.parse_date(data['end_date'])))
+        date_filters = (
+            ('start_date', 'end_date', 'created_date'),
+        )
+        cond = And(cond, self.get_date_filters(date_filters, data))
 
         receipts, total = select_receipts(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(receipts=receipts, total=total)
 
     @transaction()
     def list_chargeoffs(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False, for_update=False) #IGNORE:W0612
+        balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
         currency = get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
@@ -210,13 +210,42 @@ class Handler(object):
 
         date_filters = (
             ('locked_start_date', 'locked_end_date', 'locked_date'),
-            ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date')
+            ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date'),
         )
+        cond = And(cond, self.get_date_filters(date_filters, data))
+
+        chargeoffs, total = select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
+        return response_ok(chargeoffs=chargeoffs, total=total)
+
+    @transaction()
+    def list_balance_locks(self, data, curs=None):
+        balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
+        currency = get_currency_by_balance(curs, balance)
+
+        cond = Eq('client_id', data['client_id'])
+        if 'product_id' in data:
+            cond = And(cond, Eq('product_id', data['product_id']))
+
+        date_filters = (
+            ('locked_start_date', 'locked_end_date', 'locked_date'),
+        )
+        cond = And(cond, self.get_date_filters(date_filters, data))
+
+        balance_locks, total = select_balance_locks(curs, currency, cond, data['offset'], data['limit'])
+        return response_ok(balance_locks=balance_locks, total=total)
+
+    def get_date_filters(self, date_filters, data):
+        '''
+        adds date filtering parameters from data to cond.
+        @param cond: db filtering condition
+        @param date_filters: is tuple of
+            (start_date_filter_name, end_date_filter_name, db_filtering_field_name)
+        @param data: request data
+        '''
+        cond = NullLeaf()
         for start_date, end_date, db_field in date_filters:
             if start_date in data:
                 cond = And(cond, MoreEq(db_field, iso8601.parse_date(data[start_date])))
             if end_date in data:
                 cond = And(cond, Less(db_field, iso8601.parse_date(data[end_date])))
-
-        chargeoffs, total = select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
-        return response_ok(chargeoffs=chargeoffs, total=total)
+        return cond
