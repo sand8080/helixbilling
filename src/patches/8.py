@@ -17,7 +17,7 @@ def apply(curs):
     print 'Creating index action_log_client_id_idx on action_log'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX action_log_client_id_idx ON action_log(client_id);
+        CREATE INDEX action_log_client_id_idx ON action_log(client_id);
     ''')
 
 def revert(curs):

@@ -1,8 +1,6 @@
-import iso8601
-
 from helixcore.mapping.actions import insert, update, delete
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.db.cond import Eq, And, MoreEq, Less, NullLeaf
+from helixcore.db.cond import Eq, And
 
 from helixbilling.conf.db import transaction
 
@@ -11,7 +9,7 @@ from helixbilling.logic.response import response_ok
 from helixbilling.logic.exceptions import ActionNotAllowedError, DataIntegrityError
 import helixbilling.logic.product_status as product_status
 
-from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff
+from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff, get_date_filters
 from helper import compose_amount, decompose_amount
 from selectors import select_receipts, select_chargeoffs, select_balance_locks
 from action_log import logged
@@ -205,7 +203,7 @@ class Handler(object):
         date_filters = (
             ('start_date', 'end_date', 'created_date'),
         )
-        cond = And(cond, self.get_date_filters(date_filters, data))
+        cond = And(cond, get_date_filters(date_filters, data))
 
         receipts, total = select_receipts(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(receipts=receipts, total=total)
@@ -223,7 +221,7 @@ class Handler(object):
             ('locked_start_date', 'locked_end_date', 'locked_date'),
             ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date'),
         )
-        cond = And(cond, self.get_date_filters(date_filters, data))
+        cond = And(cond, get_date_filters(date_filters, data))
 
         chargeoffs, total = select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(chargeoffs=chargeoffs, total=total)
@@ -240,23 +238,7 @@ class Handler(object):
         date_filters = (
             ('locked_start_date', 'locked_end_date', 'locked_date'),
         )
-        cond = And(cond, self.get_date_filters(date_filters, data))
+        cond = And(cond, get_date_filters(date_filters, data))
 
         balance_locks, total = select_balance_locks(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(balance_locks=balance_locks, total=total)
-
-    def get_date_filters(self, date_filters, data):
-        '''
-        adds date filtering parameters from data to cond.
-        @param cond: db filtering condition
-        @param date_filters: is tuple of
-            (start_date_filter_name, end_date_filter_name, db_filtering_field_name)
-        @param data: request data
-        '''
-        cond = NullLeaf()
-        for start_date, end_date, db_field in date_filters:
-            if start_date in data:
-                cond = And(cond, MoreEq(db_field, iso8601.parse_date(data[start_date])))
-            if end_date in data:
-                cond = And(cond, Less(db_field, iso8601.parse_date(data[end_date])))
-        return cond

@@ -1,6 +1,7 @@
+import iso8601
 
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.db.cond import Eq, And
+from helixcore.db.cond import Eq, And, NullLeaf, MoreEq, Less
 from helixcore.mapping.actions import get
 
 from helixbilling.domain.objects import Currency, Balance, BalanceLock, ChargeOff
@@ -39,6 +40,22 @@ def try_get_chargeoff(curs, client_id, product_id, for_update=False):
     @return: ChargeOff on success, raises EmptyResultSetError if no such charge-off
     '''
     return get(curs, ChargeOff, And(Eq('client_id', client_id), Eq('product_id', product_id)), for_update)
+
+def get_date_filters(date_filters, data):
+    '''
+    adds date filtering parameters from data to cond.
+    @param date_filters: is tuple of
+        (start_date_filter_name, end_date_filter_name, db_filtering_field_name)
+    @param data: dict of request data
+    @return: db filtering condition
+    '''
+    cond = NullLeaf()
+    for start_date, end_date, db_field in date_filters:
+        if start_date in data:
+            cond = And(cond, MoreEq(db_field, iso8601.parse_date(data[start_date])))
+        if end_date in data:
+            cond = And(cond, Less(db_field, iso8601.parse_date(data[end_date])))
+    return cond
 
 def compose_amount(currency, amount_spec, int_part, cent_part):
     '''
