@@ -14,6 +14,7 @@ import helixbilling.logic.product_status as product_status
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff
 from helper import compose_amount, decompose_amount
 from selectors import select_receipts, select_chargeoffs, select_balance_locks
+from action_log import logged
 
 class Handler(object):
     '''
@@ -26,12 +27,14 @@ class Handler(object):
     # --- currency ---
 
     @transaction()
+    @logged
     def add_currency(self, data, curs=None):
         curr = Currency(**data)
         insert(curs, curr)
         return response_ok()
 
     @transaction()
+    @logged
     def modify_currency(self, data, curs=None):
         curr = get_currency_by_name(curs, data['name'], True)
         curr.update(data)
@@ -39,6 +42,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @logged
     def delete_currency(self, data, curs=None):
         curr = get_currency_by_name(curs, data['name'], True)
         delete(curs, curr)
@@ -47,6 +51,7 @@ class Handler(object):
     # --- balance ---
 
     @transaction()
+    @logged
     def create_balance(self, data, curs=None):
         currency = get_currency_by_name(curs, data['currency_name'], False)
 
@@ -58,6 +63,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @logged
     def modify_balance(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=True)
 
@@ -70,6 +76,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @logged
     def enroll_receipt(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
         currency = get_currency_by_balance(curs, balance)
@@ -84,6 +91,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @logged
     def lock(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
         currency = get_currency_by_balance(curs, balance)
@@ -110,6 +118,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @logged
     def unlock(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
 
@@ -152,6 +161,7 @@ class Handler(object):
         return response_ok(**response)
 
     @transaction()
+    @logged
     def make_bonus(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
         currency = get_currency_by_balance(curs, balance)
@@ -166,6 +176,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @logged
     def charge_off(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
 

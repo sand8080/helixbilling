@@ -1,6 +1,15 @@
 
 from helixcore.mapping.objects import Mapped
 
+class ActionLog(Mapped):
+    __slots__ = [
+        'id',
+        'client_id', 'action',
+        'request_date',
+        'request', 'response',
+    ]
+    table = 'action_log'
+
 class Currency(Mapped):
     __slots__ = ['id', 'name', 'designation', 'cent_factor']
     table = 'currency'

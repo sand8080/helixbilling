@@ -17,7 +17,7 @@ def handle_action(action_name, data):
         method = getattr(h, action_name)
     except AttributeError, e:
         raise UnknownActionError('Cannot handle action %s: unknown action' % action_name)
-    
+
     try:
         return method(data)
     except IntegrityError, e:

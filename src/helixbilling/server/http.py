@@ -30,6 +30,7 @@ class Handler(object):
             response = response_app_error(e.message)
 
         raw_response = api_handle_response(response)
+        
         self.log_response(req, response_ok, raw_response)
         req.response(200, body=raw_response)
 

@@ -17,6 +17,8 @@ from helixbilling.test.logic.test_bonus import BonusTestCase #IGNORE:W0611
 from helixbilling.test.logic.test_product_status import ProductStatusTestCase #IGNORE:W0611
 
 from helixbilling.test.logic.test_list_receipts import ListReceiptsTestCase #IGNORE:W0611
+from helixbilling.test.logic.test_list_chargeoffs import ListChargeoffsTestCase #IGNORE:W0611
+from helixbilling.test.logic.test_list_balance_locks import ListBalanceLocksTestCase #IGNORE:W0611
 
 if __name__ == '__main__':
     unittest.main()
