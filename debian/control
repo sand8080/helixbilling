@@ -10,7 +10,7 @@ XS-Python-Version: 2.5
 Package: python-helixbilling
 Provides: python2.5-helixbilling
 Recommends: postgresql
-Depends: python (>= 2.5), python2.5-helixcore, python-setuptools, python-tz, python-cjson (>= 1.0.5), supervisor, adduser, dbconfig-common, debconf
+Depends: python (>= 2.5), python2.5-helixcore, python-setuptools, python2.5-dev, libssl-dev, python-tz, python-cjson (>= 1.0.5), supervisor, adduser, dbconfig-common, debconf
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Description: Helix family billing package
