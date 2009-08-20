@@ -5,7 +5,7 @@ def apply(curs):
     '''
         CREATE TABLE action_log (
             id serial,
-            client_id int,
+            client_id varchar,
             action varchar NOT NULL,
             request_date timestamp with time zone NOT NULL DEFAULT now(),
             request text NOT NULL,

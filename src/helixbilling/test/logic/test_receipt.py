@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import unittest
 
@@ -13,7 +12,6 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.logic.exceptions import DataIntegrityError
 from helixbilling.domain.objects import Currency, Balance
 
-
 class ReceiptTestCase(LogicTestCase):
 
     def setUp(self):
@@ -25,7 +23,7 @@ class ReceiptTestCase(LogicTestCase):
         self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
         insert(curs, self.currency)
 
-        balance = Balance(client_id=123, active=1, currency_id=self.currency.id) #IGNORE:E1101
+        balance = Balance(client_id='123', active=1, currency_id=self.currency.id) #IGNORE:E1101
         self.balance = balance #IGNORE:W0201
         insert(curs, self.balance)
 
@@ -49,7 +47,7 @@ class ReceiptTestCase(LogicTestCase):
 
     def test_enroll_receipt_no_balance(self):
         data = {
-            'client_id': 677676, #inexistent
+            'client_id': 'inexistent',
             'amount': (1000000, 0),
         }
         self.assertRaises(DataIntegrityError, handle_action, 'enroll_receipt', data)

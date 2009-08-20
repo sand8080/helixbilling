@@ -5,7 +5,7 @@ def apply(curs):
     '''
         CREATE TABLE bonus (
             id serial,
-            client_id int NOT NULL,
+            client_id varchar NOT NULL,
             created_date timestamp with time zone NOT NULL DEFAULT now(),
             amount int,
             PRIMARY KEY(id)

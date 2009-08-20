@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 import datetime
 import unittest
 
 from common import LogicTestCase
 
-from helixcore.mapping.actions import insert, reload
+from helixcore.mapping import actions
 from helixcore.db.wrapper import EmptyResultSetError
 
 from helixbilling.conf.db import transaction
@@ -21,21 +20,31 @@ class ChargeOffTestCase(LogicTestCase):
     @transaction()
     def _fixture(self, curs=None):
         self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
-        insert(curs, self.currency)
+        actions.insert(curs, self.currency)
 
-        balance = Balance(client_id=123, active=1, currency_id=self.currency.id, available_amount=5000, overdraft_limit=7000, locked_amount=2500) #IGNORE:E1101
+        balance = Balance(
+            client_id='PVH 123', active=1,
+            currency_id=self.currency.id, #IGNORE:E1101
+            available_amount=5000, overdraft_limit=7000,
+            locked_amount=2500
+        )
         self.balance = balance #IGNORE:W0201
-        insert(curs, self.balance)
+        actions.insert(curs, self.balance)
 
-        lock = BalanceLock(client_id=123, product_id=33, amount=2500) #IGNORE:E1101
+        self.product_id = '33 cow' #IGNORE:W0201
+        lock = BalanceLock(
+            client_id=self.balance.client_id, #IGNORE:E1101
+            product_id=self.product_id,
+            amount=2500
+        )
         self.lock = lock #IGNORE:W0201
-        insert(curs, self.lock)
-        self.lock = reload(curs, self.lock)
+        actions.insert(curs, self.lock)
+        self.lock = actions.reload(curs, self.lock)
 
     def test_charge_off_ok(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 33,
+            'product_id': self.product_id,
         }
         handle_action('charge_off', data)
         balance = self._get_balance(data['client_id'])
@@ -57,7 +66,7 @@ class ChargeOffTestCase(LogicTestCase):
     def test_charge_off_not_locked(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': '555',
         }
         self.assertRaises(ActionNotAllowedError, handle_action, 'charge_off', data)
 

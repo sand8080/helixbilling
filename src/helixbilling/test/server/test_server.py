@@ -15,7 +15,7 @@ class ServerTestCase(RootTestCase):
         t.setDaemon(True)
         t.start()
 
-        sleep(0.2)
+        sleep(0.5)
         request_data = {'action': 'ping'}
 
         conn = httplib.HTTPConnection(server_http_addr, server_http_port)

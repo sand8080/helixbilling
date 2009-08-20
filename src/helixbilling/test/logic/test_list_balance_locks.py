@@ -34,26 +34,26 @@ class ListBalanceLocksTestCase(ListTestCase):
 
     def test_double_balance_lock_failure(self):
         self._make_balance_lock(
-            getattr(self.balance, 'client_id'), 66,
+            getattr(self.balance, 'client_id'), '66',
             self.locked_start_date, 789
         )
         self.assertRaises(
             Exception, self._make_balance_lock,
-            getattr(self.balance, 'client_id'), 66,
+            getattr(self.balance, 'client_id'), '66',
             self.locked_end_date, 800
         )
 
     def test_list_balance_locks_ok(self):
         l_start = self._make_balance_lock(
-            getattr(self.balance, 'client_id'), 66,
+            getattr(self.balance, 'client_id'), '66',
             self.locked_start_date, 789
         )
         l_middle = self._make_balance_lock(
-            getattr(self.balance, 'client_id'), 67,
+            getattr(self.balance, 'client_id'), '67',
             self.locked_start_date + datetime.timedelta(days=3), 789
         )
         self._make_balance_lock(
-            getattr(self.balance, 'client_id'), 68,
+            getattr(self.balance, 'client_id'), '68',
             self.locked_end_date + datetime.timedelta(days=3), 789
         )
 

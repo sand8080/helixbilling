@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
 import datetime, pytz
 import unittest
 
 import helixbilling.test.test_environment #IGNORE:W0611
-
 from common import LogicTestCase
-
-from helixcore.mapping.actions import insert
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import Currency, Balance, Receipt
 
+from helixcore.mapping.actions import insert
 
 class ListReceiptsTestCase(LogicTestCase):
 
@@ -24,7 +21,7 @@ class ListReceiptsTestCase(LogicTestCase):
         self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
         insert(curs, self.currency)
 
-        balance = Balance(client_id=123, active=1, currency_id=self.currency.id) #IGNORE:E1101
+        balance = Balance(client_id='123', active=1, currency_id=self.currency.id) #IGNORE:E1101
         self.balance = balance #IGNORE:W0201
         insert(curs, self.balance)
 
@@ -42,7 +39,7 @@ class ListReceiptsTestCase(LogicTestCase):
         start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)
         end_date = datetime.datetime(2009, 4, 25, tzinfo=pytz.utc)
 
-        self._make_receipt(899, datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
+        self._make_receipt('899', datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
         self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #IGNORE:E1101 - too early
         r_low = self._make_receipt(self.balance.client_id, start_date, 6200) #IGNORE:E1101
         r_mid = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 22, 8, 33, 44, tzinfo=pytz.utc), 7060) #IGNORE:E1101
@@ -69,7 +66,7 @@ class ListReceiptsTestCase(LogicTestCase):
         start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)
         end_date = datetime.datetime(2009, 4, 25, tzinfo=pytz.utc)
 
-        self._make_receipt(899, datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
+        self._make_receipt('899', datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
         self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #IGNORE:E1101 - too early
         r_low = self._make_receipt(self.balance.client_id, start_date, 6200) #IGNORE:E1101
         r_mid = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 22, 8, 33, 44, tzinfo=pytz.utc), 7060) #IGNORE:E1101
@@ -103,7 +100,7 @@ class ListReceiptsTestCase(LogicTestCase):
         start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)
         end_date = datetime.datetime(2009, 4, 25, tzinfo=pytz.utc)
 
-        self._make_receipt(899, datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
+        self._make_receipt('899', datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
         self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #IGNORE:E1101 - too early
         self._make_receipt(self.balance.client_id, end_date, 1080) #IGNORE:E1101 - too late
 

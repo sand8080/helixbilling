@@ -97,7 +97,10 @@ class Handler(object):
         data['amount'] = compose_amount(currency, 'lock', *data['amount'])
 
         if balance.available_amount - data['amount'] < -balance.overdraft_limit:
-            raise ActionNotAllowedError('Cannot lock %(1)s.%(2)s %(0)s: the amount violates current overdraft limit of %(3)s.%(4)s %(0)s. Available amount on balance is %(5)s.%(6)s %(0)s' %
+            raise ActionNotAllowedError(
+                'Cannot lock %(1)s.%(2)s %(0)s: '
+                'the amount violates current overdraft limit of %(3)s.%(4)s %(0)s. '
+                'Available amount on balance is %(5)s.%(6)s %(0)s' %
                 dict(zip(
                     map(str, range(7)),
                     tuple(currency.designation) +
@@ -123,7 +126,11 @@ class Handler(object):
         try:
             lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
         except EmptyResultSetError:
-            raise DataIntegrityError('Cannot unlock money for product %d: amount was not locked for this product' % data['product_id'])
+            raise DataIntegrityError(
+                'Cannot unlock money for product %s: '
+                'amount was not locked for this product'
+                % data['product_id']
+            )
 
         delete(curs, lock)
 
@@ -181,7 +188,11 @@ class Handler(object):
         try:
             lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
         except EmptyResultSetError:
-            raise ActionNotAllowedError('Cannot charge off money for product %d: amount was not locked for this product' % data['product_id'])
+            raise ActionNotAllowedError(
+                'Cannot charge off money for product %s: '
+                'amount was not locked for this product'
+                % data['product_id']
+            )
 
         chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock.amount, **data)
 

@@ -23,7 +23,7 @@ class BalanceTestCase(LogicTestCase):
 
     def test_create_balance(self):
         data = {
-            'client_id': 23,
+            'client_id': 'U-23-52',
             'active': 1,
             'currency_name': 'USD',
             'overdraft_limit': (500, 50), # $ 500.00
@@ -41,7 +41,7 @@ class BalanceTestCase(LogicTestCase):
 
     def test_modify_balance(self):
         data = {
-            'client_id': 23,
+            'client_id': 'U-23-52',
             'active': 1,
             'currency_name': 'USD',
             'overdraft_limit': (500, 0),
@@ -49,7 +49,7 @@ class BalanceTestCase(LogicTestCase):
         handle_action('create_balance', data)
 
         data = {
-            'client_id': 23,
+            'client_id': 'U-23-52',
             'active': 0,
             'overdraft_limit': (999, 99),
         }

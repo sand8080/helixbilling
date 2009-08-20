@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 
 from common import LogicTestCase
@@ -21,7 +20,12 @@ class ProductStatusTestCase(LogicTestCase):
         self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
         insert(curs, self.currency)
 
-        balance = Balance(client_id=123, active=1, currency_id=self.currency.id, available_amount=5000, overdraft_limit=7000) #IGNORE:E1101
+        balance = Balance(
+            client_id='123', active=1,
+            currency_id=self.currency.id, #IGNORE:E1101
+            available_amount=5000,
+            overdraft_limit=7000
+        )
         self.balance = balance #IGNORE:W0201
         insert(curs, self.balance)
 
@@ -29,7 +33,7 @@ class ProductStatusTestCase(LogicTestCase):
         lock_amount = (60, 00)
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': '555',
             'amount': lock_amount,
         }
         handle_action('lock', data)
@@ -45,7 +49,7 @@ class ProductStatusTestCase(LogicTestCase):
         lock_amount = (60, 00)
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': '555',
             'amount': lock_amount,
         }
         handle_action('lock', data)
@@ -64,13 +68,13 @@ class ProductStatusTestCase(LogicTestCase):
         lock_amount = (60, 00)
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': '555',
             'amount': lock_amount,
         }
         handle_action('lock', data)
 
         del data['amount']
-        data['product_id'] = 556
+        data['product_id'] = '556'
         response = handle_action('product_status', data)
         self.assertEquals(product_status.unknown, response['product_status'])
 

@@ -5,8 +5,8 @@ def apply(curs):
     '''
         CREATE TABLE charge_off (
             id serial,
-            client_id int NOT NULL,
-            product_id int NOT NULL,
+            client_id varchar NOT NULL,
+            product_id varchar NOT NULL,
             locked_date timestamp with time zone NOT NULL,
             chargeoff_date timestamp with time zone NOT NULL DEFAULT now(),
             amount int,

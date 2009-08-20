@@ -1,20 +1,16 @@
-# -*- coding: utf-8 -*-
 import datetime, pytz
 import unittest
 
 import helixbilling.test.test_environment #IGNORE:W0611
-
 from common import LogicTestCase
-
-from helixcore.mapping.actions import insert
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import Currency, Balance, ChargeOff
 
+from helixcore.mapping.actions import insert
 
 class ListChargeoffsTestCase(LogicTestCase):
-
     good_chargeoffs = None
     locked_start_date = None
     locked_end_date = None
@@ -35,14 +31,15 @@ class ListChargeoffsTestCase(LogicTestCase):
 
         # other client
         self._make_chargeoff(
-            899, 44,
+            '899',
+            '44',
             locked_start_date,
             chargedoff_start_date,
             5099
         )
         self._make_chargeoff(
             self.balance.client_id, #IGNORE:E1101
-            45,
+            '45',
             datetime.datetime(2009, 2, 21, tzinfo=pytz.utc),
             datetime.datetime(2009, 3, 21, tzinfo=pytz.utc),
             5000
@@ -50,21 +47,21 @@ class ListChargeoffsTestCase(LogicTestCase):
         self.good_chargeoffs = (
             self._make_chargeoff(
                 self.balance.client_id,  #IGNORE:E1101
-                70,
+                '70',
                 locked_start_date,
                 chargedoff_start_date,
                 6200
             ),
             self._make_chargeoff(
                 self.balance.client_id, #IGNORE:E1101
-                71,
+                '71',
                 locked_start_date + datetime.timedelta(days=3),
                 chargedoff_start_date + datetime.timedelta(days=3),
                 7060
             ),
             self._make_chargeoff(
                 self.balance.client_id,  #IGNORE:E1101
-                72,
+                '72',
                 locked_end_date - datetime.timedelta(seconds=1),
                 chargedoff_end_date - datetime.timedelta(seconds=1),
                 7899
@@ -73,7 +70,7 @@ class ListChargeoffsTestCase(LogicTestCase):
         # too late
         self._make_chargeoff(
             self.balance.client_id, #IGNORE:E1101
-            46,
+            '46',
             locked_end_date,
             chargedoff_end_date,
             1080
@@ -87,7 +84,7 @@ class ListChargeoffsTestCase(LogicTestCase):
     def _fixture(self, curs=None):
         self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
         insert(curs, self.currency)
-        balance = Balance(client_id=123, active=0, currency_id=self.currency.id) #IGNORE:E1101
+        balance = Balance(client_id='123', active=0, currency_id=self.currency.id) #IGNORE:E1101
         self.balance = balance #IGNORE:W0201
         insert(curs, self.balance)
 

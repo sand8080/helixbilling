@@ -4,7 +4,7 @@ from helixbilling.test.server.test_server import ServerTestCase #IGNORE:W0611
 
 from helixbilling.test.api.test_api import RequestHandlingTestCase #IGNORE:W0611
 
-from helixbilling.test.logic.test_action_log import ActionLog #IGNORE:W0611
+from helixbilling.test.logic.test_action_log import ActionLogTestCase #IGNORE:W0611
 
 from helixbilling.test.logic.test_common import CommonLogicTestCase #IGNORE:W0611
 from helixbilling.test.logic.test_balance import BalanceTestCase #IGNORE:W0611

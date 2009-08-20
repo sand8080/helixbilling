@@ -24,10 +24,10 @@ def get_balance(curs, client_id, active_only=True, for_update=False):
     try:
         balance = get(curs, Balance, Eq('client_id', client_id), for_update)
         if active_only and balance.active == 0:
-            raise ActionNotAllowedError('Balance related to client ID %d is not active' % client_id)
+            raise ActionNotAllowedError('Balance related to client ID %s is not active' % client_id)
         return balance
     except EmptyResultSetError:
-        raise DataIntegrityError('Balance related to client ID %d not found in system' % client_id)
+        raise DataIntegrityError('Balance related to client ID %s not found in system' % client_id)
 
 def try_get_lock(curs, client_id, product_id, for_update=False):
     '''

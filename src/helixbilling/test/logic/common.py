@@ -61,7 +61,7 @@ class ListTestCase(LogicTestCase):
         self.currency = reload(curs, self.currency)
 
         balance = Balance(
-            client_id=123, active=1,
+            client_id='123', active=1,
             currency_id=getattr(self.currency, 'id')
         )
         self.balance = balance #IGNORE:W0201

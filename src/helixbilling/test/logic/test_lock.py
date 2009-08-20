@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import unittest
 
@@ -24,14 +23,18 @@ class LockTestCase(LogicTestCase):
         self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
         insert(curs, self.currency)
 
-        balance = Balance(client_id=123, active=1, currency_id=self.currency.id, available_amount=5000, overdraft_limit=7000) #IGNORE:E1101
+        balance = Balance(
+            client_id='123', active=1,
+            currency_id=self.currency.id, #IGNORE:E1101
+            available_amount=5000, overdraft_limit=7000
+        )
         self.balance = balance #IGNORE:W0201
         insert(curs, self.balance)
 
     def test_lock_ok(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': 'super-light 555',
             'amount': (60, 00),
         }
         handle_action('lock', data)
@@ -48,7 +51,7 @@ class LockTestCase(LogicTestCase):
     def test_lock_overdraft_violation(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': 'lucky boy',
             'amount': (120, 43),
         }
         self.assertRaises(ActionNotAllowedError, handle_action, 'lock', data)
@@ -56,7 +59,7 @@ class LockTestCase(LogicTestCase):
     def test_unlock_ok(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': '555',
             'amount': (60, 00),
         }
         handle_action('lock', data)
@@ -73,13 +76,13 @@ class LockTestCase(LogicTestCase):
     def test_unlock_inexistent(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
-            'product_id': 555,
+            'product_id': '555',
             'amount': (60, 00),
         }
         handle_action('lock', data)
 
         del data['amount']
-        data['product_id'] = 444
+        data['product_id'] = '444'
         self.assertRaises(DataIntegrityError, handle_action, 'unlock', data)
 
 if __name__ == '__main__':
