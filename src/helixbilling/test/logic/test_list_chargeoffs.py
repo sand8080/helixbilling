@@ -1,16 +1,15 @@
 import datetime, pytz
 import unittest
 
-import helixbilling.test.test_environment #IGNORE:W0611
-from common import LogicTestCase
-
-from helixbilling.conf.db import transaction
-from helixbilling.logic.actions import handle_action
-from helixbilling.domain.objects import Currency, Balance, ChargeOff
-
 from helixcore.mapping.actions import insert
 
-class ListChargeoffsTestCase(LogicTestCase):
+import helixbilling.test.test_environment #IGNORE:W0611
+from common import ListTestCase
+from helixbilling.conf.db import transaction
+from helixbilling.logic.actions import handle_action
+from helixbilling.domain.objects import ChargeOff
+
+class ListChargeoffsTestCase(ListTestCase):
     good_chargeoffs = None
     locked_start_date = None
     locked_end_date = None
@@ -18,8 +17,7 @@ class ListChargeoffsTestCase(LogicTestCase):
     chargedoff_end_date = None
 
     def setUp(self):
-        LogicTestCase.setUp(self)
-        self._fixture()
+        ListTestCase.setUp(self)
         self._create_chargeoffs()
 
     def _create_chargeoffs(self):
@@ -79,14 +77,6 @@ class ListChargeoffsTestCase(LogicTestCase):
         self.locked_end_date = locked_end_date
         self.chargedoff_start_date = chargedoff_start_date
         self.chargedoff_end_date = chargedoff_end_date
-
-    @transaction()
-    def _fixture(self, curs=None):
-        self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
-        insert(curs, self.currency)
-        balance = Balance(client_id='123', active=0, currency_id=self.currency.id) #IGNORE:E1101
-        self.balance = balance #IGNORE:W0201
-        insert(curs, self.balance)
 
     @transaction()
     def _make_chargeoff(self, client_id, product_id, locked_date, chargeoff_date, amount, curs=None):

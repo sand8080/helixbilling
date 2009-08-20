@@ -1,18 +1,15 @@
 import datetime, pytz
 import unittest
 
-import helixbilling.test.test_environment #IGNORE:W0611
-
-from common import ListTestCase
-
 from helixcore.mapping.actions import insert
 
+import helixbilling.test.test_environment #IGNORE:W0611
+from common import ListTestCase
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import BalanceLock
 
 class ListBalanceLocksTestCase(ListTestCase):
-
     def setUp(self):
         ListTestCase.setUp(self)
         self.locked_start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)

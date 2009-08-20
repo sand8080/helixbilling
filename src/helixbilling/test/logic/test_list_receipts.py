@@ -1,30 +1,15 @@
 import datetime, pytz
 import unittest
 
-import helixbilling.test.test_environment #IGNORE:W0611
-from common import LogicTestCase
-
-from helixbilling.conf.db import transaction
-from helixbilling.logic.actions import handle_action
-from helixbilling.domain.objects import Currency, Balance, Receipt
-
 from helixcore.mapping.actions import insert
 
-class ListReceiptsTestCase(LogicTestCase):
+import helixbilling.test.test_environment #IGNORE:W0611
+from common import ListTestCase
+from helixbilling.conf.db import transaction
+from helixbilling.logic.actions import handle_action
+from helixbilling.domain.objects import Receipt
 
-    def setUp(self):
-        LogicTestCase.setUp(self)
-        self._fixture()
-
-    @transaction()
-    def _fixture(self, curs=None):
-        self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
-        insert(curs, self.currency)
-
-        balance = Balance(client_id='123', active=1, currency_id=self.currency.id) #IGNORE:E1101
-        self.balance = balance #IGNORE:W0201
-        insert(curs, self.balance)
-
+class ListReceiptsTestCase(ListTestCase):
     @transaction()
     def _make_receipt(self, client_id, created_date, amount, curs=None):
         receipt = Receipt(client_id=client_id, created_date=created_date, amount=amount) #IGNORE:E1101
