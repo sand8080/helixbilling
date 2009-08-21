@@ -1,10 +1,10 @@
-from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme
+from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text
 from helixbilling.error.errors import RequestProcessingError
 import re
 
 amount_validator = (NonNegative(int), NonNegative(int))
-positive_amount_validator = (Positive(int), Positive(int))
-id_validator = Positive(int)
+nonnegative_amount_validator = (Positive(int), NonNegative(int))
+
 iso_datetime_validator = re.compile(r"""
     (\d{2,4})
     (?:-?([01]\d))?
@@ -26,70 +26,74 @@ PING = {
 }
 # --- currency ---
 ADD_CURRENCY = {
-    'name': AnyOf(str, unicode),
-    'designation': AnyOf(str, unicode),
-    Optional('cent_factor'): NonNegative(int),
+    'name': Text(),
+    'designation': Text(),
+    Optional('cent_factor'): Positive(int),
 }
 
 MODIFY_CURRENCY = {
-    'name': AnyOf(str, unicode),
-    Optional('designation'): AnyOf(str, unicode),
-    Optional('cent_factor'): NonNegative(int),
+    'name': Text(),
+    Optional('designation'): Text(),
+    Optional('cent_factor'): Positive(int),
 }
 
 DELETE_CURRENCY = {
-    'name': AnyOf(str, unicode),
+    'name': Text(),
 }
 
 # --- balance ---
 CREATE_BALANCE = {
-    'client_id': id_validator,
+    'client_id': Text(),
     'active': AnyOf(0, 1),
-    'currency_name': AnyOf(str, unicode),
+    'currency_name': Text(),
     'overdraft_limit': amount_validator,
 }
 
 MODIFY_BALANCE = {
-    'client_id': id_validator,
+    'client_id': Text(),
     Optional('active'): AnyOf(0, 1),
     Optional('overdraft_limit'): amount_validator,
 }
 
 # --- operations ---
 ENROLL_RECEIPT = {
-    'client_id': id_validator,
-    'amount': positive_amount_validator,
+    'client_id': Text(),
+    'amount': nonnegative_amount_validator,
 }
 
 LOCK = {
-    'client_id': id_validator,
-    'product_id': id_validator,
-    'amount': positive_amount_validator,
+    'client_id': Text(),
+    'product_id': Text(),
+    'amount': nonnegative_amount_validator,
+}
+
+LOCK_LIST = {
+    'locks': [LOCK]
 }
 
 UNLOCK = {
-    'client_id': id_validator,
-    'product_id': id_validator,
+    'client_id': Text(),
+    'product_id': Text(),
 }
 
 PRODUCT_STATUS = {
-    'client_id': id_validator,
-    'product_id': id_validator,
+    'client_id': Text(),
+    'product_id': Text(),
 }
 
 MAKE_BONUS = {
-    'client_id': id_validator,
-    'amount': positive_amount_validator,
+    'client_id': Text(),
+    'amount': nonnegative_amount_validator,
 }
 
 CHARGE_OFF = {
-    'client_id': id_validator,
-    'product_id': id_validator,
+    'client_id': Text(),
+    'product_id': Text(),
 }
 
 # --- list operations ---
 LIST_RECEIPTS = {
-    'client_id': id_validator,
+    'client_id': Text(),
     Optional('start_date'): iso_datetime_validator,
     Optional('end_date'): iso_datetime_validator,
     'offset': NonNegative(int),
@@ -97,8 +101,8 @@ LIST_RECEIPTS = {
 }
 
 LIST_CHARGEOFFS = {
-    'client_id': id_validator,
-    Optional('product_id'): id_validator,
+    'client_id': Text(),
+    Optional('product_id'): Text(),
     Optional('locked_start_date'): iso_datetime_validator,
     Optional('locked_end_date'): iso_datetime_validator,
     Optional('chargeoff_start_date'): iso_datetime_validator,
@@ -108,8 +112,8 @@ LIST_CHARGEOFFS = {
 }
 
 LIST_BALANCE_LOCK = {
-    'client_id': id_validator,
-    Optional('product_id'): id_validator,
+    'client_id': Text(),
+    Optional('product_id'): Text(),
     Optional('locked_start_date'): iso_datetime_validator,
     Optional('locked_end_date'): iso_datetime_validator,
     'offset': NonNegative(int),
@@ -130,6 +134,8 @@ action_to_scheme_map = {
     'make_bonus': Scheme(MAKE_BONUS),
 
     'lock': Scheme(LOCK),
+    'lock_list': Scheme(LOCK_LIST),
+
     'unlock': Scheme(UNLOCK),
 
     'charge_off': Scheme(CHARGE_OFF),
@@ -149,10 +155,13 @@ def validate(action_name, data):
     Validates API request data by action name
     @raise ValidationError: if validation failed for some reason
     '''
-    scheme = scheme = action_to_scheme_map.get(action_name)
+    scheme = action_to_scheme_map.get(action_name)
     if scheme is None:
         raise ValidationError('Unknown action: %s' % action_name)
 
     result = scheme.validate(data)
     if not result:
-        raise ValidationError('Validation failed for action %s' % action_name)
+        raise ValidationError(
+            'Validation failed for action %s. Expected scheme: %s. Actual data: %s'
+            % (action_name, scheme, data)
+        )

@@ -1,11 +1,13 @@
+from helixbilling.test.root_test import RootTestCase
+
 import install
 
 from helixcore.db.cond import Eq, And
 from helixcore.mapping import actions
 
-from helixbilling.test.root_test import RootTestCase
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
+
 
 class LogicTestCase(RootTestCase):
     '''
@@ -48,7 +50,7 @@ class LogicTestCase(RootTestCase):
         balance.active = 0
         actions.update(curs, balance)
 
-class ListTestCase(LogicTestCase):
+class TestCaseWithBalance(LogicTestCase):
     def setUp(self):
         LogicTestCase.setUp(self)
         self._fixture()

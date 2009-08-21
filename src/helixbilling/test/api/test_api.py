@@ -45,5 +45,29 @@ class RequestHandlingTestCase(RootTestCase):
         res = cjson.decode(handle_response(good_response))
         self.assertEquals(res, good_response)
 
+#    def test_lock_list(self):
+#        data = [
+#            {
+#                'client_id': 'id_one',
+#                'product_id': 'super-light 555',
+#                'amount': (60, 00),
+#            },
+#            {
+#                'client_id': 'id_two',
+#                'product_id': 'super-light 555',
+#                'vermont': 'brb',
+#                'amount': (60, 00),
+#            }
+#        ]
+#
+#        raw_data = cjson.encode(data)
+#        action_name, data = handle_request(raw_data)
+#        self.assertEquals(action_name, good_data.pop('action'))
+#        self.assertEquals(data, good_data)
+#
+#        good_response = {'status': 'ok'}
+#        res = cjson.decode(handle_response(good_response))
+#        self.assertEquals(res, good_response)
+
 if __name__ == '__main__':
     unittest.main()

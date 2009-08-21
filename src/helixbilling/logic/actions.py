@@ -12,9 +12,8 @@ def handle_action(action_name, data):
     @raise UnknownActionError: if action with such name is unknown to handler
     @raise DataIntegrityError: if given data is semantically not correct (ie. database raises IntegrityError)
     '''
-    h = Handler()
     try:
-        method = getattr(h, action_name)
+        method = getattr(Handler(), action_name)
     except AttributeError, e:
         raise UnknownActionError('Cannot handle action %s: unknown action' % action_name)
 

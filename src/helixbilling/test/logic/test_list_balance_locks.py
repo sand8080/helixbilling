@@ -4,14 +4,14 @@ import unittest
 from helixcore.mapping.actions import insert
 
 import helixbilling.test.test_environment #IGNORE:W0611
-from common import ListTestCase
+from common import TestCaseWithBalance
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import BalanceLock
 
-class ListBalanceLocksTestCase(ListTestCase):
+class ListBalanceLocksTestCase(TestCaseWithBalance):
     def setUp(self):
-        ListTestCase.setUp(self)
+        TestCaseWithBalance.setUp(self)
         self.locked_start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)
         self.locked_end_date = self.locked_start_date + datetime.timedelta(days=50)
 

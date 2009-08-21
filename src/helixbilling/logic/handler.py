@@ -14,6 +14,7 @@ from helper import compose_amount, decompose_amount
 from selectors import select_receipts, select_chargeoffs, select_balance_locks
 from action_log import logged
 
+
 class Handler(object):
     '''
     Handles all API actions. Method names are called like actions.
@@ -88,34 +89,42 @@ class Handler(object):
         update(curs, balance)
         return response_ok()
 
+    def _lock(self, data_list, curs):
+        for data in data_list:
+            balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+            currency = get_currency_by_balance(curs, balance)
+            data['amount'] = compose_amount(currency, 'lock', *data['amount'])
+            if balance.available_amount - data['amount'] < -balance.overdraft_limit:
+                raise ActionNotAllowedError(
+                    'Cannot lock %(1)s.%(2)s %(0)s: '
+                    'the amount violates current overdraft limit of %(3)s.%(4)s %(0)s. '
+                    'Available amount on balance is %(5)s.%(6)s %(0)s' %
+                    dict(zip(
+                        map(str, range(7)),
+                        tuple(currency.designation) +
+                        decompose_amount(currency, data['amount']) +
+                        decompose_amount(currency, balance.overdraft_limit) +
+                        decompose_amount(currency, balance.available_amount)
+                    ))
+                )
+            lock = BalanceLock(**data)
+            insert(curs, lock)
+
+            balance.available_amount -= lock.amount #IGNORE:E1101
+            balance.locked_amount += lock.amount #IGNORE:E1101
+            update(curs, balance)
+
+    # TODO: implement array handling in helixcore
+    # then you can add record to action_log
+    @transaction()
+    def lock_list(self, data, curs=None):
+        self._lock(data['locks'], curs)
+        return response_ok()
+
     @transaction()
     @logged
     def lock(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
-        currency = get_currency_by_balance(curs, balance)
-
-        data['amount'] = compose_amount(currency, 'lock', *data['amount'])
-
-        if balance.available_amount - data['amount'] < -balance.overdraft_limit:
-            raise ActionNotAllowedError(
-                'Cannot lock %(1)s.%(2)s %(0)s: '
-                'the amount violates current overdraft limit of %(3)s.%(4)s %(0)s. '
-                'Available amount on balance is %(5)s.%(6)s %(0)s' %
-                dict(zip(
-                    map(str, range(7)),
-                    tuple(currency.designation) +
-                    decompose_amount(currency, data['amount']) +
-                    decompose_amount(currency, balance.overdraft_limit) +
-                    decompose_amount(currency, balance.available_amount)
-                ))
-            )
-
-        lock = BalanceLock(**data)
-        insert(curs, lock)
-
-        balance.available_amount -= lock.amount #IGNORE:E1101
-        balance.locked_amount += lock.amount #IGNORE:E1101
-        update(curs, balance)
+        self._lock([data], curs)
         return response_ok()
 
     @transaction()

@@ -13,7 +13,6 @@ from helixbilling.domain.objects import Currency, Balance
 
 
 class LockTestCase(LogicTestCase):
-
     def setUp(self):
         LogicTestCase.setUp(self)
         self._fixture()

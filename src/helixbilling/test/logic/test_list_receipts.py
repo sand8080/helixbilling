@@ -4,12 +4,12 @@ import unittest
 from helixcore.mapping.actions import insert
 
 import helixbilling.test.test_environment #IGNORE:W0611
-from common import ListTestCase
+from common import TestCaseWithBalance
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import Receipt
 
-class ListReceiptsTestCase(ListTestCase):
+class ListReceiptsTestCase(TestCaseWithBalance):
     @transaction()
     def _make_receipt(self, client_id, created_date, amount, curs=None):
         receipt = Receipt(client_id=client_id, created_date=created_date, amount=amount) #IGNORE:E1101

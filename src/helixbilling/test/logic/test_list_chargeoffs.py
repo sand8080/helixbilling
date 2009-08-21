@@ -4,12 +4,12 @@ import unittest
 from helixcore.mapping.actions import insert
 
 import helixbilling.test.test_environment #IGNORE:W0611
-from common import ListTestCase
+from common import TestCaseWithBalance
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import ChargeOff
 
-class ListChargeoffsTestCase(ListTestCase):
+class ListChargeoffsTestCase(TestCaseWithBalance):
     good_chargeoffs = None
     locked_start_date = None
     locked_end_date = None
@@ -17,7 +17,7 @@ class ListChargeoffsTestCase(ListTestCase):
     chargedoff_end_date = None
 
     def setUp(self):
-        ListTestCase.setUp(self)
+        TestCaseWithBalance.setUp(self)
         self._create_chargeoffs()
 
     def _create_chargeoffs(self):
