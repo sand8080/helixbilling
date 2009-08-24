@@ -76,6 +76,10 @@ UNLOCK = {
     'product_id': Text(),
 }
 
+UNLOCK_LIST = {
+    'unlocks': [UNLOCK]
+}
+
 PRODUCT_STATUS = {
     'client_id': Text(),
     'product_id': Text(),
@@ -137,6 +141,7 @@ action_to_scheme_map = {
     'lock_list': Scheme(LOCK_LIST),
 
     'unlock': Scheme(UNLOCK),
+    'unlock_list': Scheme(UNLOCK_LIST),
 
     'charge_off': Scheme(CHARGE_OFF),
 

@@ -1,4 +1,3 @@
-import datetime
 import unittest
 
 from common import TestCaseWithBalance
@@ -8,11 +7,11 @@ from helixcore.db.wrapper import EmptyResultSetError
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import ActionNotAllowedError, DataIntegrityError
-from helixbilling.domain.objects import Currency, Balance
+from helixbilling.logic.exceptions import ActionNotAllowedError
+from helixbilling.logic.helper import compose_amount
 
 
-class LockTestCase(TestCaseWithBalance):
+class LockListTestCase(TestCaseWithBalance):
     @transaction()
     def increase_balance(self, val, curs=None):
         balance = reload(curs, self.balance, for_update=True)
@@ -25,12 +24,7 @@ class LockTestCase(TestCaseWithBalance):
         self.balance = reload(curs, self.balance, for_update=True)
 
     def test_lock_ok(self):
-        self.reload_balance()
-        available_before = self.balance.available_amount
-        locked_before = self.balance.locked_amount
-        increase = 9000
-        self.increase_balance(increase)
-        data = {
+        lock_data = {
             'locks': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101
@@ -49,47 +43,90 @@ class LockTestCase(TestCaseWithBalance):
                 },
             ]
         }
-        handle_action('lock_list', data)
-        self.reload_balance()
-        self.assertEquals(available_before, increase + self.balance.available_amount)
-        self.assertEquals(locked_before, increase - self.balance.locked_amount)
+        balance_increase = 9000
+        balance_decrease = self.get_amount_sum(lock_data['locks'])
 
-#    def test_lock_overdraft_violation(self):
-#        data = {
-#            'client_id': self.balance.client_id, #IGNORE:E1101
-#            'product_id': 'lucky boy',
-#            'amount': (120, 43),
+        self.increase_balance(balance_increase)
+        available_before = self.balance.available_amount
+        locked_before = self.balance.locked_amount
+
+        handle_action('lock_list', lock_data)
+        self.reload_balance()
+        self.assertEquals(available_before, self.balance.available_amount + balance_decrease)
+        self.assertEquals(locked_before, self.balance.locked_amount - balance_decrease)
+
+    def test_unlock_ok(self):
+        self.test_lock_ok()
+        unlock_data = {
+            'unlocks': [
+                {
+                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'product_id': 'super-light 555',
+                },
+                {
+                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'product_id': 'super-light 557',
+                },
+            ]
+        }
+        self.reload_balance()
+        available_before = self.balance.available_amount
+        locked_before = self.balance.locked_amount
+        handle_action('unlock_list', unlock_data)
+        self.reload_balance()
+        self.assertEqual(
+            available_before + locked_before,
+            self.balance.available_amount + self.balance.locked_amount
+        )
+
+    def get_amount_sum(self, data):
+        return reduce(lambda x, y: x + y, [compose_amount(self.currency, '', *d['amount']) for d in data])
+
+    def test_lock_failure(self):
+        balance_increase = 2500
+        lock_data = {
+            'locks': [
+                {
+                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'product_id': 'super-light 555',
+                    'amount': (20, 00),
+                },
+                {
+                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'product_id': 'super-light 556',
+                    'amount': (30, 00),
+                },
+            ]
+        }
+        self.increase_balance(balance_increase)
+        self.assertRaises(ActionNotAllowedError, handle_action, 'lock_list', lock_data)
+
+#        lock_data = {
+#            'locks': [
+#                {
+#                    'client_id': self.balance.client_id, #IGNORE:E1101
+#                    'product_id': 'super-light 555',
+#                    'amount': (20, 00),
+#                },
+#                {
+#                    'client_id': self.balance.client_id, #IGNORE:E1101
+#                    'product_id': 'super-light 556',
+#                    'amount': (30, 00),
+#                },
+#            ]
 #        }
-#        self.assertRaises(ActionNotAllowedError, handle_action, 'lock', data)
+#        balance_increase = 8000
+#        balance_decrease = self.get_amount_sum(lock_data['locks'])
 #
-#    def test_unlock_ok(self):
-#        data = {
-#            'client_id': self.balance.client_id, #IGNORE:E1101
-#            'product_id': '555',
-#            'amount': (60, 00),
-#        }
-#        handle_action('lock', data)
+#        self.increase_balance(balance_increase)
+#        available_before = self.balance.available_amount
+#        locked_before = self.balance.locked_amount
 #
-#        del data['amount']
-#        handle_action('unlock', data)
-#
-#        balance = self._get_balance(data['client_id'])
-#
-#        self.assertEquals(balance.available_amount, 5000)
-#        self.assertEquals(balance.locked_amount, 0)
-#        self.assertRaises(EmptyResultSetError, self._get_lock, self.balance.client_id, data['product_id']) #IGNORE:E1101
-#
-#    def test_unlock_inexistent(self):
-#        data = {
-#            'client_id': self.balance.client_id, #IGNORE:E1101
-#            'product_id': '555',
-#            'amount': (60, 00),
-#        }
-#        handle_action('lock', data)
-#
-#        del data['amount']
-#        data['product_id'] = '444'
-#        self.assertRaises(DataIntegrityError, handle_action, 'unlock', data)
+#        handle_action('lock_list', lock_data)
+#        self.reload_balance()
+#        self.assertEquals(available_before, self.balance.available_amount + balance_decrease)
+#        self.assertEquals(locked_before, self.balance.locked_amount - balance_decrease)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -127,26 +127,42 @@ class Handler(object):
         self._lock([data], curs)
         return response_ok()
 
+    def _unlock(self, data_list, curs=None):
+        balances = {}
+        # locking all balances
+        for data in data_list:
+            balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+            balances[balance.client_id] = balance
+
+        for data in data_list:
+            try:
+                lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+            except EmptyResultSetError:
+                raise DataIntegrityError(
+                    'Cannot unlock money for product %s: '
+                    'amount was not locked for this product'
+                    % data['product_id']
+                )
+
+            delete(curs, lock)
+
+            balance = balances[lock.client_id]
+            balance.available_amount += lock.amount
+            balance.locked_amount -= lock.amount #IGNORE:E1101
+
+            update(curs, balance)
+
     @transaction()
     @logged
     def unlock(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+        self._unlock([data], curs)
+        return response_ok()
 
-        try:
-            lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
-        except EmptyResultSetError:
-            raise DataIntegrityError(
-                'Cannot unlock money for product %s: '
-                'amount was not locked for this product'
-                % data['product_id']
-            )
-
-        delete(curs, lock)
-
-        balance.available_amount += lock.amount #IGNORE:E1101
-        balance.locked_amount -= lock.amount #IGNORE:E1101
-
-        update(curs, balance)
+    # TODO: implement array handling in helixcore
+    # then you can add record to action_log
+    @transaction()
+    def unlock_list(self, data, curs=None):
+        self._unlock(data['unlocks'], curs)
         return response_ok()
 
     @transaction()

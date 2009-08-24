@@ -105,6 +105,41 @@ class ValidatorTestCase(RootTestCase):
             }
         )
 
+    def test_unlock_list(self):
+        validate(
+            'unlock_list',
+            {
+                'unlocks': [
+                    {
+                        'client_id': 'id_one',
+                        'product_id': 'super-light 555',
+                    },
+                    {
+                        'client_id': 'id_two',
+                        'product_id': 'brb',
+                    }
+                ]
+            }
+        )
+
+    def test_unlock_list_invalid(self):
+        self.assertRaises(ValidationError, validate,
+            'unlock_list',
+            {
+                'unlocks': [
+                    {
+                        'client_id': 'id_one',
+                        'product_id': 'super-light 555',
+                    },
+                    {
+                        'client_id': 'id_two',
+                        'product_id': 'brb',
+                        'ERROR_HERE': 'bug',
+                    }
+                ]
+            }
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
