@@ -12,7 +12,7 @@ import helixbilling.logic.product_status as product_status
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff, get_date_filters
 from helper import compose_amount, decompose_amount
 from selectors import select_receipts, select_chargeoffs, select_balance_locks
-from action_log import logged
+from action_log import logged, logged_bulk
 
 
 class Handler(object):
@@ -155,13 +155,26 @@ class Handler(object):
     @transaction()
     @logged
     def unlock(self, data, curs=None):
+        """
+        data = {
+            'client_id': Text(),
+            'product_id': Text(),
+        }
+        """
         self._unlock([data], curs)
         return response_ok()
 
-    # TODO: implement array handling in helixcore
-    # then you can add record to action_log
     @transaction()
+    @logged_bulk
     def unlock_list(self, data, curs=None):
+        """
+        data = {
+            'unlocks': [
+                {'client_id': Text(), 'product_id': Text(),}
+                ...
+            ]
+        }
+        """
         self._unlock(data['unlocks'], curs)
         return response_ok()
 

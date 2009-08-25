@@ -1,18 +1,20 @@
-
 from helixcore.mapping.objects import Mapped
+
 
 class ActionLog(Mapped):
     __slots__ = [
         'id',
-        'client_id', 'action',
+        'client_ids', 'action',
         'request_date',
         'request', 'response',
     ]
     table = 'action_log'
 
+
 class Currency(Mapped):
     __slots__ = ['id', 'name', 'designation', 'cent_factor']
     table = 'currency'
+
 
 class Balance(Mapped):
     __slots__ = [
@@ -23,6 +25,7 @@ class Balance(Mapped):
     ]
     table = 'balance'
 
+
 class Receipt(Mapped):
     __slots__ = [
         'id',
@@ -30,6 +33,7 @@ class Receipt(Mapped):
         'created_date', 'amount'
     ]
     table = 'receipt'
+
 
 class Bonus(Mapped):
     __slots__ = [
@@ -39,6 +43,7 @@ class Bonus(Mapped):
     ]
     table = 'bonus'
 
+
 class BalanceLock(Mapped):
     __slots__ = [
         'id',
@@ -46,6 +51,7 @@ class BalanceLock(Mapped):
         'locked_date', 'amount'
     ]
     table = 'balance_lock'
+
 
 class ChargeOff(Mapped):
     __slots__ = [

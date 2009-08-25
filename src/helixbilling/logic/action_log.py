@@ -2,15 +2,35 @@ import cjson
 from helixcore.mapping.actions import insert
 from helixbilling.domain.objects import ActionLog
 
-def logged(fun):
+def logged(func):
     def decorated(obj, data, curs):
         client_id = data.get('client_id')
-        action_name = fun.__name__
-        request=cjson.encode(data)
+        client_ids = [client_id] if client_id else []
 
-        result = fun(obj, data, curs)
+        result = func(obj, data, curs)
 
-        log = ActionLog(client_id=client_id, action=action_name, request=request, response=cjson.encode(result))
-        insert(curs, log)
+        insert(curs, ActionLog(
+            client_ids=client_ids,
+            action=func.__name__,
+            request=cjson.encode(data),
+            response=cjson.encode(result)
+        ))
+        return result
+    return decorated
+
+def logged_bulk(func):
+    def decorated(obj, data, curs):
+        client_ids = []
+        for lst in data.values():
+            client_ids += [d['client_id'] for d in lst if 'client_id' in d]
+
+        result = func(obj, data, curs)
+
+        insert(curs, ActionLog(
+            client_ids=client_ids,
+            action=func.__name__,
+            request=cjson.encode(data),
+            response=cjson.encode(result)
+        ))
         return result
     return decorated

@@ -5,7 +5,7 @@ def apply(curs):
     '''
         CREATE TABLE action_log (
             id serial,
-            client_id varchar,
+            client_ids varchar[],
             action varchar NOT NULL,
             request_date timestamp with time zone NOT NULL DEFAULT now(),
             request text NOT NULL,
@@ -17,7 +17,7 @@ def apply(curs):
     print 'Creating index action_log_client_id_idx on action_log'
     curs.execute(
     '''
-        CREATE INDEX action_log_client_id_idx ON action_log(client_id);
+        CREATE INDEX action_log_client_id_idx ON action_log(client_ids);
     ''')
 
 def revert(curs):

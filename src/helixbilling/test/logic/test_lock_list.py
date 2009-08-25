@@ -2,8 +2,7 @@ import unittest
 
 from common import TestCaseWithBalance
 
-from helixcore.mapping.actions import insert, get, reload, update
-from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.mapping.actions import reload, update
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
@@ -100,32 +99,6 @@ class LockListTestCase(TestCaseWithBalance):
         }
         self.increase_balance(balance_increase)
         self.assertRaises(ActionNotAllowedError, handle_action, 'lock_list', lock_data)
-
-#        lock_data = {
-#            'locks': [
-#                {
-#                    'client_id': self.balance.client_id, #IGNORE:E1101
-#                    'product_id': 'super-light 555',
-#                    'amount': (20, 00),
-#                },
-#                {
-#                    'client_id': self.balance.client_id, #IGNORE:E1101
-#                    'product_id': 'super-light 556',
-#                    'amount': (30, 00),
-#                },
-#            ]
-#        }
-#        balance_increase = 8000
-#        balance_decrease = self.get_amount_sum(lock_data['locks'])
-#
-#        self.increase_balance(balance_increase)
-#        available_before = self.balance.available_amount
-#        locked_before = self.balance.locked_amount
-#
-#        handle_action('lock_list', lock_data)
-#        self.reload_balance()
-#        self.assertEquals(available_before, self.balance.available_amount + balance_decrease)
-#        self.assertEquals(locked_before, self.balance.locked_amount - balance_decrease)
 
 
 if __name__ == '__main__':
