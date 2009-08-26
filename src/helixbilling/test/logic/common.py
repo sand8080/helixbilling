@@ -13,7 +13,6 @@ class LogicTestCase(RootTestCase):
     '''
     abstract class. All logic test cases may inherit rom this
     '''
-
     def setUp(self):
         install.execute('reinit')
 
@@ -49,6 +48,7 @@ class LogicTestCase(RootTestCase):
     def _make_balance_passive(self, balance, curs=None):
         balance.active = 0
         actions.update(curs, balance)
+
 
 class TestCaseWithBalance(LogicTestCase):
     def setUp(self):

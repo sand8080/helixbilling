@@ -61,3 +61,11 @@ class ChargeOff(Mapped):
         'amount'
     ]
     table = 'charge_off'
+
+
+class ReceiptTotalView(Mapped):
+    __slots__ = [
+        'client_id',
+        'amount'
+    ]
+    table = 'receipt_total_view'
