@@ -2,7 +2,7 @@ import unittest
 
 from common import TestCaseWithBalance
 
-from helixcore.mapping.actions import reload, update
+from helixcore.mapping import actions
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
@@ -13,14 +13,14 @@ from helixbilling.logic.helper import compose_amount
 class LockListTestCase(TestCaseWithBalance):
     @transaction()
     def increase_balance(self, val, curs=None):
-        balance = reload(curs, self.balance, for_update=True)
+        balance = actions.reload(curs, self.balance, for_update=True)
         balance.available_amount += val
-        update(curs, balance)
+        actions.update(curs, balance)
         self.balance = balance #IGNORE:W0201
 
     @transaction()
     def reload_balance(self, curs=None):
-        self.balance = reload(curs, self.balance, for_update=True)
+        self.balance = actions.reload(curs, self.balance, for_update=True)
 
     def test_lock_ok(self):
         lock_data = {

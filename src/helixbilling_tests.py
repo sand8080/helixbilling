@@ -19,6 +19,10 @@ from helixbilling.test.logic.test_chargeoff import ChargeOffTestCase #IGNORE:W06
 from helixbilling.test.logic.test_receipt import ReceiptTestCase #IGNORE:W0611
 from helixbilling.test.logic.test_bonus import BonusTestCase #IGNORE:W0611
 
+from helixbilling.test.logic.test_receipt_total_view import ReceiptTotalViewTestCase #IGNORE:W0611
+from helixbilling.test.logic.test_bonus_total_view import BonusTotalViewTestCase #IGNORE:W0611
+from helixbilling.test.logic.test_chargeoff_total_view import ChargeoffTotalViewTestCase #IGNORE:W0611
+
 from helixbilling.test.logic.test_product_status import ProductStatusTestCase #IGNORE:W0611
 
 from helixbilling.test.logic.test_list_receipts import ListReceiptsTestCase #IGNORE:W0611

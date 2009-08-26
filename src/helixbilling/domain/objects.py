@@ -63,9 +63,20 @@ class ChargeOff(Mapped):
     table = 'charge_off'
 
 
-class ReceiptTotalView(Mapped):
+class MappedAmountView(Mapped):
     __slots__ = [
         'client_id',
         'amount'
     ]
+
+
+class ReceiptTotalView(MappedAmountView):
     table = 'receipt_total_view'
+
+
+class BonusTotalView(MappedAmountView):
+    table = 'bonus_total_view'
+
+
+class ChargeoffTotalView(MappedAmountView):
+    table = 'chargeoff_total_view'

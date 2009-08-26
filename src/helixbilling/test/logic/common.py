@@ -1,3 +1,5 @@
+import datetime
+
 from helixbilling.test.root_test import RootTestCase
 
 import install
@@ -49,10 +51,9 @@ class LogicTestCase(RootTestCase):
         balance.active = 0
         actions.update(curs, balance)
 
-
-class TestCaseWithBalance(LogicTestCase):
+class TestCaseWithCurrency(LogicTestCase):
     def setUp(self):
-        LogicTestCase.setUp(self)
+        super(TestCaseWithCurrency, self).setUp()
         self._fixture()
 
     @transaction()
@@ -61,9 +62,37 @@ class TestCaseWithBalance(LogicTestCase):
         actions.insert(curs, self.currency)
         self.currency = actions.reload(curs, self.currency)
 
+
+class TestCaseWithBalance(TestCaseWithCurrency):
+    def setUp(self):
+        super(TestCaseWithBalance, self).setUp()
+        self.balance = self.create_balance(client_id='123') #IGNORE:W0201
+
+    @transaction()
+    def create_balance(self, client_id, active=1, curs=None):
         balance = Balance(
-            client_id='123', active=1,
+            client_id=client_id,
+            active=active,
             currency_id=getattr(self.currency, 'id')
         )
-        self.balance = balance #IGNORE:W0201
-        actions.insert(curs, self.balance)
+        actions.insert(curs, balance)
+        return balance
+
+
+class ViewTestCase(TestCaseWithBalance):
+    @transaction()
+    def add_receipt(self, client_id, amount, curs=None):
+        actions.insert(curs, Receipt(client_id=client_id, amount=amount))
+
+    @transaction()
+    def add_bonus(self, client_id, amount, curs=None):
+        actions.insert(curs, Bonus(client_id=client_id, amount=amount))
+
+    @transaction()
+    def add_chargeoff(self, client_id, product_id, amount, curs=None):
+        actions.insert(curs, ChargeOff(client_id=client_id, product_id=product_id,
+            locked_date=datetime.datetime.now(), amount=amount))
+
+    def check_view(self, obj, expect_values):
+        for k, v in expect_values.iteritems():
+            self.assertEqual(v, getattr(obj, k))
