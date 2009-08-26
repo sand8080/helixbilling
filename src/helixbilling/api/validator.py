@@ -90,7 +90,7 @@ MAKE_BONUS = {
     'amount': nonnegative_amount_validator,
 }
 
-CHARGE_OFF = {
+CHARGEOFF = {
     'client_id': Text(),
     'product_id': Text(),
 }
@@ -143,7 +143,7 @@ action_to_scheme_map = {
     'unlock': Scheme(UNLOCK),
     'unlock_list': Scheme(UNLOCK_LIST),
 
-    'charge_off': Scheme(CHARGE_OFF),
+    'chargeoff': Scheme(CHARGEOFF),
 
     'product_status': Scheme(PRODUCT_STATUS),
     'list_receipts': Scheme(LIST_RECEIPTS),

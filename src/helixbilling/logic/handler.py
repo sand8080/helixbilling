@@ -220,7 +220,7 @@ class Handler(object):
 
     @transaction()
     @logged
-    def charge_off(self, data, curs=None):
+    def chargeoff(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
 
         try:

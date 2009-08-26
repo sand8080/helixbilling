@@ -41,12 +41,12 @@ class ChargeOffTestCase(LogicTestCase):
         actions.insert(curs, self.lock)
         self.lock = actions.reload(curs, self.lock)
 
-    def test_charge_off_ok(self):
+    def test_chargeoff_ok(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
             'product_id': self.product_id,
         }
-        handle_action('charge_off', data)
+        handle_action('chargeoff', data)
         balance = self._get_balance(data['client_id'])
 
         self.assertEquals(balance.locked_amount, 0)
@@ -56,19 +56,20 @@ class ChargeOffTestCase(LogicTestCase):
         #no lock
         self.assertRaises(EmptyResultSetError, self._get_lock, balance.client_id, data['product_id']) #IGNORE:E1101
 
-        chargeoff = self._get_charge_off(balance.client_id, data['product_id'])
+        chargeoff = self._get_chargeoff(balance.client_id, data['product_id'])
 
         self.assertEquals(chargeoff.client_id, data['client_id'])
         self.assertEquals(chargeoff.amount, self.lock.amount) #IGNORE:E1103
         self.assertEquals(chargeoff.locked_date, self.lock.locked_date) #IGNORE:E1103
         self.assertTrue(isinstance(chargeoff.chargeoff_date, datetime.datetime))
 
-    def test_charge_off_not_locked(self):
+    def test_chargeoff_not_locked(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
             'product_id': '555',
         }
-        self.assertRaises(ActionNotAllowedError, handle_action, 'charge_off', data)
+        self.assertRaises(ActionNotAllowedError, handle_action, 'chargeoff', data)
+
 
 if __name__ == '__main__':
     unittest.main()

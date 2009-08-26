@@ -55,8 +55,8 @@ class ProductStatusTestCase(LogicTestCase):
         handle_action('lock', data)
 
         del data['amount']
-        handle_action('charge_off', data)
-        chargeoff = self._get_charge_off(self.balance.client_id, data['product_id']) #IGNORE:E1101
+        handle_action('chargeoff', data)
+        chargeoff = self._get_chargeoff(self.balance.client_id, data['product_id']) #IGNORE:E1101
 
         response = handle_action('product_status', data)
         self.assertEquals(product_status.charged_off, response['product_status'])

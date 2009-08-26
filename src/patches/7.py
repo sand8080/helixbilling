@@ -1,9 +1,9 @@
 
 def apply(curs):
-    print 'Creating table charge_off'
+    print 'Creating table chargeoff'
     curs.execute(
     '''
-        CREATE TABLE charge_off (
+        CREATE TABLE chargeoff (
             id serial,
             client_id varchar NOT NULL,
             product_id varchar NOT NULL,
@@ -14,16 +14,16 @@ def apply(curs):
         )
     ''')
 
-    print 'Creating index chargeoff_client_id_product_id_idx on charge_off'
+    print 'Creating index chargeoff_client_id_product_id_idx on chargeoff'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX chargeoff_client_id_product_id_idx ON charge_off(client_id, product_id);
+        CREATE UNIQUE INDEX chargeoff_client_id_product_id_idx ON chargeoff(client_id, product_id);
     ''')
 
 def revert(curs):
-    print 'Dropping index chargeoff_client_id_product_id_idx on charge_off'
+    print 'Dropping index chargeoff_client_id_product_id_idx on chargeoff'
     curs.execute('DROP INDEX chargeoff_client_id_product_id_idx')
 
-    print 'Dropping table charge_off'
-    curs.execute('DROP TABLE charge_off')
+    print 'Dropping table chargeoff'
+    curs.execute('DROP TABLE chargeoff')
 

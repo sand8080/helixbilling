@@ -32,9 +32,9 @@ def apply(curs):
         AS
         SELECT
             balance.client_id,
-            COALESCE(sum(charge_off.amount), 0)
+            COALESCE(sum(chargeoff.amount), 0)
         FROM balance
-            left join charge_off on (balance.client_id = charge_off.client_id)
+            left join chargeoff on (balance.client_id = chargeoff.client_id)
         GROUP BY balance.client_id
     ''')
 

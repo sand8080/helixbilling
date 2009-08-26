@@ -60,7 +60,7 @@ class ChargeOff(Mapped):
         'locked_date', 'chargeoff_date',
         'amount'
     ]
-    table = 'charge_off'
+    table = 'chargeoff'
 
 
 class MappedAmountView(Mapped):

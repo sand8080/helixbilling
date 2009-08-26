@@ -43,7 +43,7 @@ class LogicTestCase(RootTestCase):
         return actions.get(curs, BalanceLock, And(Eq('client_id', client_id), Eq('product_id', product_id)))
 
     @transaction()
-    def _get_charge_off(self, client_id, product_id, curs=None):
+    def _get_chargeoff(self, client_id, product_id, curs=None):
         return actions.get(curs, ChargeOff, And(Eq('client_id', client_id), Eq('product_id', product_id)))
 
     @transaction()
