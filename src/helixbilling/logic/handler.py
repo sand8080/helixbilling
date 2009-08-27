@@ -114,17 +114,24 @@ class Handler(object):
             balance.locked_amount += lock.amount #IGNORE:E1101
             update(curs, balance)
 
-    # TODO: implement array handling in helixcore
-    # then you can add record to action_log
-    @transaction()
-    def lock_list(self, data, curs=None):
-        self._lock(data['locks'], curs)
-        return response_ok()
-
     @transaction()
     @logged
     def lock(self, data, curs=None):
         self._lock([data], curs)
+        return response_ok()
+
+    @transaction()
+    @logged_bulk
+    def lock_list(self, data, curs=None):
+        """
+        data = {
+            'locks': [
+                {'client_id': Text(), 'product_id': Text()}
+                ...
+            ]
+        }
+        """
+        self._lock(data['locks'], curs)
         return response_ok()
 
     def _unlock(self, data_list, curs=None):
@@ -218,27 +225,55 @@ class Handler(object):
         update(curs, balance)
         return response_ok()
 
+    def _chargeoff(self, data_list, curs=None):
+        balances = {}
+        for data in data_list:
+            balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+            balances[balance.client_id] = balance
+
+        for data in data_list:
+            try:
+                lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+            except EmptyResultSetError:
+                raise ActionNotAllowedError(
+                    'Cannot charge off money for product %s: '
+                    'amount was not locked for this product'
+                    % data['product_id']
+                )
+
+            chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock.amount, **data)
+
+            delete(curs, lock)
+            insert(curs, chargeoff)
+
+            balance.locked_amount -= lock.amount #IGNORE:E1101
+            update(curs, balance)
+
     @transaction()
     @logged
     def chargeoff(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+        """
+        data = {
+            'client_id': Text(),
+            'product_id': Text(),
+            'amount': (positive int, non negative int)
+        }
+        """
+        self._chargeoff([data], curs)
+        return response_ok()
 
-        try:
-            lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
-        except EmptyResultSetError:
-            raise ActionNotAllowedError(
-                'Cannot charge off money for product %s: '
-                'amount was not locked for this product'
-                % data['product_id']
-            )
-
-        chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock.amount, **data)
-
-        delete(curs, lock)
-        insert(curs, chargeoff)
-
-        balance.locked_amount -= lock.amount #IGNORE:E1101
-        update(curs, balance)
+    @transaction()
+    @logged_bulk
+    def chargeoff_list(self, data, curs=None):
+        """
+        data = {
+            'chargeoffs': [
+                {'client_id': Text(), 'product_id': Text(), 'amount': (positive int, non negative int)}
+                ...
+            ]
+        }
+        """
+        self._chargeoff(data['chargeoffs'], curs)
         return response_ok()
 
     #list operations

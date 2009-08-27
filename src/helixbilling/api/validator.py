@@ -95,6 +95,10 @@ CHARGEOFF = {
     'product_id': Text(),
 }
 
+CHARGEOFF_LIST = {
+    'chargeoffs': [CHARGEOFF]
+}
+
 # --- list operations ---
 LIST_RECEIPTS = {
     'client_id': Text(),
@@ -144,6 +148,7 @@ action_to_scheme_map = {
     'unlock_list': Scheme(UNLOCK_LIST),
 
     'chargeoff': Scheme(CHARGEOFF),
+    'chargeoff_list': Scheme(CHARGEOFF_LIST),
 
     'product_status': Scheme(PRODUCT_STATUS),
     'list_receipts': Scheme(LIST_RECEIPTS),

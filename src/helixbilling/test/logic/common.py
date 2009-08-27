@@ -78,8 +78,6 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         actions.insert(curs, balance)
         return balance
 
-
-class ViewTestCase(TestCaseWithBalance):
     @transaction()
     def add_receipt(self, client_id, amount, curs=None):
         actions.insert(curs, Receipt(client_id=client_id, amount=amount))
@@ -93,6 +91,8 @@ class ViewTestCase(TestCaseWithBalance):
         actions.insert(curs, ChargeOff(client_id=client_id, product_id=product_id,
             locked_date=datetime.datetime.now(), amount=amount))
 
+
+class ViewTestCase(TestCaseWithBalance):
     def check_view(self, obj, expect_values):
         for k, v in expect_values.iteritems():
             self.assertEqual(v, getattr(obj, k))

@@ -140,6 +140,42 @@ class ValidatorTestCase(RootTestCase):
             }
         )
 
+    def test_chargeoff_list(self):
+        validate(
+            'chargeoff_list',
+            {
+                'chargeoffs': [
+                    {
+                        'client_id': 'id_one',
+                        'product_id': 'super-light 555',
+                    },
+                    {
+                        'client_id': 'id_two',
+                        'product_id': 'brb',
+                    }
+                ]
+            }
+        )
+
+    def test_chargeoff_list_invalid(self):
+        self.assertRaises(ValidationError, validate,
+            'chargeoff_list',
+            {
+                'chargeoff': [
+                    {
+                        'client_id': 'id_one',
+                        'product_id': 'super-light 555',
+                    },
+                    {
+                        'client_id': 'id_two',
+                        'product_id': 'brb',
+                        'amount': 'BUG',
+                    }
+                ]
+            }
+        )
+
+
 
 if __name__ == '__main__':
     unittest.main()
