@@ -14,7 +14,7 @@ class LockListTestCase(TestCaseWithBalance):
     @transaction()
     def increase_balance(self, val, curs=None):
         balance = actions.reload(curs, self.balance, for_update=True)
-        balance.available_amount += val
+        balance.available_real_amount += val
         actions.update(curs, balance)
         self.balance = balance #IGNORE:W0201
 
@@ -46,12 +46,12 @@ class LockListTestCase(TestCaseWithBalance):
         balance_decrease = self.get_amount_sum(lock_data['locks'])
 
         self.increase_balance(balance_increase)
-        available_before = self.balance.available_amount
+        available_before = self.balance.available_real_amount
         locked_before = self.balance.locked_amount
 
         handle_action('lock_list', lock_data)
         self.reload_balance()
-        self.assertEquals(available_before, self.balance.available_amount + balance_decrease)
+        self.assertEquals(available_before, self.balance.available_real_amount + balance_decrease)
         self.assertEquals(locked_before, self.balance.locked_amount - balance_decrease)
 
     def test_unlock_ok(self):
@@ -69,13 +69,13 @@ class LockListTestCase(TestCaseWithBalance):
             ]
         }
         self.reload_balance()
-        available_before = self.balance.available_amount
+        available_before = self.balance.available_real_amount
         locked_before = self.balance.locked_amount
         handle_action('unlock_list', unlock_data)
         self.reload_balance()
         self.assertEqual(
             available_before + locked_before,
-            self.balance.available_amount + self.balance.locked_amount
+            self.balance.available_real_amount + self.balance.locked_amount
         )
 
     def get_amount_sum(self, data):

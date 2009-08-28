@@ -8,7 +8,8 @@ def apply(curs):
             client_id varchar NOT NULL,
             product_id varchar NOT NULL,
             locked_date timestamp with time zone NOT NULL DEFAULT now(),
-            amount int,
+            real_amount int,
+            virtual_amount int,
             PRIMARY KEY(id)
         )
     ''')

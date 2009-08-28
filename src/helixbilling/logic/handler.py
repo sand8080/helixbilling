@@ -49,6 +49,20 @@ class Handler(object):
 
     # --- balance ---
 
+    def _check_locking_order(self, data):
+        if 'locking_order' not in data:
+            return
+        locking_order = data['locking_order']
+        if locking_order is None:
+            return
+        else:
+            max_len = 2
+            if len(locking_order) > max_len:
+                raise ActionNotAllowedError('locking_order len > %d' % max_len)
+            locks_available = ['available_real_amount', 'available_virtual_amount']
+            if len([f for f in locking_order if f not in locks_available]) > 0:
+                raise ActionNotAllowedError('Only %s fields available to lock' % locks_available)
+
     @transaction()
     @logged
     def create_balance(self, data, curs=None):
@@ -57,6 +71,7 @@ class Handler(object):
         del data['currency_name']
         data['currency_id'] = currency.id
         data['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data['overdraft_limit'])
+        self._check_locking_order(data)
         balance = Balance(**data)
         insert(curs, balance)
         return response_ok()
@@ -64,12 +79,11 @@ class Handler(object):
     @transaction()
     @logged
     def modify_balance(self, data, curs=None):
+        self._check_locking_order(data)
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=True)
-
         if 'overdraft_limit' in data:
             currency = get_currency_by_balance(curs, balance)
             data['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data['overdraft_limit'])
-
         balance.update(data)
         update(curs, balance)
         return response_ok()
@@ -85,34 +99,50 @@ class Handler(object):
         receipt = Receipt(**data)
         insert(curs, receipt)
 
-        balance.available_amount += receipt.amount #IGNORE:E1101
+        balance.available_real_amount += receipt.amount #IGNORE:E1101
         update(curs, balance)
         return response_ok()
 
     def _lock(self, data_list, curs):
-        for data in data_list:
+        for data_orig in data_list:
+            data = dict(data_orig)
+
             balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
             currency = get_currency_by_balance(curs, balance)
-            data['amount'] = compose_amount(currency, 'lock', *data['amount'])
-            if balance.available_amount - data['amount'] < -balance.overdraft_limit:
-                raise ActionNotAllowedError(
-                    'Cannot lock %(1)s.%(2)s %(0)s: '
-                    'the amount violates current overdraft limit of %(3)s.%(4)s %(0)s. '
-                    'Available amount on balance is %(5)s.%(6)s %(0)s' %
-                    dict(zip(
-                        map(str, range(7)),
-                        tuple(currency.designation) +
-                        decompose_amount(currency, data['amount']) +
-                        decompose_amount(currency, balance.overdraft_limit) +
-                        decompose_amount(currency, balance.available_amount)
-                    ))
-                )
-            lock = BalanceLock(**data)
+            lock_amount = compose_amount(currency, 'lock', *data['amount'])
+            real_lock_amount, virtual_lock_amount = self._compute_locks(currency, balance, lock_amount)
+
+            del(data['amount'])
+            lock = BalanceLock(real_amount=real_lock_amount, virtual_amount=virtual_lock_amount, **data)
             insert(curs, lock)
 
-            balance.available_amount -= lock.amount #IGNORE:E1101
-            balance.locked_amount += lock.amount #IGNORE:E1101
+            balance.available_real_amount -= lock.real_amount #IGNORE:E1101
+            balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
+            balance.locked_amount += lock.real_amount #IGNORE:E1101
+            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
+
             update(curs, balance)
+
+    def _compute_locks(self, currency, balance, lock_amount):
+        """
+        returns (lock_real_amount, lock_virtual_amount)
+        excepiton raises if money not enought
+        """
+        if balance.available_real_amount + balance.available_virtual_amount - lock_amount < -balance.overdraft_limit:
+            raise ActionNotAllowedError(
+                'Cannot lock %(1)s.%(2)s %(0)s: '
+                'the amount violates current overdraft limit of %(3)s.%(4)s %(0)s. '
+                'Available amount on balance is %(5)s.%(6)s %(0)s' %
+                dict(zip(
+                    map(str, range(7)),
+                    tuple(currency.designation) +
+                    decompose_amount(currency, lock_amount) +
+                    decompose_amount(currency, balance.overdraft_limit) +
+                    decompose_amount(currency, balance.available_real_amount) +
+                    decompose_amount(currency, balance.available_virtual_amount)
+                ))
+            )
+        return lock_amount, 0
 
     @transaction()
     @logged
@@ -154,8 +184,10 @@ class Handler(object):
             delete(curs, lock)
 
             balance = balances[lock.client_id]
-            balance.available_amount += lock.amount
-            balance.locked_amount -= lock.amount #IGNORE:E1101
+            balance.available_real_amount += lock.real_amount
+            balance.available_virtual_amount += lock.virtual_amount
+            balance.locked_amount -= lock.real_amount #IGNORE:E1101
+            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
 
             update(curs, balance)
 
@@ -195,7 +227,7 @@ class Handler(object):
             lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
             response['product_status'] = product_status.locked
             response['locked_date'] = lock.locked_date
-            response['amount'] = decompose_amount(currency, lock.amount)
+            response['amount'] = decompose_amount(currency, lock.real_amount + lock.virtual_amount)
         except EmptyResultSetError: #IGNORE:W0704
             pass
 
@@ -221,7 +253,7 @@ class Handler(object):
         bonus = Bonus(**data)
         insert(curs, bonus)
 
-        balance.available_amount += bonus.amount #IGNORE:E1101
+        balance.available_real_amount += bonus.amount #IGNORE:E1101
         update(curs, balance)
         return response_ok()
 
@@ -241,12 +273,15 @@ class Handler(object):
                     % data['product_id']
                 )
 
-            chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock.amount, **data)
+            lock_amount = lock.real_amount + lock.virtual_amount
+            chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock_amount, **data)
 
             delete(curs, lock)
             insert(curs, chargeoff)
 
-            balance.locked_amount -= lock.amount #IGNORE:E1101
+            balance.locked_amount -= lock.real_amount #IGNORE:E1101
+            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
+
             update(curs, balance)
 
     @transaction()

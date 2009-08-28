@@ -14,7 +14,7 @@ class ChargeoffListTestCase(TestCaseWithBalance):
     @transaction()
     def increase_balance(self, val, curs=None):
         balance = actions.reload(curs, self.balance, for_update=True)
-        balance.available_amount += val
+        balance.available_real_amount += val
         actions.update(curs, balance)
         self.balance = balance #IGNORE:W0201
 
@@ -51,13 +51,13 @@ class ChargeoffListTestCase(TestCaseWithBalance):
             balance_decrease += helper.compose_amount(self.currency, '', *chargeoff_size)
 
         self.reload_balance()
-        self.assertEquals(balance_increase - balance_decrease, self.balance.available_amount)
+        self.assertEquals(balance_increase - balance_decrease, self.balance.available_real_amount)
         self.assertEquals(balance_decrease, self.balance.locked_amount)
 
         handle_action('chargeoff_list', chargeoff_data)
 
         self.reload_balance()
-        self.assertEquals(balance_increase - balance_decrease, self.balance.available_amount)
+        self.assertEquals(balance_increase - balance_decrease, self.balance.available_real_amount)
         self.assertEquals(locked_before, self.balance.locked_amount)
 
     def test_lock_failure(self):

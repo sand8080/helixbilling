@@ -33,6 +33,7 @@ class ValidatorTestCase(RootTestCase):
                 'active': 1,
                 'currency_name': 'USD',
                 'overdraft_limit': (500, 50),
+                'locking_order': ['available_real_amount', 'available_virtual_amount']
             }
         )
 
@@ -44,6 +45,17 @@ class ValidatorTestCase(RootTestCase):
                 'active': 1,
                 'currency_name': 'USD',
                 'overdraft_limit': (500, 50),
+            }
+        )
+
+    def test_modify_balance(self):
+        validate(
+            'modify_balance',
+            {
+                'client_id': 'U-23-52',
+                'active': 1,
+                'overdraft_limit': (500, 50),
+                'locking_order': None,
             }
         )
 

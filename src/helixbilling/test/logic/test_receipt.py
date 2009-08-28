@@ -38,7 +38,7 @@ class ReceiptTestCase(LogicTestCase):
         self.assertTrue(balance.id > 0)
         self.assertEquals(balance.client_id, data['client_id'])
         self.assertTrue(isinstance(balance.created_date, datetime.datetime))
-        self.assertEquals(balance.available_amount, 4588)
+        self.assertEquals(balance.available_real_amount, 4588)
         self.assertEquals(balance.locked_amount, 0)
 
         receipt = self._get_receipts(self.balance.client_id)[0] #IGNORE:E1101

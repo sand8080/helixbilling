@@ -23,7 +23,7 @@ class ProductStatusTestCase(LogicTestCase):
         balance = Balance(
             client_id='123', active=1,
             currency_id=self.currency.id, #IGNORE:E1101
-            available_amount=5000,
+            available_real_amount=5000,
             overdraft_limit=7000
         )
         self.balance = balance #IGNORE:W0201

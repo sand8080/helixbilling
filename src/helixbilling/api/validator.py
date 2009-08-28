@@ -47,12 +47,14 @@ CREATE_BALANCE = {
     'active': AnyOf(0, 1),
     'currency_name': Text(),
     'overdraft_limit': amount_validator,
+    Optional('locking_order'): AnyOf(None, [Text()])
 }
 
 MODIFY_BALANCE = {
     'client_id': Text(),
     Optional('active'): AnyOf(0, 1),
     Optional('overdraft_limit'): amount_validator,
+    Optional('locking_order'): AnyOf(None, [Text()])
 }
 
 # --- operations ---

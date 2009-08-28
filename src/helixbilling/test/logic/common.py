@@ -51,6 +51,7 @@ class LogicTestCase(RootTestCase):
         balance.active = 0
         actions.update(curs, balance)
 
+
 class TestCaseWithCurrency(LogicTestCase):
     def setUp(self):
         super(TestCaseWithCurrency, self).setUp()
@@ -76,6 +77,11 @@ class TestCaseWithBalance(TestCaseWithCurrency):
             currency_id=getattr(self.currency, 'id')
         )
         actions.insert(curs, balance)
+        return balance
+
+    @transaction()
+    def update_balance(self, balance, curs=None):
+        actions.update(curs, balance)
         return balance
 
     @transaction()

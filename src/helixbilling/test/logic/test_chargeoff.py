@@ -25,7 +25,7 @@ class ChargeOffTestCase(LogicTestCase):
         balance = Balance(
             client_id='PVH 123', active=1,
             currency_id=self.currency.id, #IGNORE:E1101
-            available_amount=5000, overdraft_limit=7000,
+            available_real_amount=5000, overdraft_limit=7000,
             locked_amount=2500
         )
         self.balance = balance #IGNORE:W0201
@@ -35,7 +35,7 @@ class ChargeOffTestCase(LogicTestCase):
         lock = BalanceLock(
             client_id=self.balance.client_id, #IGNORE:E1101
             product_id=self.product_id,
-            amount=2500
+            real_amount=2500, virtual_amount=0
         )
         self.lock = lock #IGNORE:W0201
         actions.insert(curs, self.lock)
@@ -51,7 +51,7 @@ class ChargeOffTestCase(LogicTestCase):
 
         self.assertEquals(balance.locked_amount, 0)
         #same available amount
-        self.assertEquals(balance.available_amount, self.balance.available_amount) #IGNORE:E1101
+        self.assertEquals(balance.available_real_amount, self.balance.available_real_amount) #IGNORE:E1101
 
         #no lock
         self.assertRaises(EmptyResultSetError, self._get_lock, balance.client_id, data['product_id']) #IGNORE:E1101
@@ -59,7 +59,7 @@ class ChargeOffTestCase(LogicTestCase):
         chargeoff = self._get_chargeoff(balance.client_id, data['product_id'])
 
         self.assertEquals(chargeoff.client_id, data['client_id'])
-        self.assertEquals(chargeoff.amount, self.lock.amount) #IGNORE:E1103
+        self.assertEquals(chargeoff.amount, self.lock.real_amount + self.lock.virtual_amount) #IGNORE:E1103
         self.assertEquals(chargeoff.locked_date, self.lock.locked_date) #IGNORE:E1103
         self.assertTrue(isinstance(chargeoff.chargeoff_date, datetime.datetime))
 
