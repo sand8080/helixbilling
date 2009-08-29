@@ -11,7 +11,7 @@ def apply(curs):
             created_date timestamp with time zone NOT NULL DEFAULT now(),
             available_real_amount int DEFAULT 0,
             available_virtual_amount int DEFAULT 0,
-            locking_order varchar DEFAULT NULL,
+            locking_order varchar[] DEFAULT NULL,
             locked_amount int DEFAULT 0,
             overdraft_limit int DEFAULT 0,
             PRIMARY KEY(id),

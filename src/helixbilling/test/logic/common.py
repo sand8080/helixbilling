@@ -80,6 +80,10 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         return balance
 
     @transaction()
+    def reload_balance(self, balance, curs=None):
+        return actions.reload(curs, balance, for_update=True)
+
+    @transaction()
     def update_balance(self, balance, curs=None):
         actions.update(curs, balance)
         return balance

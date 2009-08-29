@@ -30,6 +30,8 @@ from helixbilling.test.logic.test_list_receipts import ListReceiptsTestCase #IGN
 from helixbilling.test.logic.test_list_chargeoffs import ListChargeoffsTestCase #IGNORE:W0611
 from helixbilling.test.logic.test_list_balance_locks import ListBalanceLocksTestCase #IGNORE:W0611
 
+from helixbilling.test.logic.test_helpers import HelpersTestCase #IGNORE:W0611
+
 
 if __name__ == '__main__':
     unittest.main()

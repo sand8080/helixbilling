@@ -4,6 +4,7 @@ import re
 
 amount_validator = (NonNegative(int), NonNegative(int))
 nonnegative_amount_validator = (Positive(int), NonNegative(int))
+locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
 iso_datetime_validator = re.compile(r"""
     (\d{2,4})
@@ -47,14 +48,14 @@ CREATE_BALANCE = {
     'active': AnyOf(0, 1),
     'currency_name': Text(),
     'overdraft_limit': amount_validator,
-    Optional('locking_order'): AnyOf(None, [Text()])
+    Optional('locking_order'): locking_order_validator
 }
 
 MODIFY_BALANCE = {
     'client_id': Text(),
     Optional('active'): AnyOf(0, 1),
     Optional('overdraft_limit'): amount_validator,
-    Optional('locking_order'): AnyOf(None, [Text()])
+    Optional('locking_order'): locking_order_validator
 }
 
 # --- operations ---
@@ -87,7 +88,7 @@ PRODUCT_STATUS = {
     'product_id': Text(),
 }
 
-MAKE_BONUS = {
+ENROLL_BONUS = {
     'client_id': Text(),
     'amount': nonnegative_amount_validator,
 }
@@ -141,7 +142,7 @@ action_to_scheme_map = {
     'modify_balance': Scheme(MODIFY_BALANCE),
 
     'enroll_receipt': Scheme(ENROLL_RECEIPT),
-    'make_bonus': Scheme(MAKE_BONUS),
+    'enroll_bonus': Scheme(ENROLL_BONUS),
 
     'lock': Scheme(LOCK),
     'lock_list': Scheme(LOCK_LIST),

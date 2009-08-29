@@ -12,15 +12,15 @@ from helixbilling.logic.helper import compose_amount
 
 class LockListTestCase(TestCaseWithBalance):
     @transaction()
-    def increase_balance(self, val, curs=None):
+    def increase_balance(self, real_val, virtual_val, curs=None):
         balance = actions.reload(curs, self.balance, for_update=True)
-        balance.available_real_amount += val
+        balance.available_real_amount += real_val
+        balance.available_virtual_amount += virtual_val
         actions.update(curs, balance)
         self.balance = balance #IGNORE:W0201
 
-    @transaction()
-    def reload_balance(self, curs=None):
-        self.balance = actions.reload(curs, self.balance, for_update=True)
+    def get_amount_sum(self, data):
+        return reduce(lambda x, y: x + y, [compose_amount(self.currency, '', *d['amount']) for d in data])
 
     def test_lock_ok(self):
         lock_data = {
@@ -42,20 +42,28 @@ class LockListTestCase(TestCaseWithBalance):
                 },
             ]
         }
-        balance_increase = 9000
+        balance_real_increase = 5000
+        balance_virtual_increase = 4000
         balance_decrease = self.get_amount_sum(lock_data['locks'])
 
-        self.increase_balance(balance_increase)
-        available_before = self.balance.available_real_amount
+        self.increase_balance(balance_real_increase, balance_virtual_increase)
+        available_real_before = self.balance.available_real_amount
+        available_virtual_before = self.balance.available_virtual_amount
         locked_before = self.balance.locked_amount
 
         handle_action('lock_list', lock_data)
-        self.reload_balance()
-        self.assertEquals(available_before, self.balance.available_real_amount + balance_decrease)
+        self.balance = self.reload_balance(self.balance)
+        self.assertEquals(available_real_before, self.balance.available_real_amount + balance_real_increase)
+        self.assertEquals(available_virtual_before, self.balance.available_virtual_amount + balance_virtual_increase)
         self.assertEquals(locked_before, self.balance.locked_amount - balance_decrease)
 
     def test_unlock_ok(self):
         self.test_lock_ok()
+        self.balance = self.reload_balance(self.balance)
+        available_real_before = self.balance.available_real_amount
+        available_virtual_before = self.balance.available_virtual_amount
+        locked_before = self.balance.locked_amount
+
         unlock_data = {
             'unlocks': [
                 {
@@ -68,21 +76,17 @@ class LockListTestCase(TestCaseWithBalance):
                 },
             ]
         }
-        self.reload_balance()
-        available_before = self.balance.available_real_amount
-        locked_before = self.balance.locked_amount
         handle_action('unlock_list', unlock_data)
-        self.reload_balance()
+        self.balance = self.reload_balance(self.balance)
+
         self.assertEqual(
-            available_before + locked_before,
-            self.balance.available_real_amount + self.balance.locked_amount
+            available_real_before + available_virtual_before + locked_before,
+            self.balance.available_real_amount + self.balance.available_virtual_amount + self.balance.locked_amount
         )
 
-    def get_amount_sum(self, data):
-        return reduce(lambda x, y: x + y, [compose_amount(self.currency, '', *d['amount']) for d in data])
-
     def test_lock_failure(self):
-        balance_increase = 2500
+        balance_real_increase = 1500
+        balance_virtual_increase = 1000
         lock_data = {
             'locks': [
                 {
@@ -97,7 +101,7 @@ class LockListTestCase(TestCaseWithBalance):
                 },
             ]
         }
-        self.increase_balance(balance_increase)
+        self.increase_balance(balance_real_increase, balance_virtual_increase)
         self.assertRaises(ActionNotAllowedError, handle_action, 'lock_list', lock_data)
 
 

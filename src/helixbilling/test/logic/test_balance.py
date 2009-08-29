@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import unittest
 
@@ -8,7 +7,6 @@ from helixcore.mapping.actions import insert
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import ActionNotAllowedError
 from helixbilling.domain.objects import Currency
 
 
@@ -40,24 +38,6 @@ class BalanceTestCase(LogicTestCase):
         self.assertEquals(balance.currency_id, self._get_currency('USD').id)
         self.assertEquals(None, balance.locking_order)
 
-    def test_create_balance_invalid_locking_order(self):
-        data_wrong_fields = {
-            'client_id': 'U-23-52',
-            'active': 1,
-            'currency_name': 'USD',
-            'overdraft_limit': (500, 50),
-            'locking_order': ['fake_field']
-        }
-        self.assertRaises(ActionNotAllowedError, handle_action, 'create_balance', data_wrong_fields)
-        data_wrong_length = {
-            'client_id': 'U-23-52',
-            'active': 1,
-            'currency_name': 'USD',
-            'overdraft_limit': (500, 50),
-            'locking_order': ['available_real_amount', 'available_virtual_amount', 'available_real_amount']
-        }
-        self.assertRaises(ActionNotAllowedError, handle_action, 'create_balance', data_wrong_length)
-
     def test_modify_balance(self):
         data = {
             'client_id': 'U-23-52',
@@ -67,6 +47,8 @@ class BalanceTestCase(LogicTestCase):
             'locking_order': ['available_real_amount'],
         }
         handle_action('create_balance', data)
+        balance = self._get_balance(data['client_id'])
+        self.assertEquals(balance.locking_order, ['available_real_amount'])
 
         data = {
             'client_id': 'U-23-52',
@@ -80,6 +62,17 @@ class BalanceTestCase(LogicTestCase):
         self.assertEquals(balance.overdraft_limit, 99999)
         self.assertEquals(balance.active, data['active'])
         self.assertEquals(balance.locking_order, None)
+
+    def test_create_balance_failure(self):
+        data = {
+            'client_id': 52,
+            'active': 1,
+            'currency_name': 'USD',
+            'overdraft_limit': (500, 0),
+            'locking_order': ['available_real_amount'],
+            'FAKE': 'ERROR',
+        }
+        self.assertRaises(TypeError, handle_action, 'create_balance', data)
 
 
 if __name__ == '__main__':

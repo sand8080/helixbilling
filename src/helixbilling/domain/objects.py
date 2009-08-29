@@ -23,8 +23,9 @@ class Balance(Mapped):
         'created_date',
         'available_real_amount',
         'available_virtual_amount',
+        'overdraft_limit',
         'locking_order',
-        'locked_amount', 'overdraft_limit'
+        'locked_amount',
     ]
     table = 'balance'
 

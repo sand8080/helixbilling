@@ -41,10 +41,11 @@ class ValidatorTestCase(RootTestCase):
         self.assertRaises(ValidationError, validate,
             'create_balance',
             {
-                'client_id': 2,
+                'client_id': '2',
                 'active': 1,
                 'currency_name': 'USD',
                 'overdraft_limit': (500, 50),
+                'locking_order': ['ERROR_HERE']
             }
         )
 

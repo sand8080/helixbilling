@@ -9,8 +9,8 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import Currency, Balance
 import helixbilling.logic.product_status as product_status
 
-class ProductStatusTestCase(LogicTestCase):
 
+class ProductStatusTestCase(LogicTestCase):
     def setUp(self):
         LogicTestCase.setUp(self)
         self._fixture()
