@@ -98,10 +98,7 @@ def compute_locks(currency, balance, lock_amount):
     available_resources = get_available_resources(balance)
     amount_to_lock = lock_amount
     locked_resources = dict(zip(locking_order, [0 for _i in locking_order]))
-#    print 'ZZZZ', balance.locking_order
     for resource_name in locking_order:
-#        print 'XXXX resource_name', resource_name
-#        print 'XXXX available', available_resources
         if amount_to_lock <= 0:
             break
         available_to_lock = min(amount_to_lock, available_resources[resource_name])

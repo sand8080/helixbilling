@@ -192,7 +192,8 @@ class Handler(object):
             lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
             response['product_status'] = product_status.locked
             response['locked_date'] = lock.locked_date
-            response['amount'] = decompose_amount(currency, lock.real_amount + lock.virtual_amount)
+            response['real_amount'] = decompose_amount(currency, lock.real_amount)
+            response['virtual_amount'] = decompose_amount(currency, lock.virtual_amount)
         except EmptyResultSetError: #IGNORE:W0704
             pass
 
@@ -201,7 +202,8 @@ class Handler(object):
             response['product_status'] = product_status.charged_off
             response['locked_date'] = chargeoff.locked_date
             response['chargeoff_date'] = chargeoff.chargeoff_date
-            response['amount'] = decompose_amount(currency, chargeoff.amount)
+            response['real_amount'] = decompose_amount(currency, chargeoff.real_amount)
+            response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
         except EmptyResultSetError: #IGNORE:W0704
             pass
 
@@ -238,8 +240,8 @@ class Handler(object):
                     % data['product_id']
                 )
 
-            lock_amount = lock.real_amount + lock.virtual_amount
-            chargeoff = ChargeOff(locked_date=lock.locked_date, amount=lock_amount, **data)
+            chargeoff = ChargeOff(locked_date=lock.locked_date,
+                real_amount=lock.real_amount, virtual_amount=lock.virtual_amount, **data)
 
             delete(curs, lock)
             insert(curs, chargeoff)

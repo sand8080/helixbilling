@@ -28,11 +28,12 @@ def apply(curs):
     print 'Creating view chargeoff_total_view'
     curs.execute(
     '''
-        CREATE VIEW chargeoff_total_view (client_id, amount)
+        CREATE VIEW chargeoff_total_view (client_id, real_amount, virtual_amount)
         AS
         SELECT
             balance.client_id,
-            COALESCE(sum(chargeoff.amount), 0)
+            COALESCE(sum(chargeoff.real_amount), 0),
+            COALESCE(sum(chargeoff.virtual_amount), 0)
         FROM balance
             left join chargeoff on (balance.client_id = chargeoff.client_id)
         GROUP BY balance.client_id

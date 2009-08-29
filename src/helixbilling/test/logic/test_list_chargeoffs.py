@@ -33,14 +33,14 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
             '44',
             locked_start_date,
             chargedoff_start_date,
-            5099
+            5099, 0
         )
         self._make_chargeoff(
             self.balance.client_id, #IGNORE:E1101
             '45',
             datetime.datetime(2009, 2, 21, tzinfo=pytz.utc),
             datetime.datetime(2009, 3, 21, tzinfo=pytz.utc),
-            5000
+            5000, 0
         )
         self.good_chargeoffs = (
             self._make_chargeoff(
@@ -48,21 +48,21 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
                 '70',
                 locked_start_date,
                 chargedoff_start_date,
-                6200
+                6200, 0
             ),
             self._make_chargeoff(
                 self.balance.client_id, #IGNORE:E1101
                 '71',
                 locked_start_date + datetime.timedelta(days=3),
                 chargedoff_start_date + datetime.timedelta(days=3),
-                7060
+                7060, 0
             ),
             self._make_chargeoff(
                 self.balance.client_id,  #IGNORE:E1101
                 '72',
                 locked_end_date - datetime.timedelta(seconds=1),
                 chargedoff_end_date - datetime.timedelta(seconds=1),
-                7899
+                7899, 0
             )
         )
         # too late
@@ -71,7 +71,7 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
             '46',
             locked_end_date,
             chargedoff_end_date,
-            1080
+            1080, 0
         )
         self.locked_start_date = locked_start_date
         self.locked_end_date = locked_end_date
@@ -79,11 +79,12 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
         self.chargedoff_end_date = chargedoff_end_date
 
     @transaction()
-    def _make_chargeoff(self, client_id, product_id, locked_date, chargeoff_date, amount, curs=None):
+    def _make_chargeoff(self, client_id, product_id, locked_date, chargeoff_date, real_amount, virtual_amount, curs=None):
         chargeoff = ChargeOff(
             client_id=client_id, product_id=product_id,
             locked_date=locked_date, chargeoff_date=chargeoff_date,
-            amount=amount
+            real_amount=real_amount,
+            virtual_amount=virtual_amount
         ) #IGNORE:E1101
         insert(curs, chargeoff)
         return chargeoff
@@ -93,7 +94,8 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
         self.assertEquals(chargeoff_obj.product_id, sel_dict['product_id'])
         self.assertEquals(chargeoff_obj.locked_date, sel_dict['locked_date'])
         self.assertEquals(chargeoff_obj.chargeoff_date, sel_dict['chargeoff_date'])
-        self.assertEquals(chargeoff_obj.amount, sel_dict['amount'][0]*100 + sel_dict['amount'][1])
+        self.assertEquals(chargeoff_obj.real_amount, sel_dict['real_amount'][0]*100 + sel_dict['real_amount'][1])
+        self.assertEquals(chargeoff_obj.virtual_amount, sel_dict['virtual_amount'][0]*100 + sel_dict['virtual_amount'][1])
 
     def test_list_chargeoffs_ok(self):
         data = {

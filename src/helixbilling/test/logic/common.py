@@ -97,9 +97,9 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         actions.insert(curs, Bonus(client_id=client_id, amount=amount))
 
     @transaction()
-    def add_chargeoff(self, client_id, product_id, amount, curs=None):
+    def add_chargeoff(self, client_id, product_id, real_amount, virtual_amount, curs=None):
         actions.insert(curs, ChargeOff(client_id=client_id, product_id=product_id,
-            locked_date=datetime.datetime.now(), amount=amount))
+            locked_date=datetime.datetime.now(), real_amount=real_amount, virtual_amount=virtual_amount))
 
 
 class ViewTestCase(TestCaseWithBalance):

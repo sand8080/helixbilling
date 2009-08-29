@@ -29,7 +29,7 @@ def _select(curs, currency, cond, offset, limit, MAPPED_CLASS, FUNC_NAME, AMOUNT
     return (dicts, count)
 
 select_receipts = partial(_select, MAPPED_CLASS=Receipt, FUNC_NAME='select_receipts', AMOUNT_FIELDS=['amount'])
-select_chargeoffs = partial(_select, MAPPED_CLASS=ChargeOff, FUNC_NAME='select_chargeoffs', AMOUNT_FIELDS=['amount'])
+select_chargeoffs = partial(_select, MAPPED_CLASS=ChargeOff, FUNC_NAME='select_chargeoffs', AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 select_balance_locks = partial(_select, MAPPED_CLASS=BalanceLock, FUNC_NAME='select_balance_locks', AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 
 def get_count(curs, table, cond):

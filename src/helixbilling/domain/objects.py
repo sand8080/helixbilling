@@ -64,7 +64,7 @@ class ChargeOff(Mapped):
         'id',
         'client_id', 'product_id',
         'locked_date', 'chargeoff_date',
-        'amount'
+        'real_amount', 'virtual_amount'
     ]
     table = 'chargeoff'
 
@@ -84,5 +84,10 @@ class BonusTotalView(MappedAmountView):
     table = 'bonus_total_view'
 
 
-class ChargeoffTotalView(MappedAmountView):
+class ChargeoffTotalView(Mapped):
+    __slots__ = [
+        'client_id',
+        'real_amount',
+        'virtual_amount'
+    ]
     table = 'chargeoff_total_view'
