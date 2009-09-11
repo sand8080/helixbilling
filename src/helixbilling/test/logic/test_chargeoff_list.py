@@ -3,10 +3,10 @@ import unittest
 from common import TestCaseWithBalance
 
 from helixcore.mapping import actions
+from helixcore.server.exceptions import ActionNotAllowedError
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import ActionNotAllowedError
 from helixbilling.logic import helper
 
 

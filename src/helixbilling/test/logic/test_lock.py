@@ -5,10 +5,10 @@ from common import TestCaseWithBalance
 
 from helixcore.mapping import actions
 from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import ActionNotAllowedError, DataIntegrityError
 
 
 class LockTestCase(TestCaseWithBalance):

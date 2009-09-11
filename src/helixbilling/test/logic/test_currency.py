@@ -4,9 +4,9 @@ import unittest
 from common import LogicTestCase
 
 from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.server.exceptions import DataIntegrityError
 
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import DataIntegrityError
 
 
 class CurrencyTestCase(LogicTestCase):

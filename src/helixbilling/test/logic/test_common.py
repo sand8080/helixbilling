@@ -1,8 +1,8 @@
 from helixbilling.test.root_test import RootTestCase
 
-from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import UnknownActionError
 import unittest
+from helixcore.server.exceptions import UnknownActionError
+from helixbilling.logic.actions import handle_action
 
 
 class CommonLogicTestCase(RootTestCase):

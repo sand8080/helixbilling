@@ -4,10 +4,11 @@ import logging
 
 from helixbilling.conf.settings import server_http_addr, server_http_port
 
-from helixcore.server.api.api import Api as HelixApi
+from helixcore.server.api import Api as HelixApi
+from helixcore.server.response import response_error, response_app_error
+from helixcore.server.errors import RequestProcessingError
+
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.response import response_error, response_app_error
-from helixbilling.error.errors import RequestProcessingError
 from helixbilling.conf.log import logger
 from helixbilling.validator.validator import validate
 

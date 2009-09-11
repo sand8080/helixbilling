@@ -2,7 +2,7 @@ import unittest
 import datetime
 
 from helixbilling.logic.helper import compute_locks, get_available_resources
-from helixbilling.logic.exceptions import ActionNotAllowedError
+from helixcore.server.exceptions import ActionNotAllowedError
 from helixbilling.domain.objects import Currency, Balance
 from helixbilling.test.logic.common import RootTestCase
 

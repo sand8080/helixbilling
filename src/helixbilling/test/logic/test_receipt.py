@@ -3,8 +3,8 @@ import unittest
 
 from common import TestCaseWithBalance
 
+from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import DataIntegrityError, ActionNotAllowedError
 
 
 class ReceiptTestCase(TestCaseWithBalance):

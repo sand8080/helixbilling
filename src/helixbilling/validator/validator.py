@@ -1,5 +1,5 @@
 from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text
-from helixcore.server.error.errors import RequestProcessingError
+from helixcore.server.errors import RequestProcessingError
 import re
 
 amount_validator = (NonNegative(int), NonNegative(int))

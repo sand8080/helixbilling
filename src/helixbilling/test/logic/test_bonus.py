@@ -4,10 +4,10 @@ import unittest
 from common import LogicTestCase
 
 from helixcore.mapping.actions import insert
+from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.logic.exceptions import DataIntegrityError, ActionNotAllowedError
 from helixbilling.domain.objects import Currency, Balance
 
 class BonusTestCase(LogicTestCase):
