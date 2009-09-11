@@ -3,7 +3,6 @@ import unittest
 
 from helixcore.mapping.actions import insert
 
-import helixbilling.test.test_environment #IGNORE:W0611
 from common import TestCaseWithBalance
 from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action

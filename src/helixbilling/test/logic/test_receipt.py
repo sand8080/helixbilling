@@ -1,12 +1,11 @@
 import datetime
 import unittest
 
-import helixbilling.test.test_environment #IGNORE:W0611
-
 from common import TestCaseWithBalance
 
 from helixbilling.logic.actions import handle_action
 from helixbilling.logic.exceptions import DataIntegrityError, ActionNotAllowedError
+
 
 class ReceiptTestCase(TestCaseWithBalance):
     def test_enroll_receipt_ok(self):

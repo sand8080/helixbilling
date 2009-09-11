@@ -1,7 +1,7 @@
 import unittest
 
 from helixbilling.test.root_test import RootTestCase
-from helixbilling.api.validator import validate, ValidationError
+from helixbilling.validator.validator import validate, ValidationError
 
 
 class ValidatorTestCase(RootTestCase):

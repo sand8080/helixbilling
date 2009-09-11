@@ -10,6 +10,7 @@ from helixbilling.conf.db import transaction
 from helixbilling.logic.action_log import logged, logged_bulk
 from helixbilling.domain.objects import ActionLog
 
+
 class ActionLogTestCase(LogicTestCase):
     simple_request = {'client_id': 'mr. Jefferson', 'make': 'me', 'happy': 'now'}
     bulk_request = {'bulk': [

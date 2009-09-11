@@ -12,4 +12,4 @@ log_level = logging.DEBUG
 log_format = "%(asctime)s [%(levelname)s] - %(message)s"
 log_console = False
 
-import lock_order #IGNORE:W0611
+import lock_order #IGNORE:W0611 @UnusedImport

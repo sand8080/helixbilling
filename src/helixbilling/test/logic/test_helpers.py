@@ -1,12 +1,11 @@
 import unittest
 import datetime
 
-import helixbilling.test.test_environment #IGNORE:W0611
-
 from helixbilling.logic.helper import compute_locks, get_available_resources
 from helixbilling.logic.exceptions import ActionNotAllowedError
 from helixbilling.domain.objects import Currency, Balance
 from helixbilling.test.logic.common import RootTestCase
+
 
 class HelpersTestCase(RootTestCase):
     def __init__(self, *args, **kwargs): #IGNORE:W0231
