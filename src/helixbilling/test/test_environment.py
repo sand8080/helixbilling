@@ -5,3 +5,6 @@ import logging
 settings.log_filename = '/tmp/helixbilling.log'
 settings.log_level = logging.DEBUG
 settings.log_console = True
+
+import os
+patches_path = os.path.join(os.path.realpath(os.path.dirname(__file__)), '..', '..', 'patches')
