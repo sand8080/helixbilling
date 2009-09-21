@@ -3,7 +3,7 @@ import unittest
 from common import ViewTestCase
 
 from helixcore.mapping import actions
-from helixcore.db.cond import Eq
+from helixcore.db.sql import Eq
 
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import BonusTotalView

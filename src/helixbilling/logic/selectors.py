@@ -1,4 +1,5 @@
 import helixcore.db.query_builder as query_builder
+from helixcore.db import sql
 from helixcore.db.wrapper import fetchall_dicts, fetchone_dict
 
 from helixbilling.domain.objects import Receipt, ChargeOff, BalanceLock
@@ -33,7 +34,7 @@ select_chargeoffs = partial(_select, MAPPED_CLASS=ChargeOff, FUNC_NAME='select_c
 select_balance_locks = partial(_select, MAPPED_CLASS=BalanceLock, FUNC_NAME='select_balance_locks', AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 
 def get_count(curs, table, cond):
-    req, params = query_builder.select(table, columns=[query_builder.Columns.COUNT_ALL], cond=cond)
+    req, params = query_builder.select(table, columns=[sql.Columns.COUNT_ALL], cond=cond)
     logger.debug('select from %s: count SQL: "%s", params: %s' % (table, req, params))
     curs.execute(req, params)
     count_dict = fetchone_dict(curs)

@@ -2,7 +2,7 @@
 import iso8601
 
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.db.cond import Eq, And, NullLeaf, MoreEq, Less
+from helixcore.db.sql import Eq, And, NullLeaf, MoreEq, Less
 from helixcore.mapping.actions import get
 from helixcore.server.exceptions import  DataIntegrityError, ActionNotAllowedError, ApplicationError
 

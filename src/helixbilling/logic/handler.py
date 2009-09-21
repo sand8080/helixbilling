@@ -1,6 +1,6 @@
 from helixcore.mapping.actions import insert, update, delete
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.db.cond import Eq, And
+from helixcore.db.sql import Eq, And
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
 

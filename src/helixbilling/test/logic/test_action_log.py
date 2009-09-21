@@ -4,7 +4,7 @@ import cjson
 from common import LogicTestCase
 
 from helixcore.mapping.actions import get
-from helixcore.db.cond import Eq
+from helixcore.db.sql import Eq
 
 from helixbilling.conf.db import transaction
 from helixbilling.logic.action_log import logged, logged_bulk
@@ -31,8 +31,8 @@ class ActionLogTestCase(LogicTestCase):
         return self.simple_response
 
     @transaction()
-    def get_by_id(self, id, curs=None):
-        return get(curs, ActionLog, Eq('id', id))
+    def get_by_id(self, id_value, curs=None):
+        return get(curs, ActionLog, Eq('id', id_value))
 
     def test_logging(self):
         self.action_for_test(self.simple_request)

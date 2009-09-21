@@ -2,7 +2,7 @@ import datetime
 
 from helixbilling.test.root_test import RootTestCase
 
-from helixcore.db.cond import Eq, And
+from helixcore.db.sql import Eq, And
 from helixcore.mapping import actions
 
 from helixbilling.conf.db import transaction
