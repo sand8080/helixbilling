@@ -33,7 +33,7 @@ class Handler(object):
     @transaction()
     @logged
     def modify_currency(self, data, curs=None):
-        curr = get_currency_by_name(curs, data['name'], True)
+        curr = get_currency_by_name(curs, data['name'], for_update=True)
         curr.update(data)
         update(curs, curr)
         return response_ok()
@@ -41,7 +41,7 @@ class Handler(object):
     @transaction()
     @logged
     def delete_currency(self, data, curs=None):
-        curr = get_currency_by_name(curs, data['name'], True)
+        curr = get_currency_by_name(curs, data['name'], for_update=True)
         delete(curs, curr)
         return response_ok()
 
@@ -51,7 +51,7 @@ class Handler(object):
     @logged
     def create_balance(self, data, curs=None):
         data_copy = dict(data)
-        currency = get_currency_by_name(curs, data_copy['currency_name'], False)
+        currency = get_currency_by_name(curs, data_copy['currency_name'])
         del data_copy['currency_name']
         data_copy['currency_id'] = currency.id
         data_copy['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data_copy['overdraft_limit'])
@@ -93,7 +93,7 @@ class Handler(object):
             lock_amount = compose_amount(currency, 'lock', *data_copy['amount'])
             locks = compute_locks(currency, balance, lock_amount)
 
-            del(data_copy['amount'])
+            del data_copy['amount']
             lock = BalanceLock(
                 real_amount=locks['available_real_amount'],
                 virtual_amount=locks['available_virtual_amount'],
