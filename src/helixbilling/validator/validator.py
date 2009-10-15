@@ -1,6 +1,7 @@
-from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text
-from helixcore.server.errors import RequestProcessingError
 import re
+
+from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text
+from helixcore.server.api import ApiCall
 
 amount_validator = (NonNegative(int), NonNegative(int))
 nonnegative_amount_validator = (Positive(int), NonNegative(int))
@@ -25,6 +26,17 @@ iso_datetime_validator = re.compile(r"""
 
 PING = {
 }
+
+RESPONSE_STATUS_OK = {'status': 'ok'}
+
+RESPONSE_STATUS_ERROR = {
+    'status': 'error',
+    'category': Text(),
+    'message': Text(),
+}
+
+RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
+
 # --- currency ---
 ADD_CURRENCY = {
     'name': Text(),
@@ -131,50 +143,67 @@ LIST_BALANCE_LOCK = {
     'limit': Positive(int),
 }
 
-action_to_scheme_map = {
-    'ping': Scheme(PING),
+api_scheme = [
+    ApiCall('ping_request', Scheme(PING)),
+    ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'add_currency': Scheme(ADD_CURRENCY),
-    'modify_currency': Scheme(MODIFY_CURRENCY),
-    'delete_currency': Scheme(DELETE_CURRENCY),
+    # currency
+    ApiCall('add_currency_request', Scheme(ADD_CURRENCY)),
+    ApiCall('add_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'create_balance': Scheme(CREATE_BALANCE),
-    'modify_balance': Scheme(MODIFY_BALANCE),
+    ApiCall('modify_currency_request', Scheme(MODIFY_CURRENCY)),
+    ApiCall('modify_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'enroll_receipt': Scheme(ENROLL_RECEIPT),
-    'enroll_bonus': Scheme(ENROLL_BONUS),
+    ApiCall('delete_currency_request', Scheme(DELETE_CURRENCY)),
+    ApiCall('delete_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'lock': Scheme(LOCK),
-    'lock_list': Scheme(LOCK_LIST),
+    # balance
+    ApiCall('create_balance_request', Scheme(CREATE_BALANCE)),
+    ApiCall('create_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'unlock': Scheme(UNLOCK),
-    'unlock_list': Scheme(UNLOCK_LIST),
+    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE)),
+    ApiCall('modify_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'chargeoff': Scheme(CHARGEOFF),
-    'chargeoff_list': Scheme(CHARGEOFF_LIST),
+    # recipt
+    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
+    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    'product_status': Scheme(PRODUCT_STATUS),
-    'list_receipts': Scheme(LIST_RECEIPTS),
-    'list_chargeoffs': Scheme(LIST_CHARGEOFFS),
-    'list_balance_locks': Scheme(LIST_BALANCE_LOCK),
-}
+    # bonus
+    ApiCall('enroll_bonus_request', Scheme(ENROLL_BONUS)),
+    ApiCall('enroll_bonus_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-class ValidationError(RequestProcessingError):
-    def __init__(self, msg):
-        RequestProcessingError.__init__(self, RequestProcessingError.Categories.validation, msg)
+    # lock
+    ApiCall('lock_request', Scheme(LOCK)),
+    ApiCall('lock_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-def validate(action_name, data):
-    '''
-    Validates API request data by action name
-    @raise ValidationError: if validation failed for some reason
-    '''
-    scheme = action_to_scheme_map.get(action_name)
-    if scheme is None:
-        raise ValidationError('Unknown action: %s' % action_name)
+    ApiCall('lock_list_request', Scheme(LOCK_LIST)),
+    ApiCall('lock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    result = scheme.validate(data)
-    if not result:
-        raise ValidationError(
-            'Validation failed for action %s. Expected scheme: %s. Actual data: %s'
-            % (action_name, scheme, data)
-        )
+    # unlock
+    ApiCall('unlock_request', Scheme(UNLOCK)),
+    ApiCall('unlock_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('unlock_list_request', Scheme(UNLOCK_LIST)),
+    ApiCall('unlock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    # chargeoff
+    ApiCall('chargeoff_request', Scheme(CHARGEOFF)),
+    ApiCall('chargeoff_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('chargeoff_list_request', Scheme(CHARGEOFF_LIST)),
+    ApiCall('chargeoff_list_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    # product
+    ApiCall('product_status_request', Scheme(PRODUCT_STATUS)),
+    ApiCall('product_status_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    # list view operations
+    ApiCall('list_receipts_request', Scheme(LIST_RECEIPTS)),
+    ApiCall('list_receipts_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('list_chargeoffs_request', Scheme(LIST_CHARGEOFFS)),
+    ApiCall('list_chargeoffs_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('list_balance_locks_request', Scheme(LIST_BALANCE_LOCK)),
+    ApiCall('list_balance_locks_response', Scheme(RESPONSE_STATUS_ONLY)),
+]

@@ -1,12 +1,17 @@
 import unittest
 
+from helixcore.server.api import Api
+from helixcore.server.exceptions import ValidationError
+
 from helixbilling.test.root_test import RootTestCase
-from helixbilling.validator.validator import validate, ValidationError
+from helixbilling.validator.validator import api_scheme
 
 
 class ValidatorTestCase(RootTestCase):
+    api = Api(api_scheme)
+
     def test_add_currency(self):
-        validate(
+        self.api.validate_request(
             'add_currency',
             {
                 'name': 'USD',
@@ -16,7 +21,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_add_currency_invalid(self):
-        self.assertRaises(ValidationError, validate,
+        self.assertRaises(ValidationError, self.api.validate_request,
             'add_currency',
             {
                 'name': 'USD',
@@ -26,7 +31,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_create_balance(self):
-        validate(
+        self.api.validate_request(
             'create_balance',
             {
                 'client_id': 'U-23-52',
@@ -38,7 +43,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_create_balance_invalid(self):
-        self.assertRaises(ValidationError, validate,
+        self.assertRaises(ValidationError, self.api.validate_request,
             'create_balance',
             {
                 'client_id': '2',
@@ -50,7 +55,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_modify_balance(self):
-        validate(
+        self.api.validate_request(
             'modify_balance',
             {
                 'client_id': 'U-23-52',
@@ -61,7 +66,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_lock(self):
-        validate(
+        self.api.validate_request(
             'lock',
             {
                 'client_id': 'id',
@@ -71,7 +76,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_lock_invalid(self):
-        self.assertRaises(ValidationError, validate,
+        self.assertRaises(ValidationError, self.api.validate_request,
             'lock',
             {
                 'client_id': 'id',
@@ -81,7 +86,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_lock_list(self):
-        validate(
+        self.api.validate_request(
             'lock_list',
             {
                 'locks': [
@@ -100,7 +105,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_lock_list_invalid(self):
-        self.assertRaises(ValidationError, validate,
+        self.assertRaises(ValidationError, self.api.validate_request,
             'lock_list',
             {
                 'locks': [
@@ -119,7 +124,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_unlock_list(self):
-        validate(
+        self.api.validate_request(
             'unlock_list',
             {
                 'unlocks': [
@@ -136,7 +141,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_unlock_list_invalid(self):
-        self.assertRaises(ValidationError, validate,
+        self.assertRaises(ValidationError, self.api.validate_request,
             'unlock_list',
             {
                 'unlocks': [
@@ -154,7 +159,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_chargeoff_list(self):
-        validate(
+        self.api.validate_request(
             'chargeoff_list',
             {
                 'chargeoffs': [
@@ -171,7 +176,7 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_chargeoff_list_invalid(self):
-        self.assertRaises(ValidationError, validate,
+        self.assertRaises(ValidationError, self.api.validate_request,
             'chargeoff_list',
             {
                 'chargeoff': [
