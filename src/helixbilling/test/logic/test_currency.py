@@ -10,7 +10,6 @@ from helixbilling.logic.actions import handle_action
 
 
 class CurrencyTestCase(LogicTestCase):
-
     def __init__(self, methodName):
         LogicTestCase.__init__(self, methodName)
         self.typical_data = {

@@ -54,6 +54,18 @@ DELETE_CURRENCY = {
     'name': Text(),
 }
 
+GET_CURRENCIES = {}
+GET_CURRENCIES_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK, currencies=[
+        {
+            'name': Text(),
+            'designation': Text(),
+            'cent_factor': Positive(int)
+        }
+    ]),
+    RESPONSE_STATUS_ERROR
+)
+
 # --- balance ---
 CREATE_BALANCE = {
     'client_id': Text(),
@@ -68,6 +80,10 @@ MODIFY_BALANCE = {
     Optional('active'): AnyOf(0, 1),
     Optional('overdraft_limit'): amount_validator,
     Optional('locking_order'): locking_order_validator
+}
+
+DELETE_BALANCE = {
+    'client_id': Text()
 }
 
 # --- operations ---
@@ -99,6 +115,17 @@ PRODUCT_STATUS = {
     'client_id': Text(),
     'product_id': Text(),
 }
+
+PRODUCT_STATUS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'name': Text(),
+            'designation': Text(),
+            'cent_factor': Positive(int)
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 ENROLL_BONUS = {
     'client_id': Text(),
@@ -157,12 +184,18 @@ api_scheme = [
     ApiCall('delete_currency_request', Scheme(DELETE_CURRENCY)),
     ApiCall('delete_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
 
+    ApiCall('get_currencies_request', Scheme(GET_CURRENCIES)),
+    ApiCall('get_currencies_response', Scheme(GET_CURRENCIES_RESPONSE)),
+
     # balance
     ApiCall('create_balance_request', Scheme(CREATE_BALANCE)),
     ApiCall('create_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE)),
     ApiCall('modify_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_balance_request', Scheme(DELETE_BALANCE)),
+    ApiCall('delete_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # recipt
     ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),

@@ -1,4 +1,4 @@
-from helixcore.mapping.actions import insert, update, delete
+import helixcore.mapping.actions as mapping
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.db.sql import Eq, And
 from helixcore.server.response import response_ok
@@ -22,12 +22,11 @@ class Handler(object):
         return response_ok()
 
     # --- currency ---
-
     @transaction()
     @logged
     def add_currency(self, data, curs=None):
         curr = Currency(**data)
-        insert(curs, curr)
+        mapping.insert(curs, curr)
         return response_ok()
 
     @transaction()
@@ -35,18 +34,17 @@ class Handler(object):
     def modify_currency(self, data, curs=None):
         curr = get_currency_by_name(curs, data['name'], for_update=True)
         curr.update(data)
-        update(curs, curr)
+        mapping.update(curs, curr)
         return response_ok()
 
     @transaction()
     @logged
     def delete_currency(self, data, curs=None):
         curr = get_currency_by_name(curs, data['name'], for_update=True)
-        delete(curs, curr)
+        mapping.delete(curs, curr)
         return response_ok()
 
     # --- balance ---
-
     @transaction()
     @logged
     def create_balance(self, data, curs=None):
@@ -56,7 +54,7 @@ class Handler(object):
         data_copy['currency_id'] = currency.id
         data_copy['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data_copy['overdraft_limit'])
         balance = Balance(**data_copy)
-        insert(curs, balance)
+        mapping.insert(curs, balance)
         return response_ok()
 
     @transaction()
@@ -67,9 +65,17 @@ class Handler(object):
             currency = get_currency_by_balance(curs, balance)
             data['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data['overdraft_limit'])
         balance.update(data)
-        update(curs, balance)
+        mapping.update(curs, balance)
         return response_ok()
 
+    @transaction()
+    @logged
+    def delete_balance(self, data, curs=None):
+        obj = get_balance(curs, data['client_id'], active_only=False, for_update=True)
+        mapping.delete(curs, obj)
+        return response_ok()
+
+    # --- receipt ---
     @transaction()
     @logged
     def enroll_receipt(self, data, curs=None):
@@ -79,10 +85,10 @@ class Handler(object):
         data['amount'] = compose_amount(currency, 'receipt', *data['amount'])
 
         receipt = Receipt(**data)
-        insert(curs, receipt)
+        mapping.insert(curs, receipt)
 
         balance.available_real_amount += receipt.amount #IGNORE:E1101
-        update(curs, balance)
+        mapping.update(curs, balance)
         return response_ok()
 
     def _lock(self, data_list, curs):
@@ -99,14 +105,14 @@ class Handler(object):
                 virtual_amount=locks['available_virtual_amount'],
                 **data_copy
             )
-            insert(curs, lock)
+            mapping.insert(curs, lock)
 
             balance.available_real_amount -= lock.real_amount #IGNORE:E1101
             balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
             balance.locked_amount += lock.real_amount #IGNORE:E1101
             balance.locked_amount += lock.virtual_amount #IGNORE:E1101
 
-            update(curs, balance)
+            mapping.update(curs, balance)
 
     @transaction()
     @logged
@@ -145,7 +151,7 @@ class Handler(object):
                     % data['product_id']
                 )
 
-            delete(curs, lock)
+            mapping.delete(curs, lock)
 
             balance = balances[lock.client_id]
             balance.available_real_amount += lock.real_amount
@@ -153,7 +159,7 @@ class Handler(object):
             balance.locked_amount -= lock.real_amount #IGNORE:E1101
             balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
 
-            update(curs, balance)
+            mapping.update(curs, balance)
 
     @transaction()
     @logged
@@ -217,10 +223,10 @@ class Handler(object):
         data['amount'] = compose_amount(currency, 'bonus', *data['amount'])
 
         bonus = Bonus(**data)
-        insert(curs, bonus)
+        mapping.insert(curs, bonus)
 
         balance.available_virtual_amount += bonus.amount #IGNORE:E1101
-        update(curs, balance)
+        mapping.update(curs, balance)
         return response_ok()
 
     def _chargeoff(self, data_list, curs=None):
@@ -242,13 +248,13 @@ class Handler(object):
             chargeoff = ChargeOff(locked_date=lock.locked_date,
                 real_amount=lock.real_amount, virtual_amount=lock.virtual_amount, **data)
 
-            delete(curs, lock)
-            insert(curs, chargeoff)
+            mapping.delete(curs, lock)
+            mapping.insert(curs, chargeoff)
 
             balance.locked_amount -= lock.real_amount #IGNORE:E1101
             balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
 
-            update(curs, balance)
+            mapping.update(curs, balance)
 
     @transaction()
     @logged

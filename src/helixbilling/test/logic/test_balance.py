@@ -1,3 +1,5 @@
+from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import EmptyResultSetError
 import datetime
 import unittest
 
@@ -19,6 +21,10 @@ class BalanceTestCase(LogicTestCase):
     def _fixture(self, curs=None):
         insert(curs, Currency(name='USD', designation='$'))
 
+    def create_balance(self, data):
+        handle_action('create_balance', data)
+        return self._get_balance(data['client_id'])
+
     def test_create_balance(self):
         data = {
             'client_id': 'U-23-52',
@@ -26,9 +32,7 @@ class BalanceTestCase(LogicTestCase):
             'currency_name': 'USD',
             'overdraft_limit': (500, 50), # $ 500.00
         }
-        handle_action('create_balance', data)
-        balance = self._get_balance(data['client_id'])
-
+        balance = self.create_balance(data)
         self.assertTrue(balance.id > 0)
         self.assertEquals(balance.client_id, data['client_id'])
         self.assertTrue(isinstance(balance.created_date, datetime.datetime))
@@ -46,8 +50,7 @@ class BalanceTestCase(LogicTestCase):
             'overdraft_limit': (500, 0),
             'locking_order': ['available_real_amount'],
         }
-        handle_action('create_balance', data)
-        balance = self._get_balance(data['client_id'])
+        balance = self.create_balance(data)
         self.assertEquals(balance.locking_order, ['available_real_amount'])
 
         data = {
@@ -62,6 +65,21 @@ class BalanceTestCase(LogicTestCase):
         self.assertEquals(balance.overdraft_limit, 99999)
         self.assertEquals(balance.active, data['active'])
         self.assertEquals(balance.locking_order, None)
+
+    def test_delete_balance(self):
+        client_id = 'cli 54'
+        data = {
+            'client_id': client_id,
+            'active': 1,
+            'currency_name': 'USD',
+            'overdraft_limit': (500, 0),
+            'locking_order': ['available_real_amount'],
+        }
+        self.create_balance(data)
+
+        data = {'client_id': client_id}
+        handle_action('delete_balance', data)
+        self.assertRaises(EmptyResultSetError, self._get_balance, client_id)
 
     def test_create_balance_failure(self):
         data = {

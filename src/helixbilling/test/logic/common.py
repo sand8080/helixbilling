@@ -28,12 +28,22 @@ class LogicTestCase(RootTestCase):
         actions.insert(curs, Currency(name='USD', designation='$'))
 
     @transaction()
-    def _get_balance(self, client_id, curs=None):
-        return actions.get(curs, Balance, Eq('client_id', client_id))
-
-    @transaction()
     def _get_currency(self, name, curs=None):
         return actions.get(curs, Currency, Eq('name', name))
+
+    @transaction()
+    def _add_balance(self, client_id, currency_id, active=1, available_real_amount=0,
+        available_virtual_amount=0, overdraft_limit=0, locking_order=None,
+        locked_amount=0, curs=None):
+        if locking_order is None:
+            locking_order = ['available_real_amount', 'available_virtual_amount']
+        actions.insert(curs, Balance(client_id=client_id, currency_id=currency_id, active=active,
+            available_real_amount=available_real_amount, available_virtual_amount=available_virtual_amount,
+            overdraft_limit=overdraft_limit, locking_order=locking_order, locked_amount=locked_amount))
+
+    @transaction()
+    def _get_balance(self, client_id, curs=None):
+        return actions.get(curs, Balance, Eq('client_id', client_id))
 
     @transaction()
     def _get_receipts(self, client_id, curs=None):
