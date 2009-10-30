@@ -1,28 +1,9 @@
-import re
-
-from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text
+from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text, IsoDatetime
 from helixcore.server.api import ApiCall
 
 amount_validator = (NonNegative(int), NonNegative(int))
 nonnegative_amount_validator = (Positive(int), NonNegative(int))
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
-
-iso_datetime_validator = re.compile(r"""
-    (\d{2,4})
-    (?:-?([01]\d))?
-    (?:-?([0-3]\d))?
-    (?:T
-        ([0-2]\d)
-        (?::?([0-5]\d))?
-        (?::?([0-5]\d))?
-        (?:[\,\.](\d+))?
-    )?
-    (Z|
-        ([+-][0-2]\d)
-        (?::?([0-5]\d))?
-    )?
-    """
-)
 
 PING = {
 }
@@ -119,9 +100,24 @@ PRODUCT_STATUS = {
 PRODUCT_STATUS_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK,
         **{
-            'name': Text(),
-            'designation': Text(),
-            'cent_factor': Positive(int)
+            'product_status': 'unknown',
+        }
+    ),
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'product_status': 'locked',
+            'real_amount': amount_validator,
+            'virtual_amount': amount_validator,
+            'locked_date': IsoDatetime(),
+        }
+    ),
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'product_status': 'charged_off',
+            'real_amount': amount_validator,
+            'virtual_amount': amount_validator,
+            'locked_date': IsoDatetime(),
+            'chargeoff_date': IsoDatetime(),
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -144,8 +140,8 @@ CHARGEOFF_LIST = {
 # --- list operations ---
 LIST_RECEIPTS = {
     'client_id': Text(),
-    Optional('start_date'): iso_datetime_validator,
-    Optional('end_date'): iso_datetime_validator,
+    Optional('start_date'): IsoDatetime(),
+    Optional('end_date'): IsoDatetime(),
     'offset': NonNegative(int),
     'limit': Positive(int),
 }
@@ -153,10 +149,10 @@ LIST_RECEIPTS = {
 LIST_CHARGEOFFS = {
     'client_id': Text(),
     Optional('product_id'): Text(),
-    Optional('locked_start_date'): iso_datetime_validator,
-    Optional('locked_end_date'): iso_datetime_validator,
-    Optional('chargeoff_start_date'): iso_datetime_validator,
-    Optional('chargeoff_end_date'): iso_datetime_validator,
+    Optional('locked_start_date'): IsoDatetime(),
+    Optional('locked_end_date'): IsoDatetime(),
+    Optional('chargeoff_start_date'): IsoDatetime(),
+    Optional('chargeoff_end_date'): IsoDatetime(),
     'offset': NonNegative(int),
     'limit': Positive(int),
 }
@@ -164,8 +160,8 @@ LIST_CHARGEOFFS = {
 LIST_BALANCE_LOCK = {
     'client_id': Text(),
     Optional('product_id'): Text(),
-    Optional('locked_start_date'): iso_datetime_validator,
-    Optional('locked_end_date'): iso_datetime_validator,
+    Optional('locked_start_date'): IsoDatetime(),
+    Optional('locked_end_date'): IsoDatetime(),
     'offset': NonNegative(int),
     'limit': Positive(int),
 }
@@ -228,7 +224,7 @@ api_scheme = [
 
     # product
     ApiCall('product_status_request', Scheme(PRODUCT_STATUS)),
-    ApiCall('product_status_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),
 
     # list view operations
     ApiCall('list_receipts_request', Scheme(LIST_RECEIPTS)),
