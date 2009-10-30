@@ -1,5 +1,4 @@
-#@PydevCodeAnalysisIgnore
-import iso8601
+import iso8601 #@UnresolvedImport
 
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.db.sql import Eq, And, NullLeaf, MoreEq, Less
