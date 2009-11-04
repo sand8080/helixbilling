@@ -137,8 +137,8 @@ CHARGEOFF_LIST = {
     'chargeoffs': [CHARGEOFF]
 }
 
-# --- list operations ---
-LIST_RECEIPTS = {
+# --- view operations ---
+VIEW_RECEIPTS = {
     'client_id': Text(),
     Optional('start_date'): IsoDatetime(),
     Optional('end_date'): IsoDatetime(),
@@ -146,7 +146,21 @@ LIST_RECEIPTS = {
     'limit': Positive(int),
 }
 
-LIST_CHARGEOFFS = {
+VIEW_RECEIPTS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'total': NonNegative(int),
+            'receipts': [{
+                'client_id': Text(),
+                'amount': nonnegative_amount_validator,
+                'created_date': IsoDatetime(),
+            }],
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_CHARGEOFFS = {
     'client_id': Text(),
     Optional('product_id'): Text(),
     Optional('locked_start_date'): IsoDatetime(),
@@ -157,7 +171,24 @@ LIST_CHARGEOFFS = {
     'limit': Positive(int),
 }
 
-LIST_BALANCE_LOCK = {
+VIEW_CHARGEOFFS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'total': NonNegative(int),
+            'chargeoffs': [{
+                'client_id': Text(),
+                'product_id': Text(),
+                'real_amount': amount_validator,
+                'virtual_amount': amount_validator,
+                'locked_date': IsoDatetime(),
+                'chargeoff_date': IsoDatetime(),
+            }],
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_BALANCE_LOCKS = {
     'client_id': Text(),
     Optional('product_id'): Text(),
     Optional('locked_start_date'): IsoDatetime(),
@@ -165,6 +196,22 @@ LIST_BALANCE_LOCK = {
     'offset': NonNegative(int),
     'limit': Positive(int),
 }
+
+VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'total': NonNegative(int),
+            'balance_locks': [{
+                'client_id': Text(),
+                'product_id': Text(),
+                'real_amount': amount_validator,
+                'virtual_amount': amount_validator,
+                'locked_date': IsoDatetime(),
+            }],
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 api_scheme = [
     ApiCall('ping_request', Scheme(PING)),
@@ -193,7 +240,7 @@ api_scheme = [
     ApiCall('delete_balance_request', Scheme(DELETE_BALANCE)),
     ApiCall('delete_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    # recipt
+    # receipt
     ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
     ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),
 
@@ -227,12 +274,13 @@ api_scheme = [
     ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),
 
     # list view operations
-    ApiCall('list_receipts_request', Scheme(LIST_RECEIPTS)),
-    ApiCall('list_receipts_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
+    ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
 
-    ApiCall('list_chargeoffs_request', Scheme(LIST_CHARGEOFFS)),
-    ApiCall('list_chargeoffs_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
+    ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
 
-    ApiCall('list_balance_locks_request', Scheme(LIST_BALANCE_LOCK)),
-    ApiCall('list_balance_locks_response', Scheme(RESPONSE_STATUS_ONLY)),
+    #TODO: cover me in test_validator
+    ApiCall('view_balance_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
+    ApiCall('view_balance_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
 ]

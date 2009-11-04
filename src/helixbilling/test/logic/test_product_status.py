@@ -27,7 +27,6 @@ class ProductStatusTestCase(TestCaseWithBalance):
 
         del data['amount']
         response = handle_action('product_status', data)
-        print '####', response
         self.assertEquals(product_status.locked, response['product_status'])
         self.assertEquals(lock.locked_date, response['locked_date'])
         self.assertEquals(lock_amount, response['real_amount'])
@@ -47,7 +46,6 @@ class ProductStatusTestCase(TestCaseWithBalance):
         chargeoff = self._get_chargeoff(self.balance.client_id, data['product_id']) #IGNORE:E1101
 
         response = handle_action('product_status', data)
-        print '####', response
         self.assertEquals(product_status.charged_off, response['product_status'])
         self.assertEquals(chargeoff.locked_date, response['locked_date'])
         self.assertEquals(chargeoff.chargeoff_date, response['chargeoff_date'])
@@ -75,7 +73,6 @@ class ProductStatusTestCase(TestCaseWithBalance):
         del data['amount']
         data['product_id'] = '556'
         response = handle_action('product_status', data)
-        print '####', response
         self.assertEquals(product_status.unknown, response['product_status'])
 
 

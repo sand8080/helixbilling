@@ -9,7 +9,7 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import ChargeOff
 
 
-class ListChargeoffsTestCase(TestCaseWithBalance):
+class ViewChargeoffsTestCase(TestCaseWithBalance):
     good_chargeoffs = None
     locked_start_date = None
     locked_end_date = None
@@ -97,7 +97,7 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
         self.assertEquals(chargeoff_obj.real_amount, sel_dict['real_amount'][0]*100 + sel_dict['real_amount'][1])
         self.assertEquals(chargeoff_obj.virtual_amount, sel_dict['virtual_amount'][0]*100 + sel_dict['virtual_amount'][1])
 
-    def test_list_chargeoffs_ok(self):
+    def test_view_chargeoffs_ok(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
             'locked_start_date': self.locked_start_date.isoformat(),
@@ -108,16 +108,16 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
             'limit': 10,
         }
 
-        output = handle_action('list_chargeoffs', data)
-        self.assertEquals(3, output['total'])
+        response = handle_action('view_chargeoffs', data)
+        self.assertEquals(3, response['total'])
 
-        selected_chargeoffs = output['chargeoffs']
+        selected_chargeoffs = response['chargeoffs']
         self.assertEquals(3, len(selected_chargeoffs))
 
         for i, c in enumerate(self.good_chargeoffs):
             self._check_chargeoff(c, selected_chargeoffs[i])
 
-    def test_list_chargeoffs_paged(self):
+    def test_view_chargeoffs_paged(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101
             'locked_start_date': self.locked_start_date.isoformat(),
@@ -128,10 +128,10 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
             'limit': 2,
         }
 
-        output = handle_action('list_chargeoffs', data)
-        self.assertEquals(3, output['total'])
+        response = handle_action('view_chargeoffs', data)
+        self.assertEquals(3, response['total'])
 
-        selected_chargeoffs = output['chargeoffs']
+        selected_chargeoffs = response['chargeoffs']
         self.assertEquals(data['limit'], len(selected_chargeoffs))
 
         for i in xrange(data['limit']):
@@ -139,12 +139,13 @@ class ListChargeoffsTestCase(TestCaseWithBalance):
 
         data['offset'] = 2
         data['limit'] = 20
-        output = handle_action('list_chargeoffs', data)
-        self.assertEquals(output['total'], 3)
+        response = handle_action('view_chargeoffs', data)
+        self.assertEquals(response['total'], 3)
 
-        selected_chargeoffs = output['chargeoffs']
+        selected_chargeoffs = response['chargeoffs']
         self.assertEquals(1, len(selected_chargeoffs))
         self._check_chargeoff(self.good_chargeoffs[2], selected_chargeoffs[0])
+
 
 if __name__ == '__main__':
     unittest.main()

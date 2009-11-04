@@ -10,8 +10,8 @@ from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import Currency, Balance
 
-class BonusTestCase(LogicTestCase):
 
+class BonusTestCase(LogicTestCase):
     def setUp(self):
         LogicTestCase.setUp(self)
         self._fixture()
@@ -57,6 +57,7 @@ class BonusTestCase(LogicTestCase):
             'amount': (45, 88),
         }
         self.assertRaises(ActionNotAllowedError, handle_action, 'enroll_bonus', data)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -283,10 +283,10 @@ class Handler(object):
         self._chargeoff(data['chargeoffs'], curs)
         return response_ok()
 
-    #list operations
+    #view operations
 
     @transaction()
-    def list_receipts(self, data, curs=None):
+    def view_receipts(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
         currency = get_currency_by_balance(curs, balance)
 
@@ -300,7 +300,7 @@ class Handler(object):
         return response_ok(receipts=receipts, total=total)
 
     @transaction()
-    def list_chargeoffs(self, data, curs=None):
+    def view_chargeoffs(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
         currency = get_currency_by_balance(curs, balance)
 
@@ -318,7 +318,7 @@ class Handler(object):
         return response_ok(chargeoffs=chargeoffs, total=total)
 
     @transaction()
-    def list_balance_locks(self, data, curs=None):
+    def view_balance_locks(self, data, curs=None):
         balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
         currency = get_currency_by_balance(curs, balance)
 

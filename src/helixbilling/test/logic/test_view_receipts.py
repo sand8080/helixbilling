@@ -8,7 +8,7 @@ from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import Receipt
 
-class ListReceiptsTestCase(TestCaseWithBalance):
+class ViewReceiptsTestCase(TestCaseWithBalance):
     @transaction()
     def _make_receipt(self, client_id, created_date, amount, curs=None):
         receipt = Receipt(client_id=client_id, created_date=created_date, amount=amount) #IGNORE:E1101
@@ -37,7 +37,7 @@ class ListReceiptsTestCase(TestCaseWithBalance):
             'offset': 0,
             'limit': 10,
         }
-        output = handle_action('list_receipts', data)
+        output = handle_action('view_receipts', data)
         self.assertEquals(output['total'], 3)
 
         selected_receipts = output['receipts']
@@ -64,19 +64,19 @@ class ListReceiptsTestCase(TestCaseWithBalance):
             'offset': 0,
             'limit': 2,
         }
-        output = handle_action('list_receipts', data)
-        self.assertEquals(output['total'], 3)
+        response = handle_action('view_receipts', data)
+        self.assertEquals(response['total'], 3)
 
-        selected_receipts = output['receipts']
+        selected_receipts = response['receipts']
         self.assertEquals(len(selected_receipts), 2)
         self._check_receipt(r_low, selected_receipts[0])
         self._check_receipt(r_mid, selected_receipts[1])
 
         data['offset'] = 2
-        output = handle_action('list_receipts', data)
-        self.assertEquals(output['total'], 3)
+        response = handle_action('view_receipts', data)
+        self.assertEquals(response['total'], 3)
 
-        selected_receipts = output['receipts']
+        selected_receipts = response['receipts']
         self.assertEquals(len(selected_receipts), 1)
         self._check_receipt(r_hi, selected_receipts[0])
 
@@ -95,11 +95,12 @@ class ListReceiptsTestCase(TestCaseWithBalance):
             'offset': 0,
             'limit': 10,
         }
-        output = handle_action('list_receipts', data)
-        self.assertEquals(output['total'], 0)
+        response = handle_action('view_receipts', data)
+        self.assertEquals(response['total'], 0)
 
-        selected_receipts = output['receipts']
+        selected_receipts = response['receipts']
         self.assertEquals(len(selected_receipts), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

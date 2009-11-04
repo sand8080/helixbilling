@@ -1,4 +1,3 @@
-from helixcore.server.exceptions import DataIntegrityError
 from helixcore.db.wrapper import EmptyResultSetError
 import datetime
 import unittest

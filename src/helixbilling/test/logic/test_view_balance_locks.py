@@ -9,7 +9,7 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.domain.objects import BalanceLock
 
 
-class ListBalanceLocksTestCase(TestCaseWithBalance):
+class ViewBalanceLocksTestCase(TestCaseWithBalance):
     def setUp(self):
         TestCaseWithBalance.setUp(self)
         self.locked_start_date = datetime.datetime(2009, 4, 1, tzinfo=pytz.utc)
@@ -62,10 +62,10 @@ class ListBalanceLocksTestCase(TestCaseWithBalance):
             'offset': 0,
             'limit': 10,
         }
-        output = handle_action('list_balance_locks', data)
-        self.assertEquals(output['total'], 2)
+        response = handle_action('view_balance_locks', data)
+        self.assertEquals(response['total'], 2)
 
-        selected_balance_locks = output['balance_locks']
+        selected_balance_locks = response['balance_locks']
         self.assertEquals(2, len(selected_balance_locks))
         self._check_balance_lock(l_start, selected_balance_locks[0])
         self._check_balance_lock(l_middle, selected_balance_locks[1])
