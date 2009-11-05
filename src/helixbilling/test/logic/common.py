@@ -1,6 +1,6 @@
 import datetime
 
-from helixbilling.test.root_test import RootTestCase
+from helixbilling.test.db_based_test import DbBasedTestCase
 
 from helixcore.db.sql import Eq, And
 from helixcore.mapping import actions
@@ -8,21 +8,11 @@ from helixcore.mapping import actions
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
 
-from helixcore.install import install
-from helixbilling.conf.db import get_connection
-from helixbilling.conf.settings import patch_table_name
-from helixbilling.test.test_environment import patches_path
 
-
-class LogicTestCase(RootTestCase):
+class LogicTestCase(DbBasedTestCase):
     '''
     abstract class. All logic test cases may inherit rom this
     '''
-    def setUp(self):
-        print 'reinit'
-        print patch_table_name, patches_path
-        install.execute('reinit', get_connection, patch_table_name, patches_path)
-
     @transaction()
     def _add_currency(self, curs=None):
         actions.insert(curs, Currency(name='USD', designation='$'))
