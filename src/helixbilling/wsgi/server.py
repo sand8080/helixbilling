@@ -15,7 +15,7 @@ class Server(object):
     @staticmethod
     def run():
         wsgi.server(
-            api.tcp_listener((settings.server_http_addr, settings.server_http_port)),
+            api.tcp_listener((settings.server_host, settings.server_port)),
             Application(handle_action, api_scheme, logger),
             max_size=5000,
             log=Server.ServerLog()

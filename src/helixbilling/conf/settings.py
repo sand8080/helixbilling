@@ -3,8 +3,8 @@ DSN = 'dbname=_DBC_DBNAME_ host=_DBC_DBSERVER_ user=_DBC_DBUSER_ password=_DBC_D
 
 patch_table_name = 'patches'
 
-server_http_addr = '0.0.0.0'
-server_http_port = 9999
+server_host = 'localhost'
+server_port = 9998
 
 import logging
 log_filename = '/var/log/helixbilling.log'

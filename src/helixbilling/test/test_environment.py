@@ -5,6 +5,7 @@ settings.DSN = 'dbname=test_helixbilling host=localhost user=helixtest password=
 import logging
 settings.log_filename = '/tmp/helixbilling.log'
 settings.log_level = logging.DEBUG
+settings.log_level = logging.ERROR
 settings.log_console = True
 
 import os

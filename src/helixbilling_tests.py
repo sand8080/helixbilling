@@ -1,6 +1,6 @@
 import unittest
 
-from helixbilling.test.wsgi.test_server_loading import ServerLoadingTestCase #IGNORE:W0611 @UnusedImport
+from helixbilling.test.wsgi.test_application_loading import ApplicationTestCase #IGNORE:W0611 @UnusedImport
 
 from helixbilling.test.validator.test_validator import ValidatorTestCase #IGNORE:W0611 @UnusedImport
 
