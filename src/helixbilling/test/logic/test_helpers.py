@@ -4,7 +4,7 @@ import datetime
 from helixbilling.logic.helper import compute_locks, get_available_resources
 from helixcore.server.exceptions import ActionNotAllowedError
 from helixbilling.domain.objects import Currency, Balance
-from helixbilling.test.logic.common import RootTestCase
+from helixbilling.test.root_test import RootTestCase
 
 
 class HelpersTestCase(RootTestCase):

@@ -32,7 +32,7 @@ class ApplicationTestCase(DbBasedTestCase):
 
     def test_ping_ok(self):
         self.check_status_ok(self.ping())
-        self.ping_loading(repeats=500)
+        self.ping_loading(repeats=200)
 
 #    def test_invalid_request(self):
 #        raw_result = self.cli.request({'action': 'fakeaction'})
