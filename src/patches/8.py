@@ -1,29 +1,30 @@
 
 def apply(curs):
-    print 'Creating table action_log'
+    print 'Creating table chargeoff'
     curs.execute(
     '''
-        CREATE TABLE action_log (
+        CREATE TABLE chargeoff (
             id serial,
-            client_ids varchar[],
-            action varchar NOT NULL,
-            request_date timestamp with time zone NOT NULL DEFAULT now(),
-            request text NOT NULL,
-            response text NOT NULL,
+            client_id varchar NOT NULL,
+            product_id varchar NOT NULL,
+            locked_date timestamp with time zone NOT NULL,
+            chargeoff_date timestamp with time zone NOT NULL DEFAULT now(),
+            real_amount int,
+            virtual_amount int,
             PRIMARY KEY(id)
         )
     ''')
 
-    print 'Creating index action_log_client_id_idx on action_log'
+    print 'Creating index chargeoff_client_id_product_id_idx on chargeoff'
     curs.execute(
     '''
-        CREATE INDEX action_log_client_id_idx ON action_log(client_ids);
+        CREATE UNIQUE INDEX chargeoff_client_id_product_id_idx ON chargeoff(client_id, product_id);
     ''')
 
 def revert(curs):
-    print 'Dropping index action_log_client_id_idx on action_log'
-    curs.execute('DROP INDEX action_log_client_id_idx')
+    print 'Dropping index chargeoff_client_id_product_id_idx on chargeoff'
+    curs.execute('DROP INDEX chargeoff_client_id_product_id_idx')
 
-    print 'Dropping table action_log'
-    curs.execute('DROP TABLE action_log')
+    print 'Dropping table chargeoff'
+    curs.execute('DROP TABLE chargeoff')
 

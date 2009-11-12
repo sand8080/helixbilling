@@ -1,50 +1,29 @@
+
 def apply(curs):
-    print 'Creating view receipt_total_view'
+    print 'Creating table action_log'
     curs.execute(
     '''
-        CREATE VIEW receipt_total_view (client_id, amount)
-        AS
-        SELECT
-            balance.client_id,
-            COALESCE(sum(receipt.amount), 0)
-        FROM balance
-            left join receipt on (balance.client_id = receipt.client_id)
-        GROUP BY balance.client_id
+        CREATE TABLE action_log (
+            id serial,
+            client_ids varchar[],
+            action varchar NOT NULL,
+            request_date timestamp with time zone NOT NULL DEFAULT now(),
+            request text NOT NULL,
+            response text NOT NULL,
+            PRIMARY KEY(id)
+        )
     ''')
 
-    print 'Creating view bonus_total_view'
+    print 'Creating index action_log_client_id_idx on action_log'
     curs.execute(
     '''
-        CREATE VIEW bonus_total_view (client_id, amount)
-        AS
-        SELECT
-            balance.client_id,
-            COALESCE(sum(bonus.amount), 0)
-        FROM balance
-            left join bonus on (balance.client_id = bonus.client_id)
-        GROUP BY balance.client_id
-    ''')
-
-    print 'Creating view chargeoff_total_view'
-    curs.execute(
-    '''
-        CREATE VIEW chargeoff_total_view (client_id, real_amount, virtual_amount)
-        AS
-        SELECT
-            balance.client_id,
-            COALESCE(sum(chargeoff.real_amount), 0),
-            COALESCE(sum(chargeoff.virtual_amount), 0)
-        FROM balance
-            left join chargeoff on (balance.client_id = chargeoff.client_id)
-        GROUP BY balance.client_id
+        CREATE INDEX action_log_client_id_idx ON action_log(client_ids);
     ''')
 
 def revert(curs):
-    print 'Dropping view bonus_total_view'
-    curs.execute('DROP VIEW bonus_total_view')
+    print 'Dropping index action_log_client_id_idx on action_log'
+    curs.execute('DROP INDEX action_log_client_id_idx')
 
-    print 'Dropping view receipt_total_view'
-    curs.execute('DROP VIEW receipt_total_view')
+    print 'Dropping table action_log'
+    curs.execute('DROP TABLE action_log')
 
-    print 'Dropping view chargeoff_total_view'
-    curs.execute('DROP VIEW chargeoff_total_view')

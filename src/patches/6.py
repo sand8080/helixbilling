@@ -1,27 +1,29 @@
 
 def apply(curs):
-    print 'Creating table bonus'
+    print 'Creating table balance_lock'
     curs.execute(
     '''
-        CREATE TABLE bonus (
+        CREATE TABLE balance_lock (
             id serial,
             client_id varchar NOT NULL,
-            created_date timestamp with time zone NOT NULL DEFAULT now(),
-            amount int,
+            product_id varchar NOT NULL,
+            locked_date timestamp with time zone NOT NULL DEFAULT now(),
+            real_amount int,
+            virtual_amount int,
             PRIMARY KEY(id)
         )
     ''')
 
-    print 'Creating index bonus_client_id_idx on bonus'
+    print 'Creating index balance_lock_client_id_product_id_idx on balance_lock'
     curs.execute(
     '''
-        CREATE INDEX bonus_client_id_idx ON bonus(client_id);
+        CREATE UNIQUE INDEX balance_lock_client_id_product_id_idx ON balance_lock(client_id, product_id);
     ''')
 
 def revert(curs):
-    print 'Dropping index bonus_client_id_idx on bonus'
-    curs.execute('DROP INDEX bonus_client_id_idx')
+    print 'Dropping index balance_lock_client_id_product_id_idx on balance_lock'
+    curs.execute('DROP INDEX balance_lock_client_id_product_id_idx')
 
-    print 'Dropping table bonus'
-    curs.execute('DROP TABLE bonus')
+    print 'Dropping table balance_lock'
+    curs.execute('DROP TABLE balance_lock')
 

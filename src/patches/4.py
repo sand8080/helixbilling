@@ -1,27 +1,34 @@
 
 def apply(curs):
-    print 'Creating table receipt'
+    print 'Creating table balance'
     curs.execute(
     '''
-        CREATE TABLE receipt (
+        CREATE TABLE balance (
             id serial,
+            active smallint NOT NULL DEFAULT 1,
             client_id varchar NOT NULL,
+            currency_id int NOT NULL,
             created_date timestamp with time zone NOT NULL DEFAULT now(),
-            amount int,
-            PRIMARY KEY(id)
+            available_real_amount int DEFAULT 0,
+            available_virtual_amount int DEFAULT 0,
+            locking_order varchar[] DEFAULT NULL,
+            locked_amount int DEFAULT 0,
+            overdraft_limit int DEFAULT 0,
+            PRIMARY KEY(id),
+            FOREIGN KEY(currency_id) REFERENCES currency(id) ON DELETE RESTRICT
         )
     ''')
 
-    print 'Creating index receipt_client_id_idx on receipt'
+    print 'Creating index balance_client_id_idx on balance'
     curs.execute(
     '''
-        CREATE INDEX receipt_client_id_idx ON receipt(client_id);
+        CREATE UNIQUE INDEX balance_client_id_idx ON balance(client_id);
     ''')
 
 def revert(curs):
-    print 'Dropping index receipt_client_id_idx on receipt'
-    curs.execute('DROP INDEX receipt_client_id_idx')
+    print 'Dropping index balance_client_id_idx on balance'
+    curs.execute('DROP INDEX balance_client_id_idx')
 
-    print 'Dropping table receipt'
-    curs.execute('DROP TABLE receipt')
+    print 'Dropping table balance'
+    curs.execute('DROP TABLE balance')
 

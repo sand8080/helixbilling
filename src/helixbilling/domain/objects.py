@@ -1,6 +1,11 @@
 from helixcore.mapping.objects import Mapped
 
 
+class BillingManager(Mapped):
+    __slots__ = ['id', 'login', 'password']
+    table = 'billing_manager'
+
+
 class ActionLog(Mapped):
     __slots__ = [
         'id',
