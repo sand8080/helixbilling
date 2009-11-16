@@ -21,23 +21,42 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response(action_name, {'status': 'error', 'category': 'test', 'message': 'happens'})
         self.assertRaises(ValidationError, self.api.validate_response, action_name, {'status': 'error', 'category': 'test'})
 
-    def test_add_currency(self):
-        self.api.validate_request('add_currency', {'name': 'USD', 'designation': '$', 'cent_factor': 100})
-        self.validate_status_response('add_currency')
+    def test_add_billing_manager(self):
+        self.api.validate_request('add_billing_manager', {'login': 'admin', 'password': 'crypted twice'})
+        self.validate_status_response('add_billing_manager')
 
-    def test_add_currency_invalid(self):
-        self.assertRaises(ValidationError, self.api.validate_request,
-            'add_currency', {'name': 'USD', 'designation': '$', 'cent_factor': 0})
+    def test_add_billing_manager_invalid(self):
+        self.assertRaises(ValidationError, self.api.validate_request, 'add_billing_manager', {'login': 'admin'})
+        self.assertRaises(ValidationError, self.api.validate_request, 'add_billing_manager', {'password': 'admin'})
+        self.assertRaises(ValidationError, self.api.validate_request, 'add_billing_manager', {})
 
-    def test_modify_currency(self):
-        self.api.validate_request('modify_currency', {'name': 'USD', 'designation': '$', 'cent_factor': 100})
-        self.api.validate_request('modify_currency', {'name': 'USD', 'designation': '$'})
-        self.api.validate_request('modify_currency', {'name': 'USD'})
-        self.validate_status_response('modify_currency')
+    def test_modify_billing_manager(self):
+        self.api.validate_request('modify_billing_manager', {'login': 'log', 'password': 'pi', 'new_login': 'new_log'})
+        self.api.validate_request('modify_billing_manager', {'login': 'log', 'password': 'pi', 'new_login': 'new_log', 'new_password': 'pw'})
+        self.api.validate_request('modify_billing_manager', {'login': 'log', 'password': 'pi'})
+        self.validate_status_response('modify_billing_manager')
 
-    def test_delete_currency(self):
-        self.api.validate_request('delete_currency', {'name': 'USD'})
-        self.validate_status_response('delete_currency')
+    def test_delete_billing_manager(self):
+        self.api.validate_request('delete_billing_manager', {'login': 'log', 'password': 'pi'})
+        self.validate_status_response('delete_billing_manager')
+
+#    def test_add_currency(self):
+#        self.api.validate_request('add_currency', {'name': 'USD', 'designation': '$', 'cent_factor': 100})
+#        self.validate_status_response('add_currency')
+#
+#    def test_add_currency_invalid(self):
+#        self.assertRaises(ValidationError, self.api.validate_request,
+#            'add_currency', {'name': 'USD', 'designation': '$', 'cent_factor': 0})
+#
+#    def test_modify_currency(self):
+#        self.api.validate_request('modify_currency', {'name': 'USD', 'new_designation': '$', 'new_cent_factor': 100})
+#        self.api.validate_request('modify_currency', {'name': 'USD', 'new_designation': '$'})
+#        self.api.validate_request('modify_currency', {'name': 'USD'})
+#        self.validate_status_response('modify_currency')
+#
+#    def test_delete_currency(self):
+#        self.api.validate_request('delete_currency', {'name': 'USD'})
+#        self.validate_status_response('delete_currency')
 
     def test_get_currencies(self):
         self.api.validate_request('get_currencies', {})
@@ -52,7 +71,7 @@ class ValidatorTestCase(RootTestCase):
             {
                 'client_id': 'U-23-52',
                 'active': 1,
-                'currency_name': 'USD',
+                'currency_name': 'YYY',
                 'overdraft_limit': (500, 50),
                 'locking_order': ['available_real_amount', 'available_virtual_amount']
             }

@@ -1,3 +1,5 @@
+from functools import partial
+
 import helixcore.mapping.actions as mapping
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.db.sql import Eq, And
@@ -5,13 +7,23 @@ from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
+from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, BillingManager
 import helixbilling.logic.product_status as product_status
+from helixbilling.domain import security
 
 from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff, get_date_filters
 from helper import compose_amount, decompose_amount, compute_locks
-from selectors import select_receipts, select_chargeoffs, select_balance_locks
 from action_log import logged, logged_bulk
+import selector
+
+
+def authentificate(method):
+    def decroated(self, data, curs):
+        data['billing_manager_id'] = self.get_billing_manager_id(curs, data)
+        del data['login']
+        del data['password']
+        return method(self, data, curs)
+    return decroated
 
 
 class Handler(object):
@@ -21,28 +33,74 @@ class Handler(object):
     def ping(self, data): #IGNORE:W0613
         return response_ok()
 
-    # --- currency ---
+    def get_billing_manager_id(self, curs, data):
+        return selector.get_auth_billing_manager(curs, data['login'], data['password']).id
+
+    # billing manager
     @transaction()
-    @logged
-    def add_currency(self, data, curs=None):
-        curr = Currency(**data)
-        mapping.insert(curs, curr)
+    def add_billing_manager(self, data, curs=None):
+        data['password'] = security.encrypt_password(data['password'])
+        mapping.insert(curs, BillingManager(**data))
+        return response_ok()
+
+    def get_fields_for_update(self, data, prefix_of_new='new_'):
+        '''
+        If data contains fields with previx == prefix_of_new,
+        such fields will be added into result dict:
+            {'field': 'new_field'}
+        '''
+        result = {}
+        for f in data.keys():
+            if f.startswith(prefix_of_new):
+                result[f[len(prefix_of_new):]] = f
+        return result
+
+    def update_obj(self, curs, data, load_obj_func):
+        to_update = self.get_fields_for_update(data)
+        if len(to_update):
+            obj = load_obj_func()
+            for f, new_f in to_update.items():
+                setattr(obj, f, data[new_f])
+            mapping.update(curs, obj)
+
+    @transaction()
+    @authentificate
+    def modify_billing_manager(self, data, curs=None):
+        if 'new_password' in data:
+            data['new_password'] = security.encrypt_password(data['new_password'])
+        loader = partial(selector.get_billing_manager, curs, data['billing_manager_id'], for_update=True)
+        self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
-    @logged
-    def modify_currency(self, data, curs=None):
-        curr = get_currency_by_name(curs, data['name'], for_update=True)
-        curr.update(data)
-        mapping.update(curs, curr)
+    @authentificate
+    def delete_billing_manager(self, data, curs=None):
+        obj = selector.get_billing_manager(curs, data['billing_manager_id'])
+        mapping.delete(curs, obj)
         return response_ok()
 
-    @transaction()
-    @logged
-    def delete_currency(self, data, curs=None):
-        curr = get_currency_by_name(curs, data['name'], for_update=True)
-        mapping.delete(curs, curr)
-        return response_ok()
+#    # --- currency ---
+#    @transaction()
+#    @logged
+#    def add_currency(self, data, curs=None):
+#        curr = Currency(**data)
+#        mapping.insert(curs, curr)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged
+#    def modify_currency(self, data, curs=None):
+#        curr = get_currency_by_name(curs, data['name'], for_update=True)
+#        curr.update(data)
+#        mapping.update(curs, curr)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged
+#    def delete_currency(self, data, curs=None):
+#        curr = get_currency_by_name(curs, data['name'], for_update=True)
+#        mapping.delete(curs, curr)
+#        return response_ok()
 
     # --- balance ---
     @transaction()
@@ -296,7 +354,7 @@ class Handler(object):
         )
         cond = And(cond, get_date_filters(date_filters, data))
 
-        receipts, total = select_receipts(curs, currency, cond, data['offset'], data['limit'])
+        receipts, total = selector.select_receipts(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(receipts=receipts, total=total)
 
     @transaction()
@@ -314,7 +372,7 @@ class Handler(object):
         )
         cond = And(cond, get_date_filters(date_filters, data))
 
-        chargeoffs, total = select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
+        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(chargeoffs=chargeoffs, total=total)
 
     @transaction()
@@ -331,5 +389,5 @@ class Handler(object):
         )
         cond = And(cond, get_date_filters(date_filters, data))
 
-        balance_locks, total = select_balance_locks(curs, currency, cond, data['offset'], data['limit'])
+        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['offset'], data['limit'])
         return response_ok(balance_locks=balance_locks, total=total)

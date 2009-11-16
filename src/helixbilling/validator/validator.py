@@ -18,23 +18,12 @@ RESPONSE_STATUS_ERROR = {
 
 RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
-# --- currency ---
-ADD_CURRENCY = {
-    'name': Text(),
-    'designation': Text(),
-    Optional('cent_factor'): Positive(int),
+AUTH_INFO = {
+    'login': Text(),
+    'password': Text(),
 }
 
-MODIFY_CURRENCY = {
-    'name': Text(),
-    Optional('designation'): Text(),
-    Optional('cent_factor'): Positive(int),
-}
-
-DELETE_CURRENCY = {
-    'name': Text(),
-}
-
+#
 GET_CURRENCIES = {}
 GET_CURRENCIES_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK, currencies=[
@@ -46,6 +35,19 @@ GET_CURRENCIES_RESPONSE = AnyOf(
     ]),
     RESPONSE_STATUS_ERROR
 )
+
+# --- billing manager ---
+ADD_BILLING_MANAGER = AUTH_INFO
+
+MODIFY_BILLING_MANAGER = dict(
+    {
+        Optional('new_login'): Text(),
+        Optional('new_password'): Text(),
+    },
+    **AUTH_INFO
+)
+
+DELETE_BILLING_MANAGER = AUTH_INFO
 
 # --- balance ---
 CREATE_BALANCE = {
@@ -217,16 +219,17 @@ api_scheme = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    # currency
-    ApiCall('add_currency_request', Scheme(ADD_CURRENCY)),
-    ApiCall('add_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
+    # billing manager
+    ApiCall('add_billing_manager_request', Scheme(ADD_BILLING_MANAGER)),
+    ApiCall('add_billing_manager_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_currency_request', Scheme(MODIFY_CURRENCY)),
-    ApiCall('modify_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('modify_billing_manager_request', Scheme(MODIFY_BILLING_MANAGER)),
+    ApiCall('modify_billing_manager_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_currency_request', Scheme(DELETE_CURRENCY)),
-    ApiCall('delete_currency_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('delete_billing_manager_request', Scheme(DELETE_BILLING_MANAGER)),
+    ApiCall('delete_billing_manager_response', Scheme(RESPONSE_STATUS_ONLY)),
 
+    # currencies
     ApiCall('get_currencies_request', Scheme(GET_CURRENCIES)),
     ApiCall('get_currencies_response', Scheme(GET_CURRENCIES_RESPONSE)),
 
@@ -280,7 +283,6 @@ api_scheme = [
     ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
     ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
 
-    #TODO: cover me in test_validator
     ApiCall('view_balance_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
     ApiCall('view_balance_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
 ]

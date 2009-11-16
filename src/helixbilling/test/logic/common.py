@@ -15,7 +15,7 @@ class LogicTestCase(DbBasedTestCase):
     '''
     @transaction()
     def _add_currency(self, curs=None):
-        actions.insert(curs, Currency(name='USD', designation='$'))
+        actions.insert(curs, Currency(name='YYY', designation='$'))
 
     @transaction()
     def _get_currency(self, name, curs=None):
@@ -64,7 +64,7 @@ class TestCaseWithCurrency(LogicTestCase):
 
     @transaction()
     def _fixture(self, curs=None):
-        self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
+        self.currency = Currency(name='YYY', designation='$') #IGNORE:W0201
         actions.insert(curs, self.currency)
         self.currency = actions.reload(curs, self.currency)
 

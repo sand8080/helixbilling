@@ -15,4 +15,3 @@ def apply(curs):  #IGNORE:W0622
 def revert(curs):
     print 'Dropping table billing_manager'
     curs.execute('DROP TABLE billing_manager')
-

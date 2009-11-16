@@ -7,6 +7,7 @@ from helixbilling.test.validator.test_validator import ValidatorTestCase #IGNORE
 from helixbilling.test.logic.test_action_log import ActionLogTestCase #IGNORE:W0611 @UnusedImport
 
 from helixbilling.test.logic.test_common import CommonLogicTestCase #IGNORE:W0611 @UnusedImport
+from helixbilling.test.logic.test_billing_manager import BillingManagerTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_balance import BalanceTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_currency import CurrencyTestCase #IGNORE:W0611 @UnusedImport
 
