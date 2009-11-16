@@ -13,9 +13,9 @@ from helixbilling.conf.log import logger
 import helper
 
 
-def _select(curs, currency, cond, offset, limit, MAPPED_CLASS, FUNC_NAME, AMOUNT_FIELDS):
+def select(curs, MAPPED_CLASS, cond, limit, offset):
     '''
-    @return: tuple( list of receipt dicts, total_receipts_number )
+    @return: list of fetched dicts
     '''
     columns = list(MAPPED_CLASS.__slots__)
     columns.remove('id')
@@ -24,19 +24,23 @@ def _select(curs, currency, cond, offset, limit, MAPPED_CLASS, FUNC_NAME, AMOUNT
         limit=limit, offset=offset,
         order_by='id'
     )
-    logger.debug(FUNC_NAME + ': SQL: "%s", params: %s' % (req, params))
-
     curs.execute(req, params)
-    dicts = decompose_amounts(fetchall_dicts(curs), currency, AMOUNT_FIELDS)
-    logger.debug(FUNC_NAME +  ': result: %s' % str(dicts))
+    return fetchall_dicts(curs)
 
+
+def _select_with_amount(curs, currency, cond, limit, offset, MAPPED_CLASS, AMOUNT_FIELDS):
+    '''
+    @return: tuple( list of receipt dicts, total_receipts_number )
+    '''
+    select_result = select(curs, MAPPED_CLASS, cond, limit, offset)
+    dicts = decompose_amounts(select_result, currency, AMOUNT_FIELDS)
     count = get_count(curs, MAPPED_CLASS.table, cond)
     return (dicts, count)
 
 
-select_receipts = partial(_select, MAPPED_CLASS=Receipt, FUNC_NAME='select_receipts', AMOUNT_FIELDS=['amount'])
-select_chargeoffs = partial(_select, MAPPED_CLASS=ChargeOff, FUNC_NAME='select_chargeoffs', AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
-select_balance_locks = partial(_select, MAPPED_CLASS=BalanceLock, FUNC_NAME='select_balance_locks', AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
+select_receipts = partial(_select_with_amount, MAPPED_CLASS=Receipt, AMOUNT_FIELDS=['amount'])
+select_chargeoffs = partial(_select_with_amount, MAPPED_CLASS=ChargeOff, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
+select_balance_locks = partial(_select_with_amount, MAPPED_CLASS=BalanceLock, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 
 
 def get_count(curs, table, cond):

@@ -18,7 +18,7 @@ class BalanceTestCase(LogicTestCase):
 
     @transaction()
     def _fixture(self, curs=None):
-        insert(curs, Currency(name='YYY', designation='$'))
+        insert(curs, Currency(code='YYY', name='y currency', location='y country', cent_factor=100))
 
     def create_balance(self, data):
         handle_action('create_balance', data)
@@ -45,7 +45,7 @@ class BalanceTestCase(LogicTestCase):
         data = {
             'client_id': 'U-23-52',
             'active': 1,
-            'currency_name': 'USD',
+            'currency_name': 'YYY',
             'overdraft_limit': (500, 0),
             'locking_order': ['available_real_amount'],
         }
@@ -70,7 +70,7 @@ class BalanceTestCase(LogicTestCase):
         data = {
             'client_id': client_id,
             'active': 1,
-            'currency_name': 'USD',
+            'currency_name': 'YYY',
             'overdraft_limit': (500, 0),
             'locking_order': ['available_real_amount'],
         }

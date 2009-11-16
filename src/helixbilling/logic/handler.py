@@ -11,7 +11,7 @@ from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock,
 import helixbilling.logic.product_status as product_status
 from helixbilling.domain import security
 
-from helper import get_currency_by_name, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff, get_date_filters
+from helper import get_currency_by_code, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff, get_date_filters
 from helper import compose_amount, decompose_amount, compute_locks
 from action_log import logged, logged_bulk
 import selector
@@ -79,35 +79,18 @@ class Handler(object):
         mapping.delete(curs, obj)
         return response_ok()
 
-#    # --- currency ---
-#    @transaction()
-#    @logged
-#    def add_currency(self, data, curs=None):
-#        curr = Currency(**data)
-#        mapping.insert(curs, curr)
-#        return response_ok()
-#
-#    @transaction()
-#    @logged
-#    def modify_currency(self, data, curs=None):
-#        curr = get_currency_by_name(curs, data['name'], for_update=True)
-#        curr.update(data)
-#        mapping.update(curs, curr)
-#        return response_ok()
-#
-#    @transaction()
-#    @logged
-#    def delete_currency(self, data, curs=None):
-#        curr = get_currency_by_name(curs, data['name'], for_update=True)
-#        mapping.delete(curs, curr)
-#        return response_ok()
+    # --- currencies ---
+    @transaction()
+    @logged
+    def view_currencies(self, data, curs=None): #IGNORE:W0613
+        return response_ok(currencies=selector.select(curs, Currency, None, None, 0))
 
     # --- balance ---
     @transaction()
     @logged
     def create_balance(self, data, curs=None):
         data_copy = dict(data)
-        currency = get_currency_by_name(curs, data_copy['currency_name'])
+        currency = get_currency_by_code(curs, data_copy['currency_name'])
         del data_copy['currency_name']
         data_copy['currency_id'] = currency.id
         data_copy['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data_copy['overdraft_limit'])
@@ -354,7 +337,7 @@ class Handler(object):
         )
         cond = And(cond, get_date_filters(date_filters, data))
 
-        receipts, total = selector.select_receipts(curs, currency, cond, data['offset'], data['limit'])
+        receipts, total = selector.select_receipts(curs, currency, cond, data['limit'], data['offset'])
         return response_ok(receipts=receipts, total=total)
 
     @transaction()
@@ -372,7 +355,7 @@ class Handler(object):
         )
         cond = And(cond, get_date_filters(date_filters, data))
 
-        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['offset'], data['limit'])
+        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['limit'], data['offset'])
         return response_ok(chargeoffs=chargeoffs, total=total)
 
     @transaction()
@@ -389,5 +372,5 @@ class Handler(object):
         )
         cond = And(cond, get_date_filters(date_filters, data))
 
-        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['offset'], data['limit'])
+        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
         return response_ok(balance_locks=balance_locks, total=total)

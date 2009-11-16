@@ -17,7 +17,7 @@ class DbBasedTestCase(RootTestCase):
 
 
 class ServiceTestCase(DbBasedTestCase):
-    test_billing_manager_login = 'test_client'
+    test_billing_manager_login = 'test_billing_manager'
     test_billing_manager_password = 'qazwsx'
 
     def setUp(self):

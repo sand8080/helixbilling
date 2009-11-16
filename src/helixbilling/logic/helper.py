@@ -7,11 +7,11 @@ from helixcore.server.exceptions import  DataIntegrityError, ActionNotAllowedErr
 
 from helixbilling.domain.objects import Currency, Balance, BalanceLock, ChargeOff
 
-def get_currency_by_name(curs, name, for_update=False):
+def get_currency_by_code(curs, code, for_update=False):
     try:
-        return get(curs, Currency, Eq('name', name), for_update)
+        return get(curs, Currency, Eq('code', code), for_update)
     except EmptyResultSetError:
-        raise DataIntegrityError('Currency with name %s not found in system' % name)
+        raise DataIntegrityError('Currency with code %s not found in system' % code)
 
 def get_currency_by_balance(curs, balance, for_update=False):
     try:
@@ -126,5 +126,5 @@ def compute_locks(currency, balance, lock_amount):
     return locked_resources
 
 def human_readable_amount(currency, composed_amount):
-    return '%s %s' % ('.'.join(map(str, decompose_amount(currency, composed_amount))), currency.designation)
+    return '%s %s' % ('.'.join(map(str, decompose_amount(currency, composed_amount))), currency.name)
 

@@ -17,7 +17,7 @@ class ActionLog(Mapped):
 
 
 class Currency(Mapped):
-    __slots__ = ['id', 'name', 'designation', 'cent_factor']
+    __slots__ = ['id', 'code', 'cent_factor', 'name', 'location']
     table = 'currency'
 
 

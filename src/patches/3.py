@@ -1,15 +1,15 @@
-
 def apply(curs):
     print 'Creating table currency'
     curs.execute(
     '''
         CREATE TABLE currency (
-            id serial, 
-            name varchar NOT NULL, 
-            designation varchar NOT NULL, 
-            cent_factor int NOT NULL DEFAULT 100,
+            id serial,
+            code varchar NOT NULL,
+            cent_factor int NOT NULL,
+            name varchar,
+            location varchar,
             PRIMARY KEY(id),
-            UNIQUE(name),
+            UNIQUE(code),
             CHECK(cent_factor > 0)
         )
     ''')

@@ -23,14 +23,15 @@ AUTH_INFO = {
     'password': Text(),
 }
 
-#
-GET_CURRENCIES = {}
-GET_CURRENCIES_RESPONSE = AnyOf(
+# --- currencies ---
+VIEW_CURRENCIES = {}
+VIEW_CURRENCIES_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK, currencies=[
         {
+            'code': Text(),
+            'cent_factor': Positive(int),
             'name': Text(),
-            'designation': Text(),
-            'cent_factor': Positive(int)
+            'location': Text(),
         }
     ]),
     RESPONSE_STATUS_ERROR
@@ -230,8 +231,8 @@ api_scheme = [
     ApiCall('delete_billing_manager_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # currencies
-    ApiCall('get_currencies_request', Scheme(GET_CURRENCIES)),
-    ApiCall('get_currencies_response', Scheme(GET_CURRENCIES_RESPONSE)),
+    ApiCall('view_currencies_request', Scheme(VIEW_CURRENCIES)),
+    ApiCall('view_currencies_response', Scheme(VIEW_CURRENCIES_RESPONSE)),
 
     # balance
     ApiCall('create_balance_request', Scheme(CREATE_BALANCE)),

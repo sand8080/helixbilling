@@ -1,30 +1,14 @@
 import datetime
 import unittest
 
-from common import LogicTestCase
+from common import TestCaseWithBalance
 
-from helixcore.mapping.actions import insert
 from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError
 
-from helixbilling.conf.db import transaction
 from helixbilling.logic.actions import handle_action
-from helixbilling.domain.objects import Currency, Balance
 
 
-class BonusTestCase(LogicTestCase):
-    def setUp(self):
-        LogicTestCase.setUp(self)
-        self._fixture()
-
-    @transaction()
-    def _fixture(self, curs=None):
-        self.currency = Currency(name='USD', designation='$') #IGNORE:W0201
-        insert(curs, self.currency)
-
-        balance = Balance(client_id='123', active=1, currency_id=self.currency.id) #IGNORE:E1101
-        self.balance = balance #IGNORE:W0201
-        insert(curs, self.balance)
-
+class BonusTestCase(TestCaseWithBalance):
     def test_enroll_bonus_ok(self):
         data = {
             'client_id': self.balance.client_id, #IGNORE:E1101

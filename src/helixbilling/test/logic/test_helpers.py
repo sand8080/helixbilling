@@ -10,7 +10,7 @@ from helixbilling.test.root_test import RootTestCase
 class HelpersTestCase(RootTestCase):
     def __init__(self, *args, **kwargs): #IGNORE:W0231
         super(HelpersTestCase, self).__init__(*args, **kwargs)
-        self.currency = Currency(name='USD', designation='$', cent_factor=100)
+        self.currency = Currency(code='YYY', name='y currency', location='y country', cent_factor=100)
 
     def test_get_available_resources(self):
         b = Balance(

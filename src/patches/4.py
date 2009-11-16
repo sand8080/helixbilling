@@ -15,19 +15,20 @@ def apply(curs):
             locked_amount int DEFAULT 0,
             overdraft_limit int DEFAULT 0,
             PRIMARY KEY(id),
-            FOREIGN KEY(currency_id) REFERENCES currency(id) ON DELETE RESTRICT
+            FOREIGN KEY(currency_id) REFERENCES currency(id) ON DELETE RESTRICT,
+            UNIQUE(client_id)
         )
     ''')
 
-    print 'Creating index balance_client_id_idx on balance'
-    curs.execute(
-    '''
-        CREATE UNIQUE INDEX balance_client_id_idx ON balance(client_id);
-    ''')
+#    print 'Creating index balance_client_id_idx on balance'
+#    curs.execute(
+#    '''
+#        CREATE UNIQUE INDEX balance_client_id_idx ON balance(client_id);
+#    ''')
 
 def revert(curs):
-    print 'Dropping index balance_client_id_idx on balance'
-    curs.execute('DROP INDEX balance_client_id_idx')
+#    print 'Dropping index balance_client_id_idx on balance'
+#    curs.execute('DROP INDEX balance_client_id_idx')
 
     print 'Dropping table balance'
     curs.execute('DROP TABLE balance')
