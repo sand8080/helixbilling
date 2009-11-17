@@ -69,7 +69,6 @@ class ProductStatusTestCase(TestCaseWithBalance):
             'amount': lock_amount,
         }
         handle_action('lock', data)
-
         del data['amount']
         data['product_id'] = '556'
         response = handle_action('product_status', data)

@@ -1,14 +1,15 @@
 from functools import partial
+import iso8601 #@UnresolvedImport
 
 import helixcore.db.query_builder as query_builder
 import helixcore.mapping.actions as mapping
 from helixcore.db import sql
-from helixcore.db.wrapper import fetchall_dicts, fetchone_dict
-from helixcore.server.exceptions import DataIntegrityError, AuthError
+from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, EmptyResultSetError
+from helixcore.server.exceptions import DataIntegrityError, AuthError, ActionNotAllowedError
 
-from helixbilling.domain.objects import Receipt, ChargeOff, BalanceLock, BillingManager
+from helixbilling.domain.objects import Receipt, ChargeOff, BalanceLock, BillingManager, \
+    Currency, Balance
 from helixbilling.domain import security
-from helixbilling.conf.log import logger
 
 import helper
 
@@ -45,11 +46,9 @@ select_balance_locks = partial(_select_with_amount, MAPPED_CLASS=BalanceLock, AM
 
 def get_count(curs, table, cond):
     req, params = query_builder.select(table, columns=[sql.Columns.COUNT_ALL], cond=cond)
-    logger.debug('select from %s: count SQL: "%s", params: %s' % (table, req, params))
     curs.execute(req, params)
     count_dict = fetchone_dict(curs)
     _, count = count_dict.popitem()
-    logger.debug('select from %s: count: %d' % (table, count))
     return count
 
 
@@ -75,5 +74,61 @@ def get_auth_billing_manager(curs, login, password, for_update=False):
     try:
         return mapping.get_obj_by_fields(curs, BillingManager,
             {'login': login, 'password': security.encrypt_password(password)}, for_update)
-    except DataIntegrityError:
+    except EmptyResultSetError:
         raise AuthError('Access denied.')
+
+
+def get_currency_by_code(curs, code, for_update=False):
+    try:
+        return mapping.get_obj_by_field(curs, Currency, 'code', code, for_update)
+    except EmptyResultSetError:
+        raise DataIntegrityError('Currency  %s is not found' % code)
+
+
+def get_currency_by_balance(curs, balance, for_update=False):
+    return mapping.get_obj_by_field(curs, Currency, 'id', balance.id, for_update)
+
+
+def get_balance(curs, client_id, active_only=True, for_update=False):
+    try:
+        balance = mapping.get_obj_by_field(curs, Balance, 'client_id', client_id, for_update)
+        if active_only and balance.active == 0:
+            raise ActionNotAllowedError('Balance of client %s is inactive' % client_id)
+        return balance
+    except EmptyResultSetError:
+        raise DataIntegrityError('Balance of client %s is not found' % client_id)
+
+
+def try_get_lock(curs, client_id, product_id, for_update=False):
+    '''
+    @return: BalanceLock on success, raises EmptyResultSetError if no such lock
+    '''
+    return mapping.get_obj_by_fields(curs, BalanceLock,
+        {'client_id': client_id, 'product_id': product_id}, for_update)
+#    except EmptyResultSetError:
+#        raise DataIntegrityError(' of client %s is not found' % client_id)
+
+
+def try_get_chargeoff(curs, client_id, product_id, for_update=False):
+    '''
+    @return: ChargeOff on success, raises EmptyResultSetError if no such charge-off
+    '''
+    return mapping.get_obj_by_fields(curs, ChargeOff,
+        {'client_id': client_id, 'product_id': product_id}, for_update)
+
+
+def get_date_filters(date_filters, data):
+    '''
+    adds date filtering parameters from data to cond.
+    @param date_filters: is tuple of
+        (start_date_filter_name, end_date_filter_name, db_filtering_field_name)
+    @param data: dict of request data
+    @return: db filtering condition
+    '''
+    cond = sql.NullLeaf()
+    for start_date, end_date, db_field in date_filters:
+        if start_date in data:
+            cond = sql.And(cond, sql.MoreEq(db_field, iso8601.parse_date(data[start_date])))
+        if end_date in data:
+            cond = sql.And(cond, sql.Less(db_field, iso8601.parse_date(data[end_date])))
+    return cond

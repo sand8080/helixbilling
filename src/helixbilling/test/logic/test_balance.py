@@ -9,20 +9,8 @@ from helixbilling.logic.actions import handle_action
 
 class BalanceTestCase(TestCaseWithBalance):
     def test_create_balance(self):
-        client_id = 'U-23-52'
-        data = {
-            'client_id': client_id,
-            'active': 1,
-            'currency_code': 'YYY',
-            'overdraft_limit': (500, 50),
-        }
-#        curr_cf_100 = self._get_currency('USD')
-#        curr_cf_10 = self._get_currency('AOA')
-#        curr_cf_1 = self._get_currency('AMD')
+        self.create_balance('U-23-52', self.currency, active=1, overdraft_limit=(500, 60))
 
-        self.create_balance(client_id, self.currency, active=data['active'],
-            overdraft_limit=data['overdraft_limit'])
-#
 #    def test_modify_balance(self):
 #        data = {
 #            'client_id': 'U-23-52',
@@ -46,7 +34,7 @@ class BalanceTestCase(TestCaseWithBalance):
 #        self.assertEquals(balance.overdraft_limit, 99999)
 #        self.assertEquals(balance.active, data['active'])
 #        self.assertEquals(balance.locking_order, None)
-#
+
 #    def test_delete_balance(self):
 #        client_id = 'cli 54'
 #        data = {

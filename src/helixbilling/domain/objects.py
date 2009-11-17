@@ -24,6 +24,7 @@ class Currency(Mapped):
 class Balance(Mapped):
     __slots__ = [
         'id', 'active',
+        'billing_manager_id',
         'client_id', 'currency_id',
         'created_date',
         'available_real_amount',

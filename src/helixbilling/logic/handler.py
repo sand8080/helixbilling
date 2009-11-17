@@ -11,7 +11,6 @@ from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock,
 import helixbilling.logic.product_status as product_status
 from helixbilling.domain import security
 
-from helper import get_currency_by_code, get_currency_by_balance, get_balance, try_get_lock, try_get_chargeoff, get_date_filters
 from helper import compose_amount, decompose_amount, compute_locks
 from action_log import logged, logged_bulk
 import selector
@@ -36,13 +35,6 @@ class Handler(object):
     def get_billing_manager_id(self, curs, data):
         return selector.get_auth_billing_manager(curs, data['login'], data['password']).id
 
-    # billing manager
-    @transaction()
-    def add_billing_manager(self, data, curs=None):
-        data['password'] = security.encrypt_password(data['password'])
-        mapping.insert(curs, BillingManager(**data))
-        return response_ok()
-
     def get_fields_for_update(self, data, prefix_of_new='new_'):
         '''
         If data contains fields with previx == prefix_of_new,
@@ -63,6 +55,19 @@ class Handler(object):
                 setattr(obj, f, data[new_f])
             mapping.update(curs, obj)
 
+    # --- currencies ---
+    @transaction()
+    @logged
+    def view_currencies(self, data, curs=None): #IGNORE:W0613
+        return response_ok(currencies=selector.select(curs, Currency, None, None, 0))
+
+    # --- billing manager ---
+    @transaction()
+    def add_billing_manager(self, data, curs=None):
+        data['password'] = security.encrypt_password(data['password'])
+        mapping.insert(curs, BillingManager(**data))
+        return response_ok()
+
     @transaction()
     @authentificate
     def modify_billing_manager(self, data, curs=None):
@@ -79,19 +84,14 @@ class Handler(object):
         mapping.delete(curs, obj)
         return response_ok()
 
-    # --- currencies ---
-    @transaction()
-    @logged
-    def view_currencies(self, data, curs=None): #IGNORE:W0613
-        return response_ok(currencies=selector.select(curs, Currency, None, None, 0))
-
     # --- balance ---
     @transaction()
     @logged
+    @authentificate
     def create_balance(self, data, curs=None):
         data_copy = dict(data)
-        currency = get_currency_by_code(curs, data_copy['currency_name'])
-        del data_copy['currency_name']
+        currency = selector.get_currency_by_code(curs, data_copy['currency_code'])
+        del data_copy['currency_code']
         data_copy['currency_id'] = currency.id
         data_copy['overdraft_limit'] = compose_amount(currency, *data_copy['overdraft_limit'])
         balance = Balance(**data_copy)
@@ -100,19 +100,20 @@ class Handler(object):
 
     @transaction()
     @logged
+    @authentificate
     def modify_balance(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False, for_update=True)
-        if 'overdraft_limit' in data:
-            currency = get_currency_by_balance(curs, balance)
-            data['overdraft_limit'] = compose_amount(currency, *data['overdraft_limit'])
-        balance.update(data)
-        mapping.update(curs, balance)
+        loader = partial(selector.get_balance, curs, data['client_id'], active_only=False, for_update=True)
+        if 'new_overdraft_limit' in data:
+            composed_amount = compose_amount(selector.get_currency_by_balance(curs, loader()),
+                *data['new_overdraft_limit'])
+            data['new_overdraft_limit'] = composed_amount
+        self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @logged
     def delete_balance(self, data, curs=None):
-        obj = get_balance(curs, data['client_id'], active_only=False, for_update=True)
+        obj = selector.get_balance(curs, data['client_id'], active_only=False, for_update=True)
         mapping.delete(curs, obj)
         return response_ok()
 
@@ -120,8 +121,8 @@ class Handler(object):
     @transaction()
     @logged
     def enroll_receipt(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
-        currency = get_currency_by_balance(curs, balance)
+        balance = selector.get_balance(curs, data['client_id'], active_only=True, for_update=True)
+        currency = selector.get_currency_by_balance(curs, balance)
 
         data['amount'] = compose_amount(currency, *data['amount'])
 
@@ -135,8 +136,8 @@ class Handler(object):
     def _lock(self, data_list, curs):
         for data in data_list:
             data_copy = dict(data)
-            balance = get_balance(curs, data_copy['client_id'], active_only=True, for_update=True)
-            currency = get_currency_by_balance(curs, balance)
+            balance = selector.get_balance(curs, data_copy['client_id'], active_only=True, for_update=True)
+            currency = selector.get_currency_by_balance(curs, balance)
             lock_amount = compose_amount(currency, *data_copy['amount'])
             locks = compute_locks(currency, balance, lock_amount)
 
@@ -179,12 +180,12 @@ class Handler(object):
         balances = {}
         # locking all balances
         for data in data_list:
-            balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+            balance = selector.get_balance(curs, data['client_id'], active_only=True, for_update=True)
             balances[balance.client_id] = balance
 
         for data in data_list:
             try:
-                lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+                lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
             except EmptyResultSetError:
                 raise DataIntegrityError(
                     'Cannot unlock money for product %s: '
@@ -230,12 +231,12 @@ class Handler(object):
 
     @transaction()
     def product_status(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False, for_update=False)
-        currency = get_currency_by_balance(curs, balance)
+        balance = selector.get_balance(curs, data['client_id'], active_only=False, for_update=False)
+        currency = selector.get_currency_by_balance(curs, balance)
 
         response = {'product_status': product_status.unknown}
         try:
-            lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
+            lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
             response['product_status'] = product_status.locked
             response['locked_date'] = lock.locked_date
             response['real_amount'] = decompose_amount(currency, lock.real_amount)
@@ -244,7 +245,7 @@ class Handler(object):
             pass
 
         try:
-            chargeoff = try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
+            chargeoff = selector.try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
             response['product_status'] = product_status.charged_off
             response['locked_date'] = chargeoff.locked_date
             response['chargeoff_date'] = chargeoff.chargeoff_date
@@ -258,8 +259,8 @@ class Handler(object):
     @transaction()
     @logged
     def enroll_bonus(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
-        currency = get_currency_by_balance(curs, balance)
+        balance = selector.get_balance(curs, data['client_id'], active_only=True, for_update=True)
+        currency = selector.get_currency_by_balance(curs, balance)
 
         data['amount'] = compose_amount(currency, *data['amount'])
 
@@ -273,12 +274,12 @@ class Handler(object):
     def _chargeoff(self, data_list, curs=None):
         balances = {}
         for data in data_list:
-            balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
+            balance = selector.get_balance(curs, data['client_id'], active_only=True, for_update=True)
             balances[balance.client_id] = balance
 
         for data in data_list:
             try:
-                lock = try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+                lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
             except EmptyResultSetError:
                 raise ActionNotAllowedError(
                     'Cannot charge off money for product %s: '
@@ -328,22 +329,22 @@ class Handler(object):
 
     @transaction()
     def view_receipts(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
-        currency = get_currency_by_balance(curs, balance)
+        balance = selector.get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
+        currency = selector.get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
         date_filters = (
             ('start_date', 'end_date', 'created_date'),
         )
-        cond = And(cond, get_date_filters(date_filters, data))
+        cond = And(cond, selector.get_date_filters(date_filters, data))
 
         receipts, total = selector.select_receipts(curs, currency, cond, data['limit'], data['offset'])
         return response_ok(receipts=receipts, total=total)
 
     @transaction()
     def view_chargeoffs(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
-        currency = get_currency_by_balance(curs, balance)
+        balance = selector.get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
+        currency = selector.get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
         if 'product_id' in data:
@@ -353,15 +354,15 @@ class Handler(object):
             ('locked_start_date', 'locked_end_date', 'locked_date'),
             ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date'),
         )
-        cond = And(cond, get_date_filters(date_filters, data))
+        cond = And(cond, selector.get_date_filters(date_filters, data))
 
         chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['limit'], data['offset'])
         return response_ok(chargeoffs=chargeoffs, total=total)
 
     @transaction()
     def view_balance_locks(self, data, curs=None):
-        balance = get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
-        currency = get_currency_by_balance(curs, balance)
+        balance = selector.get_balance(curs, data['client_id'], active_only=False) #IGNORE:W0612
+        currency = selector.get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
         if 'product_id' in data:
@@ -370,7 +371,7 @@ class Handler(object):
         date_filters = (
             ('locked_start_date', 'locked_end_date', 'locked_date'),
         )
-        cond = And(cond, get_date_filters(date_filters, data))
+        cond = And(cond, selector.get_date_filters(date_filters, data))
 
         balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
         return response_ok(balance_locks=balance_locks, total=total)

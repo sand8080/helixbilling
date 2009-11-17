@@ -1,6 +1,6 @@
 import datetime
 
-from helixbilling.test.db_based_test import DbBasedTestCase
+from helixbilling.test.db_based_test import ServiceTestCase
 
 from helixcore.db.sql import Eq, And
 import helixcore.mapping.actions as mapping
@@ -8,8 +8,11 @@ import helixcore.mapping.actions as mapping
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
 from helixbilling.logic.helper import compose_amount, decompose_amount
+from helixbilling.logic.actions import handle_action
+from helixbilling.logic import selector
 
-class LogicTestCase(DbBasedTestCase):
+
+class LogicTestCase(ServiceTestCase):
     '''
     abstract class. All logic test cases may inherit rom this
     '''
@@ -78,15 +81,16 @@ class TestCaseWithBalance(TestCaseWithCurrency):
     def create_balance(self, client_id, currency, active=1, overdraft_limit=None, curs=None):
         if overdraft_limit is None:
             overdraft_limit = (0, 0)
-        balance = Balance(
-            client_id=client_id,
-            active=active,
-            currency_id=currency.id,
-            overdraft_limit=compose_amount(currency, *overdraft_limit)
-        )
-        mapping.insert(curs, balance)
-        balance = mapping.reload(curs, balance)
-
+        data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': client_id,
+            'currency_code': currency.code,
+            'active': active,
+            'overdraft_limit': overdraft_limit,
+        }
+        handle_action('create_balance', data)
+        balance = mapping.get(curs, Balance, Eq('client_id', client_id))
         self.assertTrue(balance.id > 0) #IGNORE:E1101
         self.assertEquals(client_id, balance.client_id) #IGNORE:E1101
         self.assertTrue(isinstance(balance.created_date, datetime.datetime)) #IGNORE:E1101
@@ -95,7 +99,6 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         self.assertEquals(overdraft_limit, decompose_amount(currency, balance.overdraft_limit))
         self.assertEquals(currency.id, balance.currency_id)
         self.assertEquals(None, balance.locking_order)
-
         return balance
 
     @transaction()

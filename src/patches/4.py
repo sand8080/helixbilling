@@ -1,10 +1,10 @@
-
 def apply(curs):
     print 'Creating table balance'
     curs.execute(
     '''
         CREATE TABLE balance (
             id serial,
+            billing_manager_id integer NOT NULL,
             active smallint NOT NULL DEFAULT 1,
             client_id varchar NOT NULL,
             currency_id int NOT NULL,
@@ -15,21 +15,13 @@ def apply(curs):
             locked_amount int DEFAULT 0,
             overdraft_limit int DEFAULT 0,
             PRIMARY KEY(id),
-            FOREIGN KEY(currency_id) REFERENCES currency(id) ON DELETE RESTRICT,
+            FOREIGN KEY(currency_id) REFERENCES currency(id),
+            FOREIGN KEY(billing_manager_id) REFERENCES billing_manager(id),
             UNIQUE(client_id)
         )
     ''')
 
-#    print 'Creating index balance_client_id_idx on balance'
-#    curs.execute(
-#    '''
-#        CREATE UNIQUE INDEX balance_client_id_idx ON balance(client_id);
-#    ''')
-
 def revert(curs):
-#    print 'Dropping index balance_client_id_idx on balance'
-#    curs.execute('DROP INDEX balance_client_id_idx')
-
     print 'Dropping table balance'
     curs.execute('DROP TABLE balance')
 
