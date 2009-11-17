@@ -7,11 +7,13 @@ from helixcore.server.exceptions import  DataIntegrityError, ActionNotAllowedErr
 
 from helixbilling.domain.objects import Currency, Balance, BalanceLock, ChargeOff
 
+
 def get_currency_by_code(curs, code, for_update=False):
     try:
         return get(curs, Currency, Eq('code', code), for_update)
     except EmptyResultSetError:
         raise DataIntegrityError('Currency with code %s not found in system' % code)
+
 
 def get_currency_by_balance(curs, balance, for_update=False):
     try:
@@ -19,6 +21,7 @@ def get_currency_by_balance(curs, balance, for_update=False):
     except EmptyResultSetError:
         raise ApplicationError('Currency with id %s (related to balance of client ID %d) not found in system' %
             (balance.currency_id, balance.client_id))
+
 
 def get_balance(curs, client_id, active_only=True, for_update=False):
     try:
@@ -29,17 +32,20 @@ def get_balance(curs, client_id, active_only=True, for_update=False):
     except EmptyResultSetError:
         raise DataIntegrityError('Balance related to client ID %s not found in system' % client_id)
 
+
 def try_get_lock(curs, client_id, product_id, for_update=False):
     '''
     @return: BalanceLock on success, raises EmptyResultSetError if no such lock
     '''
     return get(curs, BalanceLock, And(Eq('client_id', client_id), Eq('product_id', product_id)), for_update)
 
+
 def try_get_chargeoff(curs, client_id, product_id, for_update=False):
     '''
     @return: ChargeOff on success, raises EmptyResultSetError if no such charge-off
     '''
     return get(curs, ChargeOff, And(Eq('client_id', client_id), Eq('product_id', product_id)), for_update)
+
 
 def get_date_filters(date_filters, data):
     '''
@@ -57,6 +63,7 @@ def get_date_filters(date_filters, data):
             cond = And(cond, Less(db_field, iso8601.parse_date(data[end_date])))
     return cond
 
+
 def compose_amount(currency, amount_spec, int_part, cent_part):
     '''
     (500, 50) -> 50050 if cent_factor is 100
@@ -68,17 +75,20 @@ def compose_amount(currency, amount_spec, int_part, cent_part):
 
     return currency.cent_factor * int_part + cent_part
 
+
 def decompose_amount(currency, cent_amount):
     '''
     50050 -> (500, 50) if cent_factor is 100
     '''
     return (cent_amount / currency.cent_factor, cent_amount % currency.cent_factor)
 
+
 def get_available_resources(balance):
     return {
         'available_real_amount': balance.available_real_amount + balance.overdraft_limit,
         'available_virtual_amount': balance.available_virtual_amount
     }
+
 
 def compute_locks(currency, balance, lock_amount):
     """
@@ -124,6 +134,7 @@ def compute_locks(currency, balance, lock_amount):
             'Available to lock: %(lockable_descr)s' % error
         )
     return locked_resources
+
 
 def human_readable_amount(currency, composed_amount):
     return '%s %s' % ('.'.join(map(str, decompose_amount(currency, composed_amount))), currency.name)

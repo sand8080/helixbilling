@@ -30,16 +30,16 @@ class ViewBalanceLocksTestCase(TestCaseWithBalance):
         self.assertEquals(obj.product_id, sel_dict['product_id'])
         self.assertEquals(obj.real_amount, sel_dict['real_amount'][0]*100 + sel_dict['real_amount'][1])
 
-#    def test_double_balance_lock_failure(self):
-#        self._make_balance_lock(
-#            getattr(self.balance, 'client_id'), '66',
-#            self.locked_start_date, 789, 0
-#        )
-#        self.assertRaises(
-#            Exception, self._make_balance_lock,
-#            getattr(self.balance, 'client_id'), '66',
-#            self.locked_end_date, 800, 0
-#        )
+    def test_double_balance_lock_failure(self):
+        self._make_balance_lock(
+            getattr(self.balance, 'client_id'), '66',
+            self.locked_start_date, 789, 0
+        )
+        self.assertRaises(
+            Exception, self._make_balance_lock,
+            getattr(self.balance, 'client_id'), '66',
+            self.locked_end_date, 800, 0
+        )
 
     def test_list_balance_locks_ok(self):
         l_start = self._make_balance_lock(
