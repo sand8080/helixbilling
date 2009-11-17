@@ -16,7 +16,7 @@ class BonusTotalViewTestCase(ViewTestCase):
 
     def test_view(self):
         client_one = 'one'
-        self.create_balance(client_one)
+        self.create_balance(client_one, self.currency)
         self.check_view(self.get_bonus_total(client_one), {'client_id': client_one, 'amount': 0})
 
         self.add_bonus(client_one, 50)
@@ -24,7 +24,7 @@ class BonusTotalViewTestCase(ViewTestCase):
         self.check_view(self.get_bonus_total(client_one), {'client_id': client_one, 'amount': 60})
 
         client_two = 'two'
-        self.create_balance(client_two)
+        self.create_balance(client_two, self.currency)
         self.check_view(self.get_bonus_total(client_two), {'client_id': client_two, 'amount': 0})
         self.add_bonus(client_two, 20)
         self.add_bonus(client_two, 70)

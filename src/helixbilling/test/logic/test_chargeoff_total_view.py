@@ -16,7 +16,7 @@ class ChargeoffTotalViewTestCase(ViewTestCase):
 
     def test_view(self):
         client_one = 'one'
-        self.create_balance(client_one)
+        self.create_balance(client_one, self.currency)
         self.check_view(
             self.get_chargeoff_total(client_one),
             {'client_id': client_one, 'real_amount': 0, 'virtual_amount': 0}
@@ -30,7 +30,7 @@ class ChargeoffTotalViewTestCase(ViewTestCase):
         )
 
         client_two = 'two'
-        self.create_balance(client_two)
+        self.create_balance(client_two, self.currency)
         self.check_view(self.get_chargeoff_total(
             client_two),
             {'client_id': client_two, 'real_amount': 0, 'virtual_amount': 0}

@@ -30,7 +30,7 @@ from helixbilling.test.logic.test_view_receipts import ViewReceiptsTestCase #IGN
 from helixbilling.test.logic.test_view_chargeoffs import ViewChargeoffsTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_view_balance_locks import ViewBalanceLocksTestCase #IGNORE:W0611 @UnusedImport
 
-from helixbilling.test.logic.test_helpers import HelpersTestCase #IGNORE:W0611 @UnusedImport
+from helixbilling.test.logic.test_helper import HelpersTestCase #IGNORE:W0611 @UnusedImport
 
 
 if __name__ == '__main__':

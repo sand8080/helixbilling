@@ -51,9 +51,11 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(
             'create_balance',
             {
+                'login': 'l',
+                'password': 'p',
                 'client_id': 'U-23-52',
                 'active': 1,
-                'currency_name': 'YYY',
+                'currency_code': 'YYY',
                 'overdraft_limit': (500, 50),
                 'locking_order': ['available_real_amount', 'available_virtual_amount']
             }
@@ -62,16 +64,25 @@ class ValidatorTestCase(RootTestCase):
 
     def test_create_balance_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request,
-            'create_balance', {'client_id': '2', 'active': 1, 'currency_name': 'USD', 'overdraft_limit': (500, 50),
-            'locking_order': ['ERROR_HERE']})
+            'create_balance',
+            {
+                'login': 'l',
+                'password': 'p',
+                'client_id': '2',
+                'active': 1,
+                'currency_code': 'USD',
+                'overdraft_limit': (500, 50),
+                'locking_order': ['ERROR_HERE']
+            }
+        )
 
     def test_modify_balance(self):
-        self.api.validate_request('modify_balance', {'client_id': 'U2', 'active': 1,
-            'overdraft_limit': (500, 50), 'locking_order': None})
+        self.api.validate_request('modify_balance', {'login': 'l', 'password': 'p', 'client_id': 'U2',
+            'new_active': 1, 'new_overdraft_limit': (500, 50), 'new_locking_order': None})
         self.validate_status_response('modify_balance')
 
     def test_delete_balance(self):
-        self.api.validate_request('delete_balance', {'client_id': 'U2'})
+        self.api.validate_request('delete_balance', {'login': 'l', 'password': 'p', 'client_id': 'U2'})
         self.validate_status_response('delete_balance')
 
     def test_enroll_receipt(self):

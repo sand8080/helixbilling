@@ -44,7 +44,7 @@ class ChargeoffListTestCase(TestCaseWithBalance):
 
         for chargeoff in chargeoff_data['chargeoffs']:
             handle_action('lock', dict(chargeoff, amount=chargeoff_size))
-            balance_decrease += helper.compose_amount(self.currency, '', *chargeoff_size)
+            balance_decrease += helper.compose_amount(self.currency, *chargeoff_size)
 
         self.balance = self.reload_balance(self.balance)
         self.assertEquals(balance_increase - balance_decrease, self.balance.available_real_amount)

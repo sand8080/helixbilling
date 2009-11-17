@@ -51,24 +51,33 @@ MODIFY_BILLING_MANAGER = dict(
 DELETE_BILLING_MANAGER = AUTH_INFO
 
 # --- balance ---
-CREATE_BALANCE = {
-    'client_id': Text(),
-    'active': AnyOf(0, 1),
-    'currency_name': Text(),
-    'overdraft_limit': amount_validator,
-    Optional('locking_order'): locking_order_validator
-}
+CREATE_BALANCE = dict(
+    {
+        'client_id': Text(),
+        'active': AnyOf(0, 1),
+        'currency_code': Text(),
+        'overdraft_limit': amount_validator,
+        Optional('locking_order'): locking_order_validator
+    },
+    **AUTH_INFO
+)
 
-MODIFY_BALANCE = {
-    'client_id': Text(),
-    Optional('active'): AnyOf(0, 1),
-    Optional('overdraft_limit'): amount_validator,
-    Optional('locking_order'): locking_order_validator
-}
+MODIFY_BALANCE = dict(
+    {
+        'client_id': Text(),
+        Optional('new_active'): AnyOf(0, 1),
+        Optional('new_overdraft_limit'): amount_validator,
+        Optional('new_locking_order'): locking_order_validator
+    },
+    **AUTH_INFO
+)
 
-DELETE_BALANCE = {
-    'client_id': Text()
-}
+DELETE_BALANCE = dict(
+    {
+        'client_id': Text()
+    },
+    **AUTH_INFO
+)
 
 # --- operations ---
 ENROLL_RECEIPT = {

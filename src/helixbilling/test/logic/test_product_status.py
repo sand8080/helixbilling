@@ -57,7 +57,7 @@ class ProductStatusTestCase(TestCaseWithBalance):
     def sum_amounts(self, amounts):
         total = 0
         for amount in amounts:
-            total += helper.compose_amount(self.currency, '', *amount)
+            total += helper.compose_amount(self.currency, *amount)
         return helper.decompose_amount(self.currency, total)
 
     def test_product_status_unknown(self):

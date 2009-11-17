@@ -20,7 +20,7 @@ class LockListTestCase(TestCaseWithBalance):
         self.balance = balance #IGNORE:W0201
 
     def get_amount_sum(self, data):
-        return reduce(lambda x, y: x + y, [compose_amount(self.currency, '', *d['amount']) for d in data])
+        return reduce(lambda x, y: x + y, [compose_amount(self.currency, *d['amount']) for d in data])
 
     def test_lock_ok(self):
         lock_data = {

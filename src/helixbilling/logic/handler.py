@@ -93,7 +93,7 @@ class Handler(object):
         currency = get_currency_by_code(curs, data_copy['currency_name'])
         del data_copy['currency_name']
         data_copy['currency_id'] = currency.id
-        data_copy['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data_copy['overdraft_limit'])
+        data_copy['overdraft_limit'] = compose_amount(currency, *data_copy['overdraft_limit'])
         balance = Balance(**data_copy)
         mapping.insert(curs, balance)
         return response_ok()
@@ -104,7 +104,7 @@ class Handler(object):
         balance = get_balance(curs, data['client_id'], active_only=False, for_update=True)
         if 'overdraft_limit' in data:
             currency = get_currency_by_balance(curs, balance)
-            data['overdraft_limit'] = compose_amount(currency, 'overdraft limit', *data['overdraft_limit'])
+            data['overdraft_limit'] = compose_amount(currency, *data['overdraft_limit'])
         balance.update(data)
         mapping.update(curs, balance)
         return response_ok()
@@ -123,7 +123,7 @@ class Handler(object):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
         currency = get_currency_by_balance(curs, balance)
 
-        data['amount'] = compose_amount(currency, 'receipt', *data['amount'])
+        data['amount'] = compose_amount(currency, *data['amount'])
 
         receipt = Receipt(**data)
         mapping.insert(curs, receipt)
@@ -137,7 +137,7 @@ class Handler(object):
             data_copy = dict(data)
             balance = get_balance(curs, data_copy['client_id'], active_only=True, for_update=True)
             currency = get_currency_by_balance(curs, balance)
-            lock_amount = compose_amount(currency, 'lock', *data_copy['amount'])
+            lock_amount = compose_amount(currency, *data_copy['amount'])
             locks = compute_locks(currency, balance, lock_amount)
 
             del data_copy['amount']
@@ -261,7 +261,7 @@ class Handler(object):
         balance = get_balance(curs, data['client_id'], active_only=True, for_update=True)
         currency = get_currency_by_balance(curs, balance)
 
-        data['amount'] = compose_amount(currency, 'bonus', *data['amount'])
+        data['amount'] = compose_amount(currency, *data['amount'])
 
         bonus = Bonus(**data)
         mapping.insert(curs, bonus)
