@@ -1,17 +1,13 @@
 import unittest
 import datetime
 
-from helixbilling.logic.helper import compute_locks, get_available_resources
+from helixbilling.logic.helper import compute_locks, get_available_resources, compose_amount, decompose_amount
 from helixcore.server.exceptions import ActionNotAllowedError
-from helixbilling.domain.objects import Currency, Balance
-from helixbilling.test.root_test import RootTestCase
+from helixbilling.domain.objects import Balance
+from helixbilling.test.logic.common import TestCaseWithCurrency
 
 
-class HelpersTestCase(RootTestCase):
-    def __init__(self, *args, **kwargs): #IGNORE:W0231
-        super(HelpersTestCase, self).__init__(*args, **kwargs)
-        self.currency = Currency(code='YYY', name='y currency', location='y country', cent_factor=100)
-
+class HelpersTestCase(TestCaseWithCurrency):
     def test_get_available_resources(self):
         b = Balance(
             active=1, client_id='client_id',
@@ -30,7 +26,7 @@ class HelpersTestCase(RootTestCase):
 
         b = Balance(
             active=1, client_id='client_id',
-            currency_id=1, #IGNORE:E1103
+            currency_id=1,
             created_date=datetime.datetime.now(),
             available_real_amount=17,
             available_virtual_amount=5,
@@ -160,6 +156,38 @@ class HelpersTestCase(RootTestCase):
             locked_amount=0
         )
         self.assertRaises(ActionNotAllowedError, compute_locks, self.currency, b, 41)
+
+    def test_compose_amount(self):
+        currencies = {'TND': 1000, 'USD': 100, 'CNY': 10, 'MRO': 5, 'JPY': 1}
+        amounts = [(0, 6), (0, 86), (13, 0), (53, 01), (1113, 36), (03, 001), (13, 359)]
+        expects = {
+            'TND': [6, 86, 13000, 53001, 1113036, 3001, 13359],
+            'USD': [6, 86, 1300, 5301, 111336, 301, 1659],
+            'CNY': [6, 86, 130, 531, 11166, 31, 489],
+            'MRO': [6, 86, 65, 266, 5601, 16, 424],
+            'JPY': [6, 86, 13, 54, 1149, 4, 372],
+        }
+        for code, cent_factor in currencies.items():
+            currency = self._get_currency(code)
+            self.assertEqual(cent_factor, currency.cent_factor)
+            actual = [compose_amount(currency, *amount) for amount in amounts]
+            self.assertEqual(expects[currency.code], actual)
+
+    def test_decompose_amount(self):
+        currencies = {'TND': 1000, 'USD': 100, 'CNY': 10, 'MRO': 5, 'JPY': 1}
+        amounts = [6, 86, 13000, 53001, 1113036, 3001, 13359]
+        expects = {
+            'TND': [(0, 6), (0, 86), (13, 0),    (53, 1),    (1113, 36),   (3, 1),    (13, 359)],
+            'USD': [(0, 6), (0, 86), (130, 0),   (530, 1),   (11130, 36),  (30, 1),   (133, 59)],
+            'CNY': [(0, 6), (8, 6),  (1300, 0),  (5300, 1),  (111303, 6),  (300, 1),  (1335, 9)],
+            'MRO': [(1, 1), (17, 1), (2600, 0),  (10600, 1), (222607, 1),  (600, 1),  (2671, 4)],
+            'JPY': [(6, 0), (86, 0), (13000, 0), (53001, 0), (1113036, 0), (3001, 0), (13359, 0)],
+        }
+        for code, cent_factor in currencies.items():
+            currency = self._get_currency(code)
+            self.assertEqual(cent_factor, currency.cent_factor)
+            actual = [decompose_amount(currency, amount) for amount in amounts]
+            self.assertEqual(expects[currency.code], actual)
 
 
 if __name__ == '__main__':

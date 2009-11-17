@@ -64,15 +64,14 @@ def get_date_filters(date_filters, data):
     return cond
 
 
-def compose_amount(currency, amount_spec, int_part, cent_part):
+def compose_amount(currency, int_part, cent_part):
     '''
     (500, 50) -> 50050 if cent_factor is 100
     '''
     if int_part < 0:
-        raise DataIntegrityError('Integer part of %s amount is negative' % amount_spec)
+        raise DataIntegrityError('Integer part of amount is negative')
     if cent_part < 0:
-        raise DataIntegrityError('Cent part of %s amount is negative' % amount_spec)
-
+        raise DataIntegrityError('Cent part of amount is negative')
     return currency.cent_factor * int_part + cent_part
 
 
