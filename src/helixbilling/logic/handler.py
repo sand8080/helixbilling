@@ -55,6 +55,13 @@ class Handler(object):
                 setattr(obj, f, data[new_f])
             mapping.update(curs, obj)
 
+    def compose_amounts(self, data, currency, amount_fields):
+        result = dict(data)
+        for f in amount_fields:
+            if f in result:
+                result[f] = compose_amount(currency, *result[f])
+        return result
+
     # --- currencies ---
     @transaction()
     @logged
@@ -93,7 +100,7 @@ class Handler(object):
         currency = selector.get_currency_by_code(curs, data_copy['currency_code'])
         del data_copy['currency_code']
         data_copy['currency_id'] = currency.id
-        data_copy['overdraft_limit'] = compose_amount(currency, *data_copy['overdraft_limit'])
+        data_copy = self.compose_amounts(data_copy, currency, ['overdraft_limit'])
         balance = Balance(**data_copy)
         mapping.insert(curs, balance)
         return response_ok()
@@ -102,16 +109,14 @@ class Handler(object):
     @logged
     @authentificate
     def modify_balance(self, data, curs=None):
-        loader = partial(selector.get_balance, curs, data['client_id'], active_only=False, for_update=True)
-        if 'new_overdraft_limit' in data:
-            composed_amount = compose_amount(selector.get_currency_by_balance(curs, loader()),
-                *data['new_overdraft_limit'])
-            data['new_overdraft_limit'] = composed_amount
-        self.update_obj(curs, data, loader)
+        balance = selector.get_balance(curs, data['client_id'], active_only=False, for_update=True)
+        data_copy = self.compose_amounts(data, selector.get_currency_by_balance(curs, balance), ['new_overdraft_limit'])
+        self.update_obj(curs, data_copy, partial(lambda x: x, balance))
         return response_ok()
 
     @transaction()
     @logged
+    @authentificate
     def delete_balance(self, data, curs=None):
         obj = selector.get_balance(curs, data['client_id'], active_only=False, for_update=True)
         mapping.delete(curs, obj)

@@ -48,18 +48,16 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('view_currencies', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
     def test_create_balance(self):
-        self.api.validate_request(
-            'create_balance',
-            {
-                'login': 'l',
-                'password': 'p',
-                'client_id': 'U-23-52',
-                'active': 1,
-                'currency_code': 'YYY',
-                'overdraft_limit': (500, 50),
-                'locking_order': ['available_real_amount', 'available_virtual_amount']
-            }
-        )
+        data = {'login': 'l', 'password': 'p', 'client_id': 'U-23-52', 'active': 1,
+            'currency_code': 'YYY'}
+        self.api.validate_request('create_balance', data)
+
+        data['overdraft_limit'] = (500, 50)
+        self.api.validate_request('create_balance', data)
+
+        data['locking_order'] = ['available_real_amount', 'available_virtual_amount']
+        self.api.validate_request('create_balance', data)
+
         self.validate_status_response('create_balance')
 
     def test_create_balance_invalid(self):

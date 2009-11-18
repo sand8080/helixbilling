@@ -105,8 +105,6 @@ def try_get_lock(curs, client_id, product_id, for_update=False):
     '''
     return mapping.get_obj_by_fields(curs, BalanceLock,
         {'client_id': client_id, 'product_id': product_id}, for_update)
-#    except EmptyResultSetError:
-#        raise DataIntegrityError(' of client %s is not found' % client_id)
 
 
 def try_get_chargeoff(curs, client_id, product_id, for_update=False):

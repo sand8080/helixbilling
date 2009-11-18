@@ -71,6 +71,9 @@ class TestCaseWithCurrency(LogicTestCase):
         mapping.insert(curs, self.currency)
         self.currency = mapping.reload(curs, self.currency)
 
+    @transaction()
+    def get_currency_by_balance(self, balance, curs=None):
+        return selector.get_currency_by_balance(curs, balance)
 
 class TestCaseWithBalance(TestCaseWithCurrency):
     def setUp(self):
@@ -78,17 +81,20 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         self.balance = self.create_balance('123', self.currency) #IGNORE:W0201
 
     @transaction()
-    def create_balance(self, client_id, currency, active=1, overdraft_limit=None, curs=None):
-        if overdraft_limit is None:
-            overdraft_limit = (0, 0)
+    def create_balance(self, client_id, currency, active=1, overdraft_limit=None,
+        locking_order=None, curs=None):
         data = {
             'login': self.test_billing_manager_login,
             'password': self.test_billing_manager_password,
             'client_id': client_id,
             'currency_code': currency.code,
             'active': active,
-            'overdraft_limit': overdraft_limit,
         }
+        if locking_order is not None:
+            data['locking_order'] = locking_order
+        if overdraft_limit is not None:
+            data['overdraft_limit'] = overdraft_limit
+
         handle_action('create_balance', data)
         balance = mapping.get(curs, Balance, Eq('client_id', client_id))
         self.assertTrue(balance.id > 0) #IGNORE:E1101
@@ -96,9 +102,12 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         self.assertTrue(isinstance(balance.created_date, datetime.datetime)) #IGNORE:E1101
         self.assertEquals(0, balance.available_real_amount)
         self.assertEquals(0, balance.locked_amount)
-        self.assertEquals(overdraft_limit, decompose_amount(currency, balance.overdraft_limit))
+        if overdraft_limit is None:
+            self.assertEquals((0, 0), decompose_amount(currency, balance.overdraft_limit))
+        else:
+            self.assertEquals(overdraft_limit, decompose_amount(currency, balance.overdraft_limit))
         self.assertEquals(currency.id, balance.currency_id)
-        self.assertEquals(None, balance.locking_order)
+        self.assertEquals(locking_order, balance.locking_order)
         return balance
 
     @transaction()

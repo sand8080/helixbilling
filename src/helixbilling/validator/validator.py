@@ -56,7 +56,7 @@ CREATE_BALANCE = dict(
         'client_id': Text(),
         'active': AnyOf(0, 1),
         'currency_code': Text(),
-        'overdraft_limit': amount_validator,
+        Optional('overdraft_limit'): amount_validator,
         Optional('locking_order'): locking_order_validator
     },
     **AUTH_INFO
