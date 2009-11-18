@@ -80,10 +80,13 @@ DELETE_BALANCE = dict(
 )
 
 # --- operations ---
-ENROLL_RECEIPT = {
-    'client_id': Text(),
-    'amount': nonnegative_amount_validator,
-}
+ENROLL_RECEIPT = dict(
+    {
+        'client_id': Text(),
+        'amount': nonnegative_amount_validator,
+    },
+    **AUTH_INFO
+)
 
 LOCK = {
     'client_id': Text(),

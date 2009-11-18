@@ -89,14 +89,12 @@ def get_currency_by_balance(curs, balance, for_update=False):
     return mapping.get_obj_by_field(curs, Currency, 'id', balance.id, for_update)
 
 
-def get_balance(curs, client_id, active_only=True, for_update=False):
-    try:
-        balance = mapping.get_obj_by_field(curs, Balance, 'client_id', client_id, for_update)
-        if active_only and balance.active == 0:
-            raise ActionNotAllowedError('Balance of client %s is inactive' % client_id)
-        return balance
-    except EmptyResultSetError:
-        raise DataIntegrityError('Balance of client %s is not found' % client_id)
+def get_balance(curs, billing_manager_id, client_id, active_only=True, for_update=False):
+    balance = mapping.get_obj_by_fields(curs, Balance,
+        {'billing_manager_id': billing_manager_id, 'client_id': client_id}, for_update)
+    if active_only and balance.active == 0:
+        raise ActionNotAllowedError('Balance of client %s is inactive' % client_id)
+    return balance
 
 
 def try_get_lock(curs, client_id, product_id, for_update=False):

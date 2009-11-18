@@ -28,7 +28,9 @@ class BalanceTestCase(TestCaseWithBalance):
             'new_locking_order': None,
         }
         handle_action('modify_balance', data)
+        manager = self.get_billing_manager_by_login(self.test_billing_manager_login)
         balance = self._get_balance(data['client_id'])
+        self.assertEqual(manager.id, balance.billing_manager_id)
 
         currency = self.get_currency_by_balance(balance)
         self.assertEquals(data['new_overdraft_limit'], decompose_amount(currency, balance.overdraft_limit))
@@ -41,6 +43,15 @@ class BalanceTestCase(TestCaseWithBalance):
         handle_action('delete_balance', {'login': self.test_billing_manager_login,
             'password': self.test_billing_manager_password, 'client_id': client_id})
         self.assertRaises(EmptyResultSetError, self._get_balance, client_id)
+
+    def test_not_owned_balance_access(self):
+        client_id = 'client 34'
+        self.create_balance(client_id, self.currency)
+        login = 'evil manager'
+        password = 'lalala'
+        self.add_billing_manager(login, password)
+        data = {'login': login, 'password': password, 'client_id': client_id, 'new_active': 0}
+        self.assertRaises(EmptyResultSetError, handle_action, 'modify_balance', data)
 
     def test_create_balance_failure(self):
         data = {

@@ -3,18 +3,24 @@ import unittest
 
 from common import TestCaseWithBalance
 
-from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError
+from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.server.exceptions import ActionNotAllowedError
+
 from helixbilling.logic.actions import handle_action
 
 
-class ReceiptTestCase(TestCaseWithBalance):
+class EnrollReceiptTestCase(TestCaseWithBalance):
     def test_enroll_receipt_ok(self):
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'amount': (45, 88),
         }
         handle_action('enroll_receipt', data)
         balance = self._get_balance(data['client_id'])
+        manager = self.get_billing_manager_by_login(self.test_billing_manager_login)
+        self.assertEqual(manager.id, balance.billing_manager_id)
 
         self.assertTrue(balance.id > 0)
         self.assertEquals(balance.client_id, data['client_id'])
@@ -28,14 +34,19 @@ class ReceiptTestCase(TestCaseWithBalance):
 
     def test_enroll_receipt_no_balance(self):
         data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
             'client_id': 'inexistent',
             'amount': (1000000, 0),
         }
-        self.assertRaises(DataIntegrityError, handle_action, 'enroll_receipt', data)
+        self.assertRaises(EmptyResultSetError, handle_action, 'enroll_receipt', data)
 
+    def test_enroll_to_inactive_balance(self):
         self._make_balance_passive(self.balance)
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'amount': (45, 88),
         }
         self.assertRaises(ActionNotAllowedError, handle_action, 'enroll_receipt', data)

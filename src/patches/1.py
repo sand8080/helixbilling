@@ -1,4 +1,3 @@
-
 from helixbilling.conf.settings import patch_table_name
 
 def apply(curs):

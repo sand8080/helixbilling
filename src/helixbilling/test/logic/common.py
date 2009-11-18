@@ -7,7 +7,7 @@ import helixcore.mapping.actions as mapping
 
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
-from helixbilling.logic.helper import compose_amount, decompose_amount
+from helixbilling.logic.helper import decompose_amount
 from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
 

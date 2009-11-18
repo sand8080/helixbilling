@@ -84,9 +84,10 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('delete_balance')
 
     def test_enroll_receipt(self):
-        self.api.validate_request('enroll_receipt', {'client_id': 'N5', 'amount': (30, 00)})
+        self.api.validate_request('enroll_receipt', {'login': 'l', 'password': 'p',
+            'client_id': 'N5', 'amount': (30, 00)})
         self.assertRaises(ValidationError, self.api.validate_request, 'enroll_receipt',
-            {'client_id': 'N5', 'amount': (00, 00)})
+            {'login': 'l', 'password': 'p', 'client_id': 'N5', 'amount': (00, 00)})
         self.validate_status_response('enroll_receipt')
 
     def test_enroll_bonus(self):

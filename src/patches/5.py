@@ -1,4 +1,3 @@
-
 def apply(curs):
     print 'Creating table receipt'
     curs.execute(
