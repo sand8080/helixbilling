@@ -16,11 +16,13 @@ class ChargeoffListTestCase(TestCaseWithBalance):
         balance = actions.reload(curs, self.balance, for_update=True)
         balance.available_real_amount += val
         actions.update(curs, balance)
-        self.balance = balance #IGNORE:W0201
+        self.balance = balance
 
     def test_chargeoff_ok(self):
         chargeoff_size = (15, 01)
         chargeoff_data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
             'chargeoffs': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101
@@ -43,7 +45,9 @@ class ChargeoffListTestCase(TestCaseWithBalance):
         locked_before = self.balance.locked_amount
 
         for chargeoff in chargeoff_data['chargeoffs']:
-            handle_action('lock', dict(chargeoff, amount=chargeoff_size))
+            d = dict(chargeoff, amount=chargeoff_size, login=self.test_billing_manager_login,
+                password=self.test_billing_manager_password)
+            handle_action('lock', d)
             balance_decrease += helper.compose_amount(self.currency, *chargeoff_size)
 
         self.balance = self.reload_balance(self.balance)
@@ -58,6 +62,8 @@ class ChargeoffListTestCase(TestCaseWithBalance):
 
     def test_lock_failure(self):
         chargeoff_data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
             'chargeoffs': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101

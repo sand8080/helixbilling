@@ -178,6 +178,8 @@ class ValidatorTestCase(RootTestCase):
         self.assertRaises(ValidationError, self.api.validate_request,
             'unlock_list',
             {
+                'login': 'l',
+                'password': 'p',
                 'unlocks': [
                     {
                         'client_id': 'id_one',
@@ -193,13 +195,16 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_chargeoff(self):
-        self.api.validate_request('chargeoff', {'client_id': 'id_two', 'product_id': 'brb'})
+        self.api.validate_request('chargeoff', {'login': 'l', 'password': 'p',
+            'client_id': 'id_two', 'product_id': 'brb'})
         self.validate_status_response('chargeoff')
 
     def test_chargeoff_list(self):
         self.api.validate_request(
             'chargeoff_list',
             {
+                'password': 'p',
+                'login': 'l',
                 'chargeoffs': [
                     {
                         'client_id': 'id_one',
@@ -218,6 +223,8 @@ class ValidatorTestCase(RootTestCase):
         self.assertRaises(ValidationError, self.api.validate_request,
             'chargeoff_list',
             {
+                'password': 'p',
+                'login': 'l',
                 'chargeoff': [
                     {
                         'client_id': 'id_one',
@@ -233,7 +240,8 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_product_status(self):
-        self.api.validate_request('product_status', {'client_id': 'id_two', 'product_id': 'brb'})
+        self.api.validate_request('product_status', {'login': 'l', 'password': 'p',
+            'client_id': 'id_two', 'product_id': 'brb'})
         self.api.validate_response('product_status', {'status': 'ok', 'product_status': 'unknown'})
         self.api.validate_response('product_status', {'status': 'ok', 'product_status': 'locked',
             'real_amount': (0, 0), 'virtual_amount': (1, 9),

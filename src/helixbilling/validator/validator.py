@@ -131,10 +131,30 @@ UNLOCK_LIST = dict(
     **AUTH_INFO
 )
 
-PRODUCT_STATUS = {
+PRODUCT_STATUS = dict(
+    {
+        'client_id': Text(),
+        'product_id': Text(),
+    },
+    **AUTH_INFO
+)
+
+CHARGEOFF_INFO = {
     'client_id': Text(),
     'product_id': Text(),
 }
+
+CHARGEOFF = dict(
+    CHARGEOFF_INFO,
+    **AUTH_INFO
+)
+
+CHARGEOFF_LIST = dict(
+    {
+        'chargeoffs': [CHARGEOFF_INFO]
+    },
+    **AUTH_INFO
+)
 
 PRODUCT_STATUS_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK,
@@ -161,15 +181,6 @@ PRODUCT_STATUS_RESPONSE = AnyOf(
     ),
     RESPONSE_STATUS_ERROR
 )
-
-CHARGEOFF = {
-    'client_id': Text(),
-    'product_id': Text(),
-}
-
-CHARGEOFF_LIST = {
-    'chargeoffs': [CHARGEOFF]
-}
 
 # --- view operations ---
 VIEW_RECEIPTS = {

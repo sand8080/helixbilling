@@ -18,14 +18,21 @@ class ProductStatusTestCase(TestCaseWithBalance):
         self.init_balance()
         lock_amount = (60, 00)
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': lock_amount,
         }
         handle_action('lock', data)
-        lock = self._get_lock(self.balance.client_id, data['product_id']) #IGNORE:E1101
+        lock = self._get_lock(self.balance.client_id, data['product_id'])
 
-        del data['amount']
+        data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
+            'product_id': '555',
+        }
         response = handle_action('product_status', data)
         self.assertEquals(product_status.locked, response['product_status'])
         self.assertEquals(lock.locked_date, response['locked_date'])
@@ -35,17 +42,24 @@ class ProductStatusTestCase(TestCaseWithBalance):
         self.init_balance()
         lock_amount = (60, 00)
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': lock_amount,
         }
         handle_action('lock', data)
 
-        del data['amount']
-        handle_action('chargeoff', data)
-        chargeoff = self._get_chargeoff(self.balance.client_id, data['product_id']) #IGNORE:E1101
+        data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
+            'product_id': '555',
+        }
+        handle_action('chargeoff', dict(data))
+        chargeoff = self._get_chargeoff(self.balance.client_id, data['product_id'])
 
-        response = handle_action('product_status', data)
+        response = handle_action('product_status', dict(data))
         self.assertEquals(product_status.charged_off, response['product_status'])
         self.assertEquals(chargeoff.locked_date, response['locked_date'])
         self.assertEquals(chargeoff.chargeoff_date, response['chargeoff_date'])
@@ -64,13 +78,20 @@ class ProductStatusTestCase(TestCaseWithBalance):
         self.init_balance()
         lock_amount = (60, 00)
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': lock_amount,
         }
         handle_action('lock', data)
-        del data['amount']
-        data['product_id'] = '556'
+
+        data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
+            'product_id': 'another product id',
+        }
         response = handle_action('product_status', data)
         self.assertEquals(product_status.unknown, response['product_status'])
 

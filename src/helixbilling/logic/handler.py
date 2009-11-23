@@ -4,7 +4,7 @@ import helixcore.mapping.actions as mapping
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.db.sql import Eq, And
 from helixcore.server.response import response_ok
-from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
+from helixcore.server.exceptions import ActionNotAllowedError
 
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, BillingManager
@@ -281,34 +281,6 @@ class Handler(object):
         self._unlock(data['billing_manager_id'], data['unlocks'], curs)
         return response_ok()
 
-    @transaction()
-    def product_status(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False, for_update=False)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        response = {'product_status': product_status.unknown}
-        try:
-            lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
-            response['product_status'] = product_status.locked
-            response['locked_date'] = lock.locked_date
-            response['real_amount'] = decompose_amount(currency, lock.real_amount)
-            response['virtual_amount'] = decompose_amount(currency, lock.virtual_amount)
-        except EmptyResultSetError: #IGNORE:W0704
-            pass
-
-        try:
-            chargeoff = selector.try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
-            response['product_status'] = product_status.charged_off
-            response['locked_date'] = chargeoff.locked_date
-            response['chargeoff_date'] = chargeoff.chargeoff_date
-            response['real_amount'] = decompose_amount(currency, chargeoff.real_amount)
-            response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
-        except EmptyResultSetError: #IGNORE:W0704
-            pass
-
-        return response_ok(**response)
-
     def _chargeoff(self, billing_manager_id, data_list, curs=None):
         balances = {}
         for data in data_list:
@@ -339,32 +311,70 @@ class Handler(object):
 
     @transaction()
     @logged
+    @authentificate
     def chargeoff(self, data, curs=None):
         """
         data = {
+            'login': Text(),
+            'password': Text(),
             'client_id': Text(),
             'product_id': Text(),
             'amount': (positive int, non negative int)
         }
         """
-        self._chargeoff([data], curs)
+        data_copy = dict(data)
+        billing_manager_id = data_copy['billing_manager_id']
+        del data_copy['billing_manager_id']
+        self._chargeoff(billing_manager_id, [data_copy], curs)
         return response_ok()
 
     @transaction()
     @logged_bulk
+    @authentificate
     def chargeoff_list(self, data, curs=None):
         """
         data = {
+            'login': Text(),
+            'password': Text(),
             'chargeoffs': [
                 {'client_id': Text(), 'product_id': Text(), 'amount': (positive int, non negative int)}
                 ...
             ]
         }
         """
-        self._chargeoff(data['chargeoffs'], curs)
+        self._chargeoff(data['billing_manager_id'], data['chargeoffs'], curs)
         return response_ok()
 
     #view operations
+
+    @transaction()
+    @authentificate
+    def product_status(self, data, curs=None):
+        balance = selector.get_balance(curs, data['billing_manager_id'],
+            data['client_id'], active_only=False, for_update=False)
+        currency = selector.get_currency_by_balance(curs, balance)
+
+        response = {'product_status': product_status.unknown}
+        try:
+            lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
+            response['product_status'] = product_status.locked
+            response['locked_date'] = lock.locked_date
+            response['real_amount'] = decompose_amount(currency, lock.real_amount)
+            response['virtual_amount'] = decompose_amount(currency, lock.virtual_amount)
+        except EmptyResultSetError: #IGNORE:W0704
+            pass
+
+        try:
+            chargeoff = selector.try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
+            response['product_status'] = product_status.charged_off
+            response['locked_date'] = chargeoff.locked_date
+            response['chargeoff_date'] = chargeoff.chargeoff_date
+            response['real_amount'] = decompose_amount(currency, chargeoff.real_amount)
+            response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
+        except EmptyResultSetError: #IGNORE:W0704
+            pass
+
+        return response_ok(**response)
 
     @transaction()
     def view_receipts(self, data, curs=None):
