@@ -158,6 +158,8 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(
             'unlock_list',
             {
+                'login': 'l',
+                'password': 'p',
                 'unlocks': [
                     {
                         'client_id': 'id_one',

@@ -22,21 +22,23 @@ class LockListTestCase(TestCaseWithBalance):
     def get_amount_sum(self, data):
         return reduce(lambda x, y: x + y, [compose_amount(self.currency, *d['amount']) for d in data])
 
-    def test_lock_ok(self):
+    def test_lock_list_ok(self):
         lock_data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
             'locks': [
                 {
-                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'client_id': self.balance.client_id,
                     'product_id': 'super-light 555',
                     'amount': (20, 00),
                 },
                 {
-                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'client_id': self.balance.client_id,
                     'product_id': 'super-light 556',
                     'amount': (30, 00),
                 },
                 {
-                    'client_id': self.balance.client_id, #IGNORE:E1101
+                    'client_id': self.balance.client_id,
                     'product_id': 'super-light 557',
                     'amount': (40, 00),
                 },
@@ -57,14 +59,16 @@ class LockListTestCase(TestCaseWithBalance):
         self.assertEquals(available_virtual_before, self.balance.available_virtual_amount + balance_virtual_increase)
         self.assertEquals(locked_before, self.balance.locked_amount - balance_decrease)
 
-    def test_unlock_ok(self):
-        self.test_lock_ok()
+    def test_unlock_list_ok(self):
+        self.test_lock_list_ok()
         self.balance = self.reload_balance(self.balance)
         available_real_before = self.balance.available_real_amount
         available_virtual_before = self.balance.available_virtual_amount
         locked_before = self.balance.locked_amount
 
         unlock_data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
             'unlocks': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101
@@ -84,10 +88,12 @@ class LockListTestCase(TestCaseWithBalance):
             self.balance.available_real_amount + self.balance.available_virtual_amount + self.balance.locked_amount
         )
 
-    def test_lock_failure(self):
+    def test_lock_list_failure(self):
         balance_real_increase = 1500
         balance_virtual_increase = 1000
         lock_data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
             'locks': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101
@@ -103,6 +109,28 @@ class LockListTestCase(TestCaseWithBalance):
         }
         self.increase_balance(balance_real_increase, balance_virtual_increase)
         self.assertRaises(ActionNotAllowedError, handle_action, 'lock_list', lock_data)
+
+    def test_unlock_list_failure(self):
+        self.test_lock_list_ok()
+        unlock_data = {
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'unlocks': [
+                {
+                    'client_id': self.balance.client_id,
+                    'product_id': 'super-light 555',
+                },
+                {
+                    'client_id': self.balance.client_id,
+                    'product_id': 'super-light 556',
+                },
+                {
+                    'client_id': self.balance.client_id,
+                    'product_id': 'UNEXISTED',
+                },
+            ]
+        }
+        self.assertRaises(ActionNotAllowedError, handle_action, 'unlock_list', unlock_data)
 
 
 if __name__ == '__main__':

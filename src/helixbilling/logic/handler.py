@@ -203,16 +203,19 @@ class Handler(object):
 
     @transaction()
     @logged_bulk
+    @authentificate
     def lock_list(self, data, curs=None):
         """
         data = {
+            'login': Text(),
+            'password': Text(),
             'locks': [
                 {'client_id': Text(), 'product_id': Text()}
                 ...
             ]
         }
         """
-        self._lock(data['locks'], curs)
+        self._lock(data['billing_manager_id'], data['locks'], curs)
         return response_ok()
 
     def _unlock(self, billing_manager_id, data_list, curs=None):
@@ -263,16 +266,19 @@ class Handler(object):
 
     @transaction()
     @logged_bulk
+    @authentificate
     def unlock_list(self, data, curs=None):
         """
         data = {
+            'login': Text(),
+            'password': Text(),
             'unlocks': [
                 {'client_id': Text(), 'product_id': Text(),}
                 ...
             ]
         }
         """
-        self._unlock(data['unlocks'], curs)
+        self._unlock(data['billing_manager_id'], data['unlocks'], curs)
         return response_ok()
 
     @transaction()

@@ -124,9 +124,12 @@ UNLOCK = dict(
     **AUTH_INFO
 )
 
-UNLOCK_LIST = {
-    'unlocks': [UNLOCK_INFO]
-}
+UNLOCK_LIST = dict(
+    {
+        'unlocks': [UNLOCK_INFO]
+    },
+    **AUTH_INFO
+)
 
 PRODUCT_STATUS = {
     'client_id': Text(),
