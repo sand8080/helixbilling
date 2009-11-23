@@ -103,13 +103,15 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('lock')
 
     def test_lock_invalid(self):
-        self.assertRaises(ValidationError, self.api.validate_request,
-            'lock', {'client_id': 'id', 'product_id': 'super-light 555', 'amount': (-60, 00)})
+        self.assertRaises(ValidationError, self.api.validate_request, 'lock', {'login': 'l', 'password': 'p',
+            'client_id': 'id', 'product_id': 'super-light 555', 'amount': (-60, 00)})
 
     def test_lock_list(self):
         self.api.validate_request(
             'lock_list',
             {
+                'login': 'l',
+                'password': 'p',
                 'locks': [
                     {
                         'client_id': 'id_one',
@@ -130,6 +132,8 @@ class ValidatorTestCase(RootTestCase):
         self.assertRaises(ValidationError, self.api.validate_request,
             'lock_list',
             {
+                'login': 'l',
+                'password': 'p',
                 'locks': [
                     {
                         'client_id': 'id_one',
@@ -146,7 +150,8 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_unlock(self):
-        self.api.validate_request('unlock', {'client_id': 'id_one', 'product_id': 'super-light 555'})
+        self.api.validate_request('unlock', {'login': 'l', 'password': 'p',
+            'client_id': 'id_one', 'product_id': 'super-light 555'})
         self.validate_status_response('unlock')
 
     def test_unlock_list(self):

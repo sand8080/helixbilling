@@ -160,15 +160,15 @@ class Handler(object):
         mapping.update(curs, balance)
         return response_ok()
 
-
+    # --- lock ---
     def _lock(self, billing_manager_id, data_list, curs):
         for data in data_list:
             balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=True, for_update=True)
             currency = selector.get_currency_by_balance(curs, balance)
             data_copy = self.compose_amounts(data, currency, ['amount'])
-            locks = compute_locks(currency, balance, *data_copy['amount'])
-
+            locks = compute_locks(currency, balance, data_copy['amount'])
             del data_copy['amount']
+
             lock = BalanceLock(
                 real_amount=locks['available_real_amount'],
                 virtual_amount=locks['available_virtual_amount'],
@@ -184,8 +184,21 @@ class Handler(object):
 
     @transaction()
     @logged
+    @authentificate
     def lock(self, data, curs=None):
-        self._lock([data], curs)
+        """
+        data = {
+            'login': Text(),
+            'password': Text(),
+            'client_id': Text(),
+            'product_id': Text(),
+            'amount': nonnegative_amount_validator
+        }
+        """
+        data_copy = dict(data)
+        billing_manager_id = data_copy['billing_manager_id']
+        del data_copy['billing_manager_id']
+        self._lock(billing_manager_id, [data_copy], curs)
         return response_ok()
 
     @transaction()
@@ -214,7 +227,7 @@ class Handler(object):
             try:
                 lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
             except EmptyResultSetError:
-                raise DataIntegrityError(
+                raise ActionNotAllowedError(
                     'Cannot unlock money for product %s: '
                     'amount was not locked for this product'
                     % data['product_id']
@@ -232,14 +245,20 @@ class Handler(object):
 
     @transaction()
     @logged
+    @authentificate
     def unlock(self, data, curs=None):
         """
         data = {
+            'login': Text(),
+            'password': Text(),
             'client_id': Text(),
             'product_id': Text(),
         }
         """
-        self._unlock([data], curs)
+        data_copy = dict(data)
+        billing_manager_id = data_copy['billing_manager_id']
+        del data_copy['billing_manager_id']
+        self._unlock(billing_manager_id, [data], curs)
         return response_ok()
 
     @transaction()

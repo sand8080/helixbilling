@@ -107,17 +107,25 @@ LOCK = dict(
     **AUTH_INFO
 )
 
-LOCK_LIST = {
-    'locks': [LOCK_INFO]
-}
+LOCK_LIST = dict(
+    {
+        'locks': [LOCK_INFO]
+    },
+    **AUTH_INFO
+)
 
-UNLOCK = {
+UNLOCK_INFO = {
     'client_id': Text(),
     'product_id': Text(),
 }
 
+UNLOCK = dict(
+    UNLOCK_INFO,
+    **AUTH_INFO
+)
+
 UNLOCK_LIST = {
-    'unlocks': [UNLOCK]
+    'unlocks': [UNLOCK_INFO]
 }
 
 PRODUCT_STATUS = {
