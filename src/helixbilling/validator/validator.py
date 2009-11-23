@@ -88,14 +88,27 @@ ENROLL_RECEIPT = dict(
     **AUTH_INFO
 )
 
-LOCK = {
+ENROLL_BONUS = dict(
+    {
+        'client_id': Text(),
+        'amount': nonnegative_amount_validator,
+    },
+    **AUTH_INFO
+)
+
+LOCK_INFO = {
     'client_id': Text(),
     'product_id': Text(),
     'amount': nonnegative_amount_validator,
 }
 
+LOCK = dict(
+    LOCK_INFO,
+    **AUTH_INFO
+)
+
 LOCK_LIST = {
-    'locks': [LOCK]
+    'locks': [LOCK_INFO]
 }
 
 UNLOCK = {
@@ -137,11 +150,6 @@ PRODUCT_STATUS_RESPONSE = AnyOf(
     ),
     RESPONSE_STATUS_ERROR
 )
-
-ENROLL_BONUS = {
-    'client_id': Text(),
-    'amount': nonnegative_amount_validator,
-}
 
 CHARGEOFF = {
     'client_id': Text(),

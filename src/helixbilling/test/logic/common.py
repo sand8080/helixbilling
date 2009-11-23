@@ -39,6 +39,13 @@ class LogicTestCase(ServiceTestCase):
         return mapping.get(curs, Balance, Eq('client_id', client_id))
 
     @transaction()
+    def _get_validated_balance(self, billing_manager_login, client_id, curs=None):
+        balance = mapping.get(curs, Balance, Eq('client_id', client_id))
+        manager = self.get_billing_manager_by_login(billing_manager_login)
+        self.assertEqual(manager.id, balance.billing_manager_id)
+        return balance
+
+    @transaction()
     def _get_receipts(self, client_id, curs=None):
         return mapping.get_list(curs, Receipt, Eq('client_id', client_id))
 

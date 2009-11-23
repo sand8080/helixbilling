@@ -124,7 +124,7 @@ class Handler(object):
         mapping.delete(curs, obj)
         return response_ok()
 
-    # --- receipt ---
+    # --- enroll receipt ---
     @transaction()
     @logged
     @authentificate
@@ -134,11 +134,32 @@ class Handler(object):
         currency = selector.get_currency_by_balance(curs, balance)
         data_copy = self.compose_amounts(data, currency, ['amount'])
         del data_copy['billing_manager_id']
+
         receipt = Receipt(**data_copy)
         mapping.insert(curs, receipt)
-        balance.available_real_amount += receipt.amount #IGNORE:E1101
+
+        balance.available_real_amount += receipt.amount  #IGNORE:E1101
         mapping.update(curs, balance)
         return response_ok()
+
+    # --- enroll bonus ---
+    @transaction()
+    @logged
+    @authentificate
+    def enroll_bonus(self, data, curs=None):
+        balance = selector.get_balance(curs, data['billing_manager_id'],
+            data['client_id'], active_only=True, for_update=True)
+        currency = selector.get_currency_by_balance(curs, balance)
+        data_copy = self.compose_amounts(data, currency, ['amount'])
+        del data_copy['billing_manager_id']
+
+        bonus = Bonus(**data_copy)
+        mapping.insert(curs, bonus)
+
+        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
+        mapping.update(curs, balance)
+        return response_ok()
+
 
     def _lock(self, billing_manager_id, data_list, curs):
         for data in data_list:
@@ -262,22 +283,6 @@ class Handler(object):
             pass
 
         return response_ok(**response)
-
-    @transaction()
-    @logged
-    def enroll_bonus(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=True, for_update=True)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        data['amount'] = compose_amount(currency, *data['amount'])
-
-        bonus = Bonus(**data)
-        mapping.insert(curs, bonus)
-
-        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
-        mapping.update(curs, balance)
-        return response_ok()
 
     def _chargeoff(self, billing_manager_id, data_list, curs=None):
         balances = {}

@@ -18,9 +18,7 @@ class EnrollReceiptTestCase(TestCaseWithBalance):
             'amount': (45, 88),
         }
         handle_action('enroll_receipt', data)
-        balance = self._get_balance(data['client_id'])
-        manager = self.get_billing_manager_by_login(self.test_billing_manager_login)
-        self.assertEqual(manager.id, balance.billing_manager_id)
+        balance = self._get_validated_balance(self.test_billing_manager_login, data['client_id'])
 
         self.assertTrue(balance.id > 0)
         self.assertEquals(balance.client_id, data['client_id'])
