@@ -24,14 +24,16 @@ class ViewReceiptsTestCase(TestCaseWithBalance):
         end_date = datetime.datetime(2009, 4, 25, tzinfo=pytz.utc)
 
         self._make_receipt('899', datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
-        self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #IGNORE:E1101 - too early
-        r_low = self._make_receipt(self.balance.client_id, start_date, 6200) #IGNORE:E1101
-        r_mid = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 22, 8, 33, 44, tzinfo=pytz.utc), 7060) #IGNORE:E1101
-        r_hi = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 24, 23, 59, 59, tzinfo=pytz.utc), 7060) #IGNORE:E1101
-        self._make_receipt(self.balance.client_id, end_date, 1080) #IGNORE:E1101 - too late
+        self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #too early
+        r_low = self._make_receipt(self.balance.client_id, start_date, 6200)
+        r_mid = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 22, 8, 33, 44, tzinfo=pytz.utc), 7060)
+        r_hi = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 24, 23, 59, 59, tzinfo=pytz.utc), 7060)
+        self._make_receipt(self.balance.client_id, end_date, 1080) #too late
 
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'start_date': start_date.isoformat(),
             'end_date': end_date.isoformat(),
             'offset': 0,
@@ -51,20 +53,22 @@ class ViewReceiptsTestCase(TestCaseWithBalance):
         end_date = datetime.datetime(2009, 4, 25, tzinfo=pytz.utc)
 
         self._make_receipt('899', datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
-        self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #IGNORE:E1101 - too early
-        r_low = self._make_receipt(self.balance.client_id, start_date, 6200) #IGNORE:E1101
-        r_mid = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 22, 8, 33, 44, tzinfo=pytz.utc), 7060) #IGNORE:E1101
-        r_hi = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 24, 23, 59, 59, tzinfo=pytz.utc), 7060) #IGNORE:E1101
-        self._make_receipt(self.balance.client_id, end_date, 1080) #IGNORE:E1101 - too late
+        self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #too early
+        r_low = self._make_receipt(self.balance.client_id, start_date, 6200)
+        r_mid = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 22, 8, 33, 44, tzinfo=pytz.utc), 7060)
+        r_hi = self._make_receipt(self.balance.client_id, datetime.datetime(2009, 4, 24, 23, 59, 59, tzinfo=pytz.utc), 7060)
+        self._make_receipt(self.balance.client_id, end_date, 1080) #too late
 
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'start_date': start_date.isoformat(),
             'end_date': end_date.isoformat(),
             'offset': 0,
             'limit': 2,
         }
-        response = handle_action('view_receipts', data)
+        response = handle_action('view_receipts', dict(data))
         self.assertEquals(response['total'], 3)
 
         selected_receipts = response['receipts']
@@ -73,7 +77,7 @@ class ViewReceiptsTestCase(TestCaseWithBalance):
         self._check_receipt(r_mid, selected_receipts[1])
 
         data['offset'] = 2
-        response = handle_action('view_receipts', data)
+        response = handle_action('view_receipts', dict(data))
         self.assertEquals(response['total'], 3)
 
         selected_receipts = response['receipts']
@@ -85,11 +89,13 @@ class ViewReceiptsTestCase(TestCaseWithBalance):
         end_date = datetime.datetime(2009, 4, 25, tzinfo=pytz.utc)
 
         self._make_receipt('899', datetime.datetime(2009, 1, 2, tzinfo=pytz.utc), 5099) #other client
-        self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #IGNORE:E1101 - too early
-        self._make_receipt(self.balance.client_id, end_date, 1080) #IGNORE:E1101 - too late
+        self._make_receipt(self.balance.client_id, datetime.datetime(2009, 2, 21, tzinfo=pytz.utc), 5000) #too early
+        self._make_receipt(self.balance.client_id, end_date, 1080) #too late
 
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'start_date': start_date.isoformat(),
             'end_date': end_date.isoformat(),
             'offset': 0,

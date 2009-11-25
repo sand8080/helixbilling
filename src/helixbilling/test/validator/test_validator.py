@@ -254,10 +254,12 @@ class ValidatorTestCase(RootTestCase):
         })
 
     def test_view_receipts(self):
-        self.api.validate_request('view_receipts', {'client_id': 'U', 'offset': 2, 'limit': 3})
-        self.api.validate_request('view_receipts', {'client_id': 'U', 'start_date': datetime.datetime.now().isoformat(),
-            'offset': 2, 'limit': 3})
-        self.api.validate_request('view_receipts', {'client_id': 'U', 'start_date': datetime.datetime.now().isoformat(),
+        self.api.validate_request('view_receipts', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3})
+        self.api.validate_request('view_receipts', {'login': 'l', 'password': 'p', 'client_id': 'U',
+            'start_date': datetime.datetime.now().isoformat(), 'offset': 2, 'limit': 3})
+        self.api.validate_request('view_receipts', {'login': 'l', 'password': 'p', 'client_id': 'U',
+            'start_date': datetime.datetime.now().isoformat(),
             'end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(), 'offset': 2, 'limit': 3})
         self.api.validate_response('view_receipts', {'status': 'ok', 'total': 0, 'receipts': []})
         self.api.validate_response('view_receipts', {'status': 'ok', 'total': 10,

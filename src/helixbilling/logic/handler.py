@@ -377,6 +377,7 @@ class Handler(object):
         return response_ok(**response)
 
     @transaction()
+    @authentificate
     def view_receipts(self, data, curs=None):
         balance = selector.get_balance(curs, data['billing_manager_id'],
             data['client_id'], active_only=False)

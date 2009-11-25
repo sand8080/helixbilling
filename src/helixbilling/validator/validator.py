@@ -183,13 +183,16 @@ PRODUCT_STATUS_RESPONSE = AnyOf(
 )
 
 # --- view operations ---
-VIEW_RECEIPTS = {
-    'client_id': Text(),
-    Optional('start_date'): IsoDatetime(),
-    Optional('end_date'): IsoDatetime(),
-    'offset': NonNegative(int),
-    'limit': Positive(int),
-}
+VIEW_RECEIPTS = dict(
+    {
+        'client_id': Text(),
+        Optional('start_date'): IsoDatetime(),
+        Optional('end_date'): IsoDatetime(),
+        'offset': NonNegative(int),
+        'limit': Positive(int),
+    },
+    **AUTH_INFO
+)
 
 VIEW_RECEIPTS_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK,
