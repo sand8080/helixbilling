@@ -239,14 +239,18 @@ VIEW_CHARGEOFFS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-VIEW_BALANCE_LOCKS = {
-    'client_id': Text(),
-    Optional('product_id'): Text(),
-    Optional('locked_start_date'): IsoDatetime(),
-    Optional('locked_end_date'): IsoDatetime(),
-    'offset': NonNegative(int),
-    'limit': Positive(int),
-}
+VIEW_BALANCE_LOCKS = dict(
+    {
+        'client_id': Text(),
+        Optional('product_id'): Text(),
+        Optional('locked_start_date'): IsoDatetime(),
+        Optional('locked_end_date'): IsoDatetime(),
+        'offset': NonNegative(int),
+        'limit': Positive(int),
+    },
+    **AUTH_INFO
+)
+
 
 VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK,

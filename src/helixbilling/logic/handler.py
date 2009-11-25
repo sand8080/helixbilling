@@ -413,6 +413,7 @@ class Handler(object):
         return response_ok(chargeoffs=chargeoffs, total=total)
 
     @transaction()
+    @authentificate
     def view_balance_locks(self, data, curs=None):
         balance = selector.get_balance(curs, data['billing_manager_id'],
             data['client_id'], active_only=False)
