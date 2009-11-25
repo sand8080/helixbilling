@@ -99,7 +99,9 @@ class ViewChargeoffsTestCase(TestCaseWithBalance):
 
     def test_view_chargeoffs_ok(self):
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'locked_start_date': self.locked_start_date.isoformat(),
             'locked_end_date': self.locked_end_date.isoformat(),
             'chargedoff_start_date': self.locked_start_date.isoformat(),
@@ -119,7 +121,9 @@ class ViewChargeoffsTestCase(TestCaseWithBalance):
 
     def test_view_chargeoffs_paged(self):
         data = {
-            'client_id': self.balance.client_id, #IGNORE:E1101
+            'login': self.test_billing_manager_login,
+            'password': self.test_billing_manager_password,
+            'client_id': self.balance.client_id,
             'locked_start_date': self.locked_start_date.isoformat(),
             'locked_end_date': self.locked_end_date.isoformat(),
             'chargedoff_start_date': self.locked_start_date.isoformat(),
@@ -128,7 +132,7 @@ class ViewChargeoffsTestCase(TestCaseWithBalance):
             'limit': 2,
         }
 
-        response = handle_action('view_chargeoffs', data)
+        response = handle_action('view_chargeoffs', dict(data))
         self.assertEquals(3, response['total'])
 
         selected_chargeoffs = response['chargeoffs']
@@ -139,7 +143,7 @@ class ViewChargeoffsTestCase(TestCaseWithBalance):
 
         data['offset'] = 2
         data['limit'] = 20
-        response = handle_action('view_chargeoffs', data)
+        response = handle_action('view_chargeoffs', dict(data))
         self.assertEquals(response['total'], 3)
 
         selected_chargeoffs = response['chargeoffs']

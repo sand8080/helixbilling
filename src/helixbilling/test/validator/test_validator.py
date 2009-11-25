@@ -287,20 +287,26 @@ class ValidatorTestCase(RootTestCase):
         })
 
     def test_view_chargeoffs(self):
-        self.api.validate_request('view_chargeoffs', {'client_id': 'U', 'offset': 2, 'limit': 3})
-        self.api.validate_request('view_chargeoffs', {'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j'})
-        self.api.validate_request('view_chargeoffs', {'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
+        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3})
+        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j'})
+        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
             'locked_start_date': datetime.datetime.now().isoformat()})
-        self.api.validate_request('view_chargeoffs', {'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
+        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
             'locked_start_date': datetime.datetime.now().isoformat(),
             'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
         })
-        self.api.validate_request('view_chargeoffs', {'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
+        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
             'locked_start_date': datetime.datetime.now().isoformat(),
             'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
             'chargeoff_start_date': datetime.datetime.now().isoformat(),
         })
-        self.api.validate_request('view_chargeoffs', {'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
+        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
             'locked_start_date': datetime.datetime.now().isoformat(),
             'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
             'chargeoff_start_date': datetime.datetime.now().isoformat(),

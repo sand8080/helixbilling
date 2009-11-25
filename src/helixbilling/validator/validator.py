@@ -208,16 +208,19 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-VIEW_CHARGEOFFS = {
-    'client_id': Text(),
-    Optional('product_id'): Text(),
-    Optional('locked_start_date'): IsoDatetime(),
-    Optional('locked_end_date'): IsoDatetime(),
-    Optional('chargeoff_start_date'): IsoDatetime(),
-    Optional('chargeoff_end_date'): IsoDatetime(),
-    'offset': NonNegative(int),
-    'limit': Positive(int),
-}
+VIEW_CHARGEOFFS = dict(
+    {
+        'client_id': Text(),
+        Optional('product_id'): Text(),
+        Optional('locked_start_date'): IsoDatetime(),
+        Optional('locked_end_date'): IsoDatetime(),
+        Optional('chargeoff_start_date'): IsoDatetime(),
+        Optional('chargeoff_end_date'): IsoDatetime(),
+        'offset': NonNegative(int),
+        'limit': Positive(int),
+    },
+    **AUTH_INFO
+)
 
 VIEW_CHARGEOFFS_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK,
