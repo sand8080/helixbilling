@@ -18,10 +18,10 @@ import selector
 
 def authentificate(method):
     def decroated(self, data, curs):
-        data['billing_manager_id'] = self.get_billing_manager_id(curs, data)
+        billing_manager_id=self.get_billing_manager_id(curs, data)
         del data['login']
         del data['password']
-        return method(self, data, curs)
+        return method(self, data, curs=curs, billing_manager_id=billing_manager_id)
     return decroated
 
 
@@ -77,17 +77,18 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def modify_billing_manager(self, data, curs=None):
+    def modify_billing_manager(self, data, curs=None, billing_manager_id=None):
         if 'new_password' in data:
             data['new_password'] = security.encrypt_password(data['new_password'])
-        loader = partial(selector.get_billing_manager, curs, data['billing_manager_id'], for_update=True)
+        data['billing_manager_id'] = billing_manager_id
+        loader = partial(selector.get_billing_manager, curs, billing_manager_id, for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @authentificate
-    def delete_billing_manager(self, data, curs=None):
-        obj = selector.get_billing_manager(curs, data['billing_manager_id'])
+    def delete_billing_manager(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
+        obj = selector.get_billing_manager(curs, billing_manager_id)
         mapping.delete(curs, obj)
         return response_ok()
 
@@ -95,32 +96,32 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def create_balance(self, data, curs=None):
-        data_copy = dict(data)
-        currency = selector.get_currency_by_code(curs, data_copy['currency_code'])
-        del data_copy['currency_code']
-        data_copy['currency_id'] = currency.id
-        data_copy = self.compose_amounts(data_copy, currency, ['overdraft_limit'])
-        balance = Balance(**data_copy)
+    def create_balance(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
+        currency = selector.get_currency_by_code(curs, data['currency_code'])
+        del data['currency_code']
+        data['currency_id'] = currency.id
+        data['billing_manager_id'] = billing_manager_id
+        data = self.compose_amounts(data, currency, ['overdraft_limit'])
+        balance = Balance(**data)
         mapping.insert(curs, balance)
         return response_ok()
 
     @transaction()
     @logged
     @authentificate
-    def modify_balance(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False, for_update=True)
-        data_copy = self.compose_amounts(data, selector.get_currency_by_balance(curs, balance), ['new_overdraft_limit'])
-        self.update_obj(curs, data_copy, partial(lambda x: x, balance))
+    def modify_balance(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+            active_only=False, for_update=True)
+        data = self.compose_amounts(data, selector.get_currency_by_balance(curs, balance), ['new_overdraft_limit'])
+        self.update_obj(curs, data, partial(lambda x: x, balance))
         return response_ok()
 
     @transaction()
     @logged
     @authentificate
-    def delete_balance(self, data, curs=None):
-        obj = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False, for_update=True)
+    def delete_balance(self, data, curs=None, billing_manager_id=None):
+        obj = selector.get_balance(curs, billing_manager_id, data['client_id'],
+            active_only=False, for_update=True)
         mapping.delete(curs, obj)
         return response_ok()
 
@@ -128,14 +129,13 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def enroll_receipt(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=True, for_update=True)
+    def enroll_receipt(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+            active_only=True, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
-        data_copy = self.compose_amounts(data, currency, ['amount'])
-        del data_copy['billing_manager_id']
+        data = self.compose_amounts(data, currency, ['amount'])
 
-        receipt = Receipt(**data_copy)
+        receipt = Receipt(**data)
         mapping.insert(curs, receipt)
 
         balance.available_real_amount += receipt.amount  #IGNORE:E1101
@@ -146,12 +146,11 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def enroll_bonus(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=True, for_update=True)
+    def enroll_bonus(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+            active_only=True, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
         data_copy = self.compose_amounts(data, currency, ['amount'])
-        del data_copy['billing_manager_id']
 
         bonus = Bonus(**data_copy)
         mapping.insert(curs, bonus)
@@ -185,7 +184,7 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def lock(self, data, curs=None):
+    def lock(self, data, curs=None, billing_manager_id=None):
         """
         data = {
             'login': Text(),
@@ -195,16 +194,13 @@ class Handler(object):
             'amount': nonnegative_amount_validator
         }
         """
-        data_copy = dict(data)
-        billing_manager_id = data_copy['billing_manager_id']
-        del data_copy['billing_manager_id']
-        self._lock(billing_manager_id, [data_copy], curs)
+        self._lock(billing_manager_id, [data], curs)
         return response_ok()
 
     @transaction()
     @logged_bulk
     @authentificate
-    def lock_list(self, data, curs=None):
+    def lock_list(self, data, curs=None, billing_manager_id=None):
         """
         data = {
             'login': Text(),
@@ -215,7 +211,7 @@ class Handler(object):
             ]
         }
         """
-        self._lock(data['billing_manager_id'], data['locks'], curs)
+        self._lock(billing_manager_id, data['locks'], curs)
         return response_ok()
 
     def _unlock(self, billing_manager_id, data_list, curs=None):
@@ -249,7 +245,7 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def unlock(self, data, curs=None):
+    def unlock(self, data, curs=None, billing_manager_id=None):
         """
         data = {
             'login': Text(),
@@ -258,16 +254,13 @@ class Handler(object):
             'product_id': Text(),
         }
         """
-        data_copy = dict(data)
-        billing_manager_id = data_copy['billing_manager_id']
-        del data_copy['billing_manager_id']
         self._unlock(billing_manager_id, [data], curs)
         return response_ok()
 
     @transaction()
     @logged_bulk
     @authentificate
-    def unlock_list(self, data, curs=None):
+    def unlock_list(self, data, curs=None, billing_manager_id=None):
         """
         data = {
             'login': Text(),
@@ -278,7 +271,7 @@ class Handler(object):
             ]
         }
         """
-        self._unlock(data['billing_manager_id'], data['unlocks'], curs)
+        self._unlock(billing_manager_id, data['unlocks'], curs)
         return response_ok()
 
     def _chargeoff(self, billing_manager_id, data_list, curs=None):
@@ -312,7 +305,7 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def chargeoff(self, data, curs=None):
+    def chargeoff(self, data, curs=None, billing_manager_id=None):
         """
         data = {
             'login': Text(),
@@ -322,16 +315,13 @@ class Handler(object):
             'amount': (positive int, non negative int)
         }
         """
-        data_copy = dict(data)
-        billing_manager_id = data_copy['billing_manager_id']
-        del data_copy['billing_manager_id']
-        self._chargeoff(billing_manager_id, [data_copy], curs)
+        self._chargeoff(billing_manager_id, [data], curs)
         return response_ok()
 
     @transaction()
     @logged_bulk
     @authentificate
-    def chargeoff_list(self, data, curs=None):
+    def chargeoff_list(self, data, curs=None, billing_manager_id=None):
         """
         data = {
             'login': Text(),
@@ -342,16 +332,16 @@ class Handler(object):
             ]
         }
         """
-        self._chargeoff(data['billing_manager_id'], data['chargeoffs'], curs)
+        self._chargeoff(billing_manager_id, data['chargeoffs'], curs)
         return response_ok()
 
     #view operations
 
     @transaction()
     @authentificate
-    def product_status(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False, for_update=False)
+    def product_status(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+            active_only=False, for_update=False)
         currency = selector.get_currency_by_balance(curs, balance)
 
         response = {'product_status': product_status.unknown}
@@ -378,9 +368,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_receipts(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False)
+    def view_receipts(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
         currency = selector.get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
@@ -394,9 +383,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_chargeoffs(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False)
+    def view_chargeoffs(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
         currency = selector.get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
@@ -414,9 +402,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_balance_locks(self, data, curs=None):
-        balance = selector.get_balance(curs, data['billing_manager_id'],
-            data['client_id'], active_only=False)
+    def view_balance_locks(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
         currency = selector.get_currency_by_balance(curs, balance)
 
         cond = Eq('client_id', data['client_id'])
