@@ -34,11 +34,11 @@ class ApplicationTestCase(DbBasedTestCase):
         self.check_status_ok(self.ping())
         self.ping_loading(repeats=200)
 
-#    def test_invalid_request(self):
-#        raw_result = self.cli.request({'action': 'fakeaction'})
-#        result = cjson.decode(raw_result)
-#        self.assertEqual('error', result['status'])
-#        self.assertEqual('validation', result['category'])
+    def test_invalid_request(self):
+        raw_result = self.cli.request({'action': 'fakeaction'})
+        result = cjson.decode(raw_result)
+        self.assertEqual('error', result['status'])
+        self.assertEqual('validation', result['category'])
 
 
 if __name__ == '__main__':
