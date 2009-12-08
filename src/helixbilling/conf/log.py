@@ -1,5 +1,7 @@
 import logging
-from settings import log_filename, log_level, log_console, log_format
+from logging.handlers import RotatingFileHandler
+from settings import log_filename, log_level, log_console, log_format,\
+    log_max_bytes, log_backup_count
 
 def init_logger():
     l = logging.getLogger('helixbilling')
@@ -7,7 +9,7 @@ def init_logger():
 
     fmt = logging.Formatter(log_format)
 
-    file_handler = logging.FileHandler(log_filename, 'a', 'UTF-8')
+    file_handler = RotatingFileHandler(log_filename, 'a', log_max_bytes, log_backup_count, 'UTF-8')
     file_handler.setFormatter(fmt)
 
     l.addHandler(file_handler)
