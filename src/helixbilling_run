@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from helixbilling.server.http import run
+from helixbilling.wsgi.server import Server
 
 if __name__ == '__main__':
-    run()
+    Server.run()
