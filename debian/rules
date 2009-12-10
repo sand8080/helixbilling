@@ -53,8 +53,10 @@ install: build
 	install src/helixbilling_install $(DESTDIR_SHARE)
 	find $(DESTDIR_SHARE) -name '*pyc' -exec rm {} \;
 	install src/helixbilling_run $(FAKE_ROOT)/usr/bin
-	install -m 0644 config/helixbilling.ini $(FAKE_ROOT)/etc/supervisor/process-available
+	install -m 0644 config/python-helixbilling.ini $(FAKE_ROOT)/etc/supervisor/process-available
 	mv $(DESTDIR)/helixbilling/conf/settings.py $(DESTDIR)/helixbilling/conf/settings.py.tpl
+	install -d -m 0755 $(FAKE_ROOT)/etc/nginx/sites-available
+	cp -r nginx/* $(FAKE_ROOT)/etc/nginx/sites-available
 
 # Build architecture-independent files here.
 binary-indep: build install

@@ -5,6 +5,15 @@ set -e
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 
+    rm -f /etc/nginx/sites-enabled/python-helixbilling
+    rm -f /etc/supervisor/process-enabled/python-helixbilling.ini
+
+    if [ "$1" = "purge" ]; then
+        rm -f  /etc/nginx/sites-available/python-helixbilling
+        rm -rf /etc/nginx/sites-available/python-hilixbilling-ssl/
+        rm -f /etc/supervisor/process-available/python-helixbilling.ini
+    fi
+
     if [ -f /usr/share/debconf/confmodule ]; then
         . /usr/share/debconf/confmodule
         db_version 2.0

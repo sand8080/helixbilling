@@ -31,10 +31,22 @@ case "$1" in
             update-python-modules  python-helixbilling
         fi
 
-        chown -R helixbilling /var/log/python-helixbilling
+        chown -R helixbilling:helixbilling /var/log/python-helixbilling
+        chmod 750 /var/log/python-helixbilling
 
         echo "Installing helixbilling patches"
         sudo -u helixbilling /usr/share/python-helixbilling/helixbilling_install update
+
+        echo "Installing nginx config"
+        chmod 400 /etc/nginx/sites-available/python-helixbilling-ssl/*.key
+        ln -f -s /etc/nginx/sites-available/python-helixbilling /etc/nginx/sites-enabled
+        /etc/init.d/nginx reload
+
+        echo "Installing supervisor configuration"
+        ln -f -s /etc/supervisor/process-available/python-helixbilling.ini /etc/supervisor/process-enabled
+        echo "Stopping supervisor"
+        supervisorctl reload
+
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
