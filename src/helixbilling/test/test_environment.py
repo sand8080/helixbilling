@@ -1,6 +1,11 @@
 from helixbilling.conf import settings
-#settings.DSN = 'dbname=helixtest host=localhost user=helixtest password=qazwsx'
-settings.DSN = 'dbname=test_helixbilling host=localhost user=helixtest password=qazwsx'
+
+settings.DSN = {
+    'user': 'helixtest',
+    'database': 'test_helixbilling',
+    'host': 'localhost',
+    'password': 'qazwsx'
+}
 
 import logging
 settings.log_filename = '/tmp/helixbilling.log'
