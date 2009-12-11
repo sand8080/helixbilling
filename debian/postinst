@@ -42,9 +42,9 @@ case "$1" in
         ln -f -s /etc/nginx/sites-available/python-helixbilling /etc/nginx/sites-enabled
         /etc/init.d/nginx reload
 
-        echo "Installing supervisor configuration"
+        echo "Installing helixbilling configuration into supervisor"
         ln -f -s /etc/supervisor/process-available/python-helixbilling.ini /etc/supervisor/process-enabled
-        echo "Stopping supervisor"
+        echo "Reloading supervisor"
         supervisorctl reload
 
     ;;

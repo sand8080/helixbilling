@@ -1,3 +1,9 @@
+python-helixbilling (1.0.120) unstable; urgency=low
+
+  * [Alexander Kislitsky] Build fixed.
+
+ -- Webdrive Developers <developers@webdrive.ru>  Fri, 11 Dec 2009 11:13:11 +0300
+
 python-helixbilling (1.0.119) unstable; urgency=low
 
   * [Alexander Kislitsky] Nginx config and webdrive ssl keys added.
@@ -140,6 +146,7 @@ python-helixbilling (1.0.38) unstable; urgency=low
   * [Alexander Kislitsky] Initial commit
 
  -- Webdrive Developers <developers@webdrive.ru>  Mon, 10 Aug 2009 16:49:36 +0400
+
 
 
 

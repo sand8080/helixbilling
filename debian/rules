@@ -20,10 +20,9 @@ configure-stamp:
 	# Add here commands to configure the package.
 	touch configure-stamp
 
-
 build: build-stamp
 
-build-stamp: configure-stamp 
+build-stamp: configure-stamp
 	dh_testdir
 	
 	# Add here commands to compile the package.
