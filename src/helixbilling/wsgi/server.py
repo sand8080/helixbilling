@@ -10,7 +10,7 @@ from helixbilling.validator.validator import api_scheme
 class Server(object):
     class ServerLog(object):
         def write(self, s, l=0): #IGNORE:W0613
-            logger.debug('server: %s' % s)
+            logger.log(l, 'server: %s' % s)
 
     @staticmethod
     def run():
