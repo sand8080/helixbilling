@@ -48,10 +48,10 @@ case "$1" in
         ln -f -s /etc/nginx/sites-available/helixbilling /etc/nginx/sites-enabled
         /etc/init.d/nginx reload
 
-#        echo "Installing helixbilling configuration into supervisor"
-#        ln -f -s /etc/supervisor/process-available/helixbilling.ini /etc/supervisor/process-enabled
-#        echo "Reloading supervisor"
-#        supervisorctl reload
+        echo "Installing helixbilling configuration into supervisor"
+        ln -f -s /etc/supervisor/process-available/helixbilling.ini /etc/supervisor/process-enabled
+        echo "Reloading supervisor"
+        supervisorctl reload
 
     ;;
 
