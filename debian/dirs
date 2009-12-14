@@ -3,6 +3,6 @@ etc/supervisor/process-enabled
 etc/nginx/sites-available
 etc/nginx/sites-enabled
 usr/bin
-usr/share/python-helixbilling
-usr/share/python-support/python-helixbilling
-var/log/python-helixbilling
+usr/share/python-support/helixbilling
+usr/share/helixbilling
+var/log/helixbilling

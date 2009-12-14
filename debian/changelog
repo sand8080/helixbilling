@@ -1,11 +1,9 @@
-python-helixbilling (1.0.120) unstable; urgency=low
+helixbilling (1.0.123) unstable; urgency=low
 
+  * [Alexander Kislitsky] Server log level hardcode fixed.
+  * [Alexander Kislitsky] DSN as dict handled.
+  * [Alexander Kislitsky] Build fixes.
   * [Alexander Kislitsky] Build fixed.
-
- -- Webdrive Developers <developers@webdrive.ru>  Fri, 11 Dec 2009 11:13:11 +0300
-
-python-helixbilling (1.0.119) unstable; urgency=low
-
   * [Alexander Kislitsky] Nginx config and webdrive ssl keys added.
   * [Alexander Kislitsky] Fixes in server starter.
   * [Alexander Kislitsky] Https protocol handled in client test applications.
@@ -75,38 +73,19 @@ python-helixbilling (1.0.119) unstable; urgency=low
   * [Alexander Kislitsky] Build specific file added to ingored
   * [Andrew Skryabin] check_locked action refactored to more generic product_status
   * [Andrew Skryabin] make_bonus action implemented, tested
-
- -- Webdrive Developers <developers@webdrive.ru>  Thu, 10 Dec 2009 18:13:58 +0300
-
-python-helixbilling (1.0.50) unstable; urgency=low
-
   * [Alexander Kislitsky] Merge branch 'logic'
   * [Andrew Skryabin] check_locked action implemented, tested
   * [Alexander Kislitsky] Chowning logs directory.
   * [Alexander Kislitsky] Changelog and last package version file added into reposytory.
   * [Alexander Kislitsky] Ignoring build specific files.
-
- -- Webdrive Developers <developers@webdrive.ru>  Wed, 12 Aug 2009 14:10:27 +0400
-
-python-helixbilling (1.0.45) unstable; urgency=low
-
   * [Alexander Kislitsky] First step in debianization. Debconfig required for complete.
-
- -- Webdrive Developers <developers@webdrive.ru>  Tue, 11 Aug 2009 16:42:47 +0400
-
-python-helixbilling (1.0.44) unstable; urgency=low
-
   * [Alexander Kislitsky] Added test environment for connecting to helixtest db.
   * [Andrew Skryabin] Lock operation implemented, tested
   * [Andrew Skryabin] Merge branch 'logic' of svn.loc:/usr/local/git/billing into logic
   * [Andrew Skryabin] enroll_receipt implemented, tested
   * [Andrew Skryabin] Implemented operations: create_balance and modify_balance; created table receipts, implementing enroll_receipt in process
-
- -- Webdrive Developers <developers@webdrive.ru>  Tue, 11 Aug 2009 14:24:54 +0400
-
-python-helixbilling (1.0.38) unstable; urgency=low
-
   * [Alexander Kislitsky] Helixcore code removed from helixbilling repository.
+  * [Andrew Skryabin] Implemented operations: create_balance and modify_balance; created table receipts, implementing enroll_receipt in process
   * [Andrew Skryabin] Patch system: fixed bugs
   * [Andrew] Request handling pipeline refactored. Error categories standardized, PING action introduced for testing
   * [Andrew] Logic: all currency-related methods implemented, tested
@@ -145,11 +124,6 @@ python-helixbilling (1.0.38) unstable; urgency=low
   * [sand] Trash pyc files deleted.
   * [Alexander Kislitsky] Initial commit
 
- -- Webdrive Developers <developers@webdrive.ru>  Mon, 10 Aug 2009 16:49:36 +0400
-
-
-
-
-
+ -- Webdrive Developers <developers@webdrive.ru>  Mon, 14 Dec 2009 11:10:12 +0300
 
 

@@ -5,27 +5,30 @@ set -e
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 
-    rm -f /etc/nginx/sites-enabled/python-helixbilling
-    rm -f /etc/supervisor/process-enabled/python-helixbilling.ini
+    rm -f /etc/nginx/sites-enabled/helixbilling
+    rm -f /etc/supervisor/process-enabled/helixbilling.ini
 
     if [ "$1" = "purge" ]; then
-        rm -f  /etc/nginx/sites-available/python-helixbilling
-        rm -rf /etc/nginx/sites-available/python-hilixbilling-ssl/
-        rm -f /etc/supervisor/process-available/python-helixbilling.ini
-    fi
+        rm -f  /etc/nginx/sites-available/helixbilling
+        rm -rf /etc/nginx/sites-available/hilixbilling-ssl/
+        rm -f /etc/supervisor/process-available/helixbilling.ini
 
-    if [ -f /usr/share/debconf/confmodule ]; then
-        . /usr/share/debconf/confmodule
-        db_version 2.0
-
-        if [ -f /usr/share/dbconfig-common/dpkg/postrm.pgsql  ]; then
-        	. /usr/share/dbconfig-common/dpkg/postrm.pgsql 
-            dbc_go python-helixbilling $@
+        if [ -f /usr/share/debconf/confmodule ]; then
+            . /usr/share/debconf/confmodule
+            if [ -f /usr/share/dbconfig-common/dpkg/postrm.pgsql  ]; then
+                . /usr/share/dbconfig-common/dpkg/postrm.pgsql 
+                dbc_go helixbilling $@
+            fi
+           
+            echo "Purging debconf configured values"
+            db_purge || true
+            echo "Debconf configured values purged"
         fi
     fi
+
 fi
 
-CFG="/usr/share/python-support/python-helixbilling/helixbilling/conf/settings.py"
+CFG="/usr/share/python-support/helixbilling/helixbilling/conf/settings.py"
 if [ -f $CFG ]; then
     rm -f $CFG
     if which ucf >/dev/null 2>&1; then
