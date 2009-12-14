@@ -10,3 +10,5 @@ debian/helixbilling.postrm.debhelper
 debian/helixbilling.debhelper.log
 debian/helixbilling.substvars
 debian/helixbilling
+debian/LAST_VERSION
+debian/changelog
