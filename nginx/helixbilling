@@ -2,7 +2,7 @@ server {
     listen       1052;
     server_name  __HOSTNAME__;
 
-    access_log  /var/log/nginxhelixbilling.access.log;
+    access_log  /var/log/nginx/helixbilling.access.log;
     error_log  /var/log/nginx/helixbilling.error.log;
 
     keepalive_timeout       70;
