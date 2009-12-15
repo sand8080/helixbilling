@@ -20,9 +20,7 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
                 dbc_go helixbilling $@
             fi
            
-            echo "Purging debconf configured values"
             db_purge || true
-            echo "Debconf configured values purged"
         fi
     fi
 

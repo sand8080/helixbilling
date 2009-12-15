@@ -11,10 +11,9 @@ case "$1" in
             db_version 2.0
 
             db_get helixbilling/hostname
-            HOSTNAME="$RET"
-            echo "HOSTNAME: $HOSTNAME"
+            # hostname value now in RET
             . /opt/helixutils/substitute.sh
-            subst /etc/nginx/sites-available/helixbilling __HOSTNAME__ $HOSTNAME
+            subst /etc/nginx/sites-available/helixbilling __HOSTNAME__ $RET
 
             if [ -f /usr/share/dbconfig-common/dpkg/postinst.pgsql  ]; then
 
@@ -46,7 +45,7 @@ case "$1" in
         echo "Installing nginx config"
         chmod 400 /etc/nginx/sites-available/helixbilling-ssl/*.key
         ln -f -s /etc/nginx/sites-available/helixbilling /etc/nginx/sites-enabled
-        /etc/init.d/nginx reload
+        invoke-rc.d nginx reload
 
         echo "Installing helixbilling configuration into supervisor"
         ln -f -s /etc/supervisor/process-available/helixbilling.ini /etc/supervisor/process-enabled
