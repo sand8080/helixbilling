@@ -49,8 +49,7 @@ case "$1" in
 
         echo "Installing helixbilling configuration into supervisor"
         ln -f -s /etc/supervisor/process-available/helixbilling.ini /etc/supervisor/process-enabled
-        echo "Reloading supervisor"
-        supervisorctl reload
+        invoke-rc.d supervisor reload
 
     ;;
 
