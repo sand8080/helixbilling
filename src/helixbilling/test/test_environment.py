@@ -7,6 +7,9 @@ settings.DSN = {
     'password': 'qazwsx'
 }
 
+settings.server_host = 'localhost'
+settings.server_port = 10998
+
 import logging
 settings.log_filename = '/tmp/helixbilling.log'
 settings.log_level = logging.DEBUG
