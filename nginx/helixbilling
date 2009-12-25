@@ -1,6 +1,6 @@
 server {
     listen       1052;
-    server_name  __HOSTNAME__;
+    server_name  localhost;
 
     access_log  /var/log/nginx/helixbilling.access.log;
     error_log  /var/log/nginx/helixbilling.error.log;
