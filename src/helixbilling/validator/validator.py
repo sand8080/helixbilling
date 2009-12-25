@@ -208,6 +208,31 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+VIEW_BONUSES = dict(
+    {
+        'client_id': Text(),
+        Optional('start_date'): IsoDatetime(),
+        Optional('end_date'): IsoDatetime(),
+        'offset': NonNegative(int),
+        'limit': Positive(int),
+    },
+    **AUTH_INFO
+)
+
+VIEW_BONUSES_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'total': NonNegative(int),
+            'bonuses': [{
+                'client_id': Text(),
+                'amount': nonnegative_amount_validator,
+                'created_date': IsoDatetime(),
+            }],
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 VIEW_CHARGEOFFS = dict(
     {
         'client_id': Text(),
@@ -267,6 +292,7 @@ VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
     ),
     RESPONSE_STATUS_ERROR
 )
+
 
 api_scheme = [
     ApiCall('ping_request', Scheme(PING)),
@@ -332,6 +358,9 @@ api_scheme = [
     # list view operations
     ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
     ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
+
+    ApiCall('view_bonuses_request', Scheme(VIEW_BONUSES)),
+    ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
 
     ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
     ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),

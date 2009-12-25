@@ -27,6 +27,7 @@ from helixbilling.test.logic.test_chargeoff_total_view import ChargeoffTotalView
 from helixbilling.test.logic.test_product_status import ProductStatusTestCase #IGNORE:W0611 @UnusedImport
 
 from helixbilling.test.logic.test_view_receipts import ViewReceiptsTestCase #IGNORE:W0611 @UnusedImport
+from helixbilling.test.logic.test_view_bonuses import ViewBonusesTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_view_chargeoffs import ViewChargeoffsTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_view_balance_locks import ViewBalanceLocksTestCase #IGNORE:W0611 @UnusedImport
 

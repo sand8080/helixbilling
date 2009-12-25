@@ -50,7 +50,8 @@ class Bonus(Mapped):
     __slots__ = [
         'id',
         'client_id',
-        'created_date', 'amount'
+        'created_date',
+        'amount'
     ]
     table = 'bonus'
 

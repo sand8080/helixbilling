@@ -286,6 +286,39 @@ class ValidatorTestCase(RootTestCase):
             ]
         })
 
+    def test_view_bonuses(self):
+        self.api.validate_request('view_bonuses', {'login': 'l', 'password': 'p',
+            'client_id': 'U', 'offset': 2, 'limit': 3})
+        self.api.validate_request('view_bonuses', {'login': 'l', 'password': 'p', 'client_id': 'U',
+            'start_date': datetime.datetime.now().isoformat(), 'offset': 2, 'limit': 3})
+        self.api.validate_request('view_bonuses', {'login': 'l', 'password': 'p', 'client_id': 'U',
+            'start_date': datetime.datetime.now().isoformat(),
+            'end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(), 'offset': 2, 'limit': 3})
+        self.api.validate_response('view_bonuses', {'status': 'ok', 'total': 0, 'bonuses': []})
+        self.api.validate_response('view_bonuses', {'status': 'ok', 'total': 10,
+            'bonuses': [
+                {
+                    'client_id': 'U2',
+                    'amount': (2, 49),
+                    'created_date': datetime.datetime.now().isoformat(),
+                }
+            ]
+        })
+        self.api.validate_response('view_bonuses', {'status': 'ok', 'total': 10,
+            'bonuses': [
+                {
+                    'client_id': 'U2',
+                    'amount': (2, 49),
+                    'created_date': datetime.datetime.now().isoformat(),
+                },
+                {
+                    'client_id': 'U3',
+                    'amount': (3, 77),
+                    'created_date': datetime.datetime.now().isoformat(),
+                }
+            ]
+        })
+
     def test_view_chargeoffs(self):
         self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
             'client_id': 'U', 'offset': 2, 'limit': 3})

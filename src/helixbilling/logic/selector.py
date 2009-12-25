@@ -7,7 +7,7 @@ from helixcore.db import sql
 from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, EmptyResultSetError
 from helixcore.server.exceptions import DataIntegrityError, AuthError, ActionNotAllowedError
 
-from helixbilling.domain.objects import Receipt, ChargeOff, BalanceLock, BillingManager, \
+from helixbilling.domain.objects import Receipt, Bonus, ChargeOff, BalanceLock, BillingManager, \
     Currency, Balance
 from helixbilling.domain import security
 
@@ -40,6 +40,7 @@ def _select_with_amount(curs, currency, cond, limit, offset, MAPPED_CLASS, AMOUN
 
 
 select_receipts = partial(_select_with_amount, MAPPED_CLASS=Receipt, AMOUNT_FIELDS=['amount'])
+select_bonuses = partial(_select_with_amount, MAPPED_CLASS=Bonus, AMOUNT_FIELDS=['amount'])
 select_chargeoffs = partial(_select_with_amount, MAPPED_CLASS=ChargeOff, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 select_balance_locks = partial(_select_with_amount, MAPPED_CLASS=BalanceLock, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 

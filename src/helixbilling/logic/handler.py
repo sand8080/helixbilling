@@ -383,6 +383,21 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    def view_bonuses(self, data, curs=None, billing_manager_id=None):
+        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+        currency = selector.get_currency_by_balance(curs, balance)
+
+        cond = Eq('client_id', data['client_id'])
+        date_filters = (
+            ('start_date', 'end_date', 'created_date'),
+        )
+        cond = And(cond, selector.get_date_filters(date_filters, data))
+
+        bonuses, total = selector.select_bonuses(curs, currency, cond, data['limit'], data['offset'])
+        return response_ok(bonuses=bonuses, total=total)
+
+    @transaction()
+    @authentificate
     def view_chargeoffs(self, data, curs=None, billing_manager_id=None):
         balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
         currency = selector.get_currency_by_balance(curs, balance)
