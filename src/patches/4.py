@@ -5,7 +5,7 @@ def apply(curs):
         CREATE TABLE balance (
             id serial,
             billing_manager_id integer NOT NULL,
-            active smallint NOT NULL DEFAULT 1,
+            active bool NOT NULL DEFAULT True,
             client_id varchar NOT NULL,
             currency_id int NOT NULL,
             created_date timestamp with time zone NOT NULL DEFAULT now(),

@@ -48,7 +48,7 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('view_currencies', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
     def test_create_balance(self):
-        data = {'login': 'l', 'password': 'p', 'client_id': 'U-23-52', 'active': 1,
+        data = {'login': 'l', 'password': 'p', 'client_id': 'U-23-52', 'active': True,
             'currency_code': 'YYY'}
         self.api.validate_request('create_balance', data)
 
@@ -76,7 +76,7 @@ class ValidatorTestCase(RootTestCase):
 
     def test_modify_balance(self):
         self.api.validate_request('modify_balance', {'login': 'l', 'password': 'p', 'client_id': 'U2',
-            'new_active': 1, 'new_overdraft_limit': (500, 50), 'new_locking_order': None})
+            'new_active': True, 'new_overdraft_limit': (500, 50), 'new_locking_order': None})
         self.validate_status_response('modify_balance')
 
     def test_delete_balance(self):

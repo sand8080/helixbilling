@@ -88,7 +88,7 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         self.balance = self.create_balance('123', self.currency) #IGNORE:W0201
 
     @transaction()
-    def create_balance(self, client_id, currency, active=1, overdraft_limit=None,
+    def create_balance(self, client_id, currency, active=True, overdraft_limit=None,
         locking_order=None, curs=None):
         data = {
             'login': self.test_billing_manager_login,

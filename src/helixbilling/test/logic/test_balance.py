@@ -9,13 +9,13 @@ from helixbilling.logic.helper import decompose_amount
 
 class BalanceTestCase(TestCaseWithBalance):
     def test_create_balance(self):
-        self.create_balance('U-23-52', self.currency, active=1)
-        self.create_balance('U-23-53', self.currency, active=1, overdraft_limit=(500, 60))
+        self.create_balance('U-23-52', self.currency, active=True)
+        self.create_balance('U-23-53', self.currency, active=True, overdraft_limit=(500, 60))
 
     def test_modify_balance(self):
         client_id='U-23-52'
         locking_order = ['available_real_amount']
-        balance = self.create_balance(client_id, self.currency, active=1,
+        balance = self.create_balance(client_id, self.currency, active=True,
             overdraft_limit=(999, 99), locking_order=locking_order)
         self.assertEquals(balance.locking_order, locking_order)
 
@@ -23,7 +23,7 @@ class BalanceTestCase(TestCaseWithBalance):
             'login': self.test_billing_manager_login,
             'password': self.test_billing_manager_password,
             'client_id': client_id,
-            'new_active': 0,
+            'new_active': False,
             'new_overdraft_limit': (5, 77),
             'new_locking_order': None,
         }
@@ -50,7 +50,7 @@ class BalanceTestCase(TestCaseWithBalance):
         login = 'evil manager'
         password = 'lalala'
         self.add_billing_manager(login, password)
-        data = {'login': login, 'password': password, 'client_id': client_id, 'new_active': 0}
+        data = {'login': login, 'password': password, 'client_id': client_id, 'new_active': False}
         self.assertRaises(EmptyResultSetError, handle_action, 'modify_balance', data)
 
     def test_create_balance_failure(self):
@@ -58,7 +58,7 @@ class BalanceTestCase(TestCaseWithBalance):
             'login': self.test_billing_manager_login,
             'password': self.test_billing_manager_password,
             'client_id': 52,
-            'active': 1,
+            'active': True,
             'currency_code': 'USD',
             'overdraft_limit': (500, 0),
             'locking_order': ['available_real_amount'],

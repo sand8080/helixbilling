@@ -54,7 +54,7 @@ DELETE_BILLING_MANAGER = AUTH_INFO
 CREATE_BALANCE = dict(
     {
         'client_id': Text(),
-        'active': AnyOf(0, 1),
+        'active': bool,
         'currency_code': Text(),
         Optional('overdraft_limit'): amount_validator,
         Optional('locking_order'): locking_order_validator
@@ -65,7 +65,7 @@ CREATE_BALANCE = dict(
 MODIFY_BALANCE = dict(
     {
         'client_id': Text(),
-        Optional('new_active'): AnyOf(0, 1),
+        Optional('new_active'): bool,
         Optional('new_overdraft_limit'): amount_validator,
         Optional('new_locking_order'): locking_order_validator
     },
