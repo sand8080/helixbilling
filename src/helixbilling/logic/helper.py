@@ -1,4 +1,17 @@
+from math import log10
 from helixcore.server.exceptions import  DataIntegrityError, ActionNotAllowedError
+
+
+def decimal_to_cents(currency, value):
+    int_part = int(value)
+    prec = int(round(log10(currency.cent_factor)))
+    cent_part = int((value - int_part) * 10 ** prec)
+    return compose_amount(currency, int_part, cent_part)
+
+def cents_to_decimal(currency, cents):
+    prec = int(round(log10(currency.cent_factor)))
+    format = '%%s.%%%ds' % prec
+    return format % decompose_amount(currency, cents)
 
 
 def compose_amount(currency, int_part, cent_part):

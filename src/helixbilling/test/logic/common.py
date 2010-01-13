@@ -85,10 +85,10 @@ class TestCaseWithCurrency(LogicTestCase):
 class TestCaseWithBalance(TestCaseWithCurrency):
     def setUp(self):
         super(TestCaseWithBalance, self).setUp()
-        self.balance = self.create_balance('123', self.currency) #IGNORE:W0201
+        self.balance = self.add_balance('123', self.currency) #IGNORE:W0201
 
     @transaction()
-    def create_balance(self, client_id, currency, active=True, overdraft_limit=None,
+    def add_balance(self, client_id, currency, active=True, overdraft_limit=None,
         locking_order=None, curs=None):
         data = {
             'login': self.test_billing_manager_login,
@@ -102,7 +102,7 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         if overdraft_limit is not None:
             data['overdraft_limit'] = overdraft_limit
 
-        handle_action('create_balance', data)
+        handle_action('add_balance', data)
         balance = mapping.get(curs, Balance, Eq('client_id', client_id))
         self.assertTrue(balance.id > 0) #IGNORE:E1101
         self.assertEquals(client_id, balance.client_id) #IGNORE:E1101

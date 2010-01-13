@@ -1,12 +1,12 @@
-from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, Text, IsoDatetime
+from helixcore.validol.validol import Optional, AnyOf, NonNegative, Positive, Scheme, \
+    Text, IsoDatetime, DecimalText
 from helixcore.server.api import ApiCall
 
 amount_validator = (NonNegative(int), NonNegative(int))
 nonnegative_amount_validator = (Positive(int), NonNegative(int))
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
-PING = {
-}
+PING = {}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
@@ -25,6 +25,7 @@ AUTH_INFO = {
 
 # --- currencies ---
 VIEW_CURRENCIES = {}
+
 VIEW_CURRENCIES_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK, currencies=[
         {
@@ -51,12 +52,12 @@ MODIFY_BILLING_MANAGER = dict(
 DELETE_BILLING_MANAGER = AUTH_INFO
 
 # --- balance ---
-CREATE_BALANCE = dict(
+ADD_BALANCE = dict(
     {
         'client_id': Text(),
         'active': bool,
         'currency_code': Text(),
-        Optional('overdraft_limit'): amount_validator,
+        Optional('overdraft_limit'): DecimalText(),
         Optional('locking_order'): locking_order_validator
     },
     **AUTH_INFO
@@ -66,7 +67,7 @@ MODIFY_BALANCE = dict(
     {
         'client_id': Text(),
         Optional('new_active'): bool,
-        Optional('new_overdraft_limit'): amount_validator,
+        Optional('new_overdraft_limit'): DecimalText(),
         Optional('new_locking_order'): locking_order_validator
     },
     **AUTH_INFO
@@ -78,6 +79,52 @@ DELETE_BALANCE = dict(
     },
     **AUTH_INFO
 )
+
+GET_BALANCE = dict(
+    {
+        'client_id': Text(),
+    },
+    **AUTH_INFO
+)
+
+BALANCE_INFO = {
+    'client_id': Text(),
+    'active': bool,
+    'currency_code': Text(),
+    'overdraft_limit': DecimalText(),
+    'locking_order': locking_order_validator,
+    'created_date': IsoDatetime(),
+    'available_real_amount': DecimalText(),
+    'available_virtual_amount': DecimalText(),
+    'locked_amount': DecimalText(),
+}
+
+GET_BALANCE_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **BALANCE_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
+VIEW_BALANCES = dict(
+    {
+        Optional('filter'): {
+            Optional('clients_ids'): [Text()],
+        }
+    },
+    **AUTH_INFO
+)
+
+VIEW_BALANCES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        balances = [BALANCE_INFO]
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 
 # --- operations ---
 ENROLL_RECEIPT = dict(
@@ -313,14 +360,20 @@ api_scheme = [
     ApiCall('view_currencies_response', Scheme(VIEW_CURRENCIES_RESPONSE)),
 
     # balance
-    ApiCall('create_balance_request', Scheme(CREATE_BALANCE)),
-    ApiCall('create_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('add_balance_request', Scheme(ADD_BALANCE)),
+    ApiCall('add_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE)),
     ApiCall('modify_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('delete_balance_request', Scheme(DELETE_BALANCE)),
     ApiCall('delete_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('get_balance_request', Scheme(GET_BALANCE)),
+    ApiCall('get_balance_response', Scheme(GET_BALANCE_RESPONSE)),
+
+    ApiCall('view_balances_request', Scheme(VIEW_BALANCES)),
+    ApiCall('view_balances_response', Scheme(VIEW_BALANCES_RESPONSE)),
 
     # receipt
     ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),

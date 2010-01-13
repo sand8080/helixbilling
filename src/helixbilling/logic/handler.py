@@ -62,6 +62,13 @@ class Handler(object):
                 result[f] = compose_amount(currency, *result[f])
         return result
 
+    def _money_to_db(self, data, currency, amount_fields):
+        result = dict(data)
+        for f in amount_fields:
+            if f in result:
+                result[f] = compose_amount(currency, *result[f])
+        return result
+
     # --- currencies ---
     @transaction()
     @logged
@@ -96,7 +103,7 @@ class Handler(object):
     @transaction()
     @logged
     @authentificate
-    def create_balance(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
+    def add_balance(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
         currency = selector.get_currency_by_code(curs, data['currency_code'])
         del data['currency_code']
         data['currency_id'] = currency.id
@@ -124,6 +131,26 @@ class Handler(object):
             active_only=False, for_update=True)
         mapping.delete(curs, obj)
         return response_ok()
+
+    @transaction()
+    @logged
+    @authentificate
+    def get_balance(self, data, curs=None, billing_manager_id=None):
+        b = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+        c = selector.get_currency_by_balance(curs, b)
+        b_data = {
+            'client_id': b.client_id,
+            'active': b.active,
+            'currency_code': c.code,
+            'created_date': b.created_date,
+#            'available_real_amount': decompose_amount(c, b.available_real_amount),
+#            'available_virtual_amount': decompose_amount(c, b.available_virtual_amount),
+#            'overdraft_limit': decompose_amount(c, b.overdraft_limit),
+#            'locking_order': b.locking_order,
+#            'locked_amount': decompose_amount(c, b.locked_amount)
+        }
+        print '###', b_data
+        return response_ok(**b_data)
 
     # --- enroll receipt ---
     @transaction()
@@ -363,7 +390,6 @@ class Handler(object):
             response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
         except EmptyResultSetError: #IGNORE:W0704
             pass
-
         return response_ok(**response)
 
     @transaction()

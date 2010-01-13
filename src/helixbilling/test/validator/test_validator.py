@@ -47,20 +47,20 @@ class ValidatorTestCase(RootTestCase):
             'currencies': [{'code': 'YYY', 'name': 'y', 'location': 'y', 'cent_factor': 100}]})
         self.api.validate_response('view_currencies', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
-    def test_create_balance(self):
+    def test_add_balance(self):
         data = {'login': 'l', 'password': 'p', 'client_id': 'U-23-52', 'active': True,
             'currency_code': 'YYY'}
-        self.api.validate_request('create_balance', data)
+        self.api.validate_request('add_balance', data)
 
-        data['overdraft_limit'] = (500, 50)
-        self.api.validate_request('create_balance', data)
+        data['overdraft_limit'] = '500.50'
+        self.api.validate_request('add_balance', data)
 
         data['locking_order'] = ['available_real_amount', 'available_virtual_amount']
-        self.api.validate_request('create_balance', data)
+        self.api.validate_request('add_balance', data)
 
-        self.validate_status_response('create_balance')
+        self.validate_status_response('add_balance')
 
-    def test_create_balance_invalid(self):
+    def test_add_balance_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request,
             'create_balance',
             {
@@ -69,19 +69,38 @@ class ValidatorTestCase(RootTestCase):
                 'client_id': '2',
                 'active': 1,
                 'currency_code': 'USD',
-                'overdraft_limit': (500, 50),
+                'overdraft_limit': '500.50',
                 'locking_order': ['ERROR_HERE']
             }
         )
 
     def test_modify_balance(self):
-        self.api.validate_request('modify_balance', {'login': 'l', 'password': 'p', 'client_id': 'U2',
-            'new_active': True, 'new_overdraft_limit': (500, 50), 'new_locking_order': None})
+        self.api.validate_request('modify_balance', {'login': 'l', 'password': 'p',
+            'client_id': 'U2', 'new_active': True, 'new_overdraft_limit': '500.50',
+            'new_locking_order': None})
         self.validate_status_response('modify_balance')
 
     def test_delete_balance(self):
         self.api.validate_request('delete_balance', {'login': 'l', 'password': 'p', 'client_id': 'U2'})
         self.validate_status_response('delete_balance')
+
+    def test_get_balance(self):
+        self.api.validate_request('get_balance',
+            {'login': 'l', 'password': 'p', 'client_id': 'U2'})
+        self.api.validate_response('get_balance',
+            {'status': 'error', 'category': 'a', 'message': 'm'})
+        self.api.validate_response('get_balance', {
+            'status': 'ok',
+            'client_id': 'c',
+            'active': True,
+            'currency_code': 'RU',
+            'available_real_amount': '3.15',
+            'available_virtual_amount': '0.0',
+            'locked_amount': '14.09',
+            'overdraft_limit': '0.14',
+            'locking_order': ['available_real_amount', 'available_virtual_amount'],
+            'created_date': '%s' % datetime.datetime.now(pytz.utc),
+        })
 
     def test_enroll_receipt(self):
         self.api.validate_request('enroll_receipt', {'login': 'l', 'password': 'p',
