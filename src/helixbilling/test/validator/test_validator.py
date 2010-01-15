@@ -49,7 +49,7 @@ class ValidatorTestCase(RootTestCase):
 
     def test_add_balance(self):
         data = {'login': 'l', 'password': 'p', 'client_id': 'U-23-52', 'active': True,
-            'currency_code': 'YYY'}
+            'currency': 'YYY'}
         self.api.validate_request('add_balance', data)
 
         data['overdraft_limit'] = '500.50'
@@ -68,7 +68,7 @@ class ValidatorTestCase(RootTestCase):
                 'password': 'p',
                 'client_id': '2',
                 'active': 1,
-                'currency_code': 'USD',
+                'currency': 'USD',
                 'overdraft_limit': '500.50',
                 'locking_order': ['ERROR_HERE']
             }

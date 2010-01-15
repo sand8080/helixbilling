@@ -10,9 +10,11 @@ from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, BillingManager
 import helixbilling.logic.product_status as product_status
 from helixbilling.domain import security
+from helixbilling.error import BalanceNotFound
 
-from helper import compose_amount, decompose_amount, compute_locks
+from helper import compose_amount, decompose_amount, compute_locks, decimal_to_cents
 from action_log import logged, logged_bulk
+from decimal import Decimal
 import selector
 
 
@@ -55,12 +57,10 @@ class Handler(object):
                 setattr(obj, f, data[new_f])
             mapping.update(curs, obj)
 
-    def compose_amounts(self, data, currency, amount_fields):
-        result = dict(data)
-        for f in amount_fields:
-            if f in result:
-                result[f] = compose_amount(currency, *result[f])
-        return result
+    def decimal_texts_to_cents(self, data, currency, amount_fields):
+        return dict([
+            (f, decimal_to_cents(currency, Decimal(data[f]))) for f in amount_fields if f in data
+        ])
 
     def _money_to_db(self, data, currency, amount_fields):
         result = dict(data)
@@ -73,7 +73,7 @@ class Handler(object):
     @transaction()
     @logged
     def view_currencies(self, data, curs=None): #IGNORE:W0613
-        return response_ok(currencies=selector.select(curs, Currency, None, None, 0))
+        return response_ok(currencies=selector.select_data(curs, Currency, None, None, 0))
 
     # --- billing manager ---
     @transaction()
@@ -104,11 +104,11 @@ class Handler(object):
     @logged
     @authentificate
     def add_balance(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
-        currency = selector.get_currency_by_code(curs, data['currency_code'])
-        del data['currency_code']
+        currency = selector.get_currency_by_code(curs, data['currency'])
+        del data['currency']
         data['currency_id'] = currency.id
         data['billing_manager_id'] = billing_manager_id
-        data = self.compose_amounts(data, currency, ['overdraft_limit'])
+        data.update(self.decimal_texts_to_cents(data, currency, ['overdraft_limit']))
         balance = Balance(**data)
         mapping.insert(curs, balance)
         return response_ok()
@@ -117,11 +117,16 @@ class Handler(object):
     @logged
     @authentificate
     def modify_balance(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
-            active_only=False, for_update=True)
-        data = self.compose_amounts(data, selector.get_currency_by_balance(curs, balance), ['new_overdraft_limit'])
-        self.update_obj(curs, data, partial(lambda x: x, balance))
-        return response_ok()
+        client_id = data['client_id']
+        try:
+            balance = selector.get_balance(curs, billing_manager_id, client_id,
+                active_only=False, for_update=True)
+            currency = selector.get_currency_by_balance(curs, balance)
+            data.update(self.decimal_texts_to_cents(data, currency, ['new_overdraft_limit']))
+            self.update_obj(curs, data, partial(lambda x: x, balance))
+            return response_ok()
+        except EmptyResultSetError:
+            raise BalanceNotFound(client_id)
 
     @transaction()
     @logged
@@ -142,7 +147,7 @@ class Handler(object):
             'client_id': b.client_id,
             'active': b.active,
             'currency_code': c.code,
-            'created_date': b.created_date,
+            'created_date': '%s' % b.created_date,
 #            'available_real_amount': decompose_amount(c, b.available_real_amount),
 #            'available_virtual_amount': decompose_amount(c, b.available_virtual_amount),
 #            'overdraft_limit': decompose_amount(c, b.overdraft_limit),
@@ -160,7 +165,7 @@ class Handler(object):
         balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
             active_only=True, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
-        data = self.compose_amounts(data, currency, ['amount'])
+        data = self.decimal_texts_to_cents(data, currency, ['amount'])
 
         receipt = Receipt(**data)
         mapping.insert(curs, receipt)
@@ -177,7 +182,7 @@ class Handler(object):
         balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
             active_only=True, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
-        data_copy = self.compose_amounts(data, currency, ['amount'])
+        data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
 
         bonus = Bonus(**data_copy)
         mapping.insert(curs, bonus)
@@ -191,7 +196,7 @@ class Handler(object):
         for data in data_list:
             balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=True, for_update=True)
             currency = selector.get_currency_by_balance(curs, balance)
-            data_copy = self.compose_amounts(data, currency, ['amount'])
+            data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
             locks = compute_locks(currency, balance, data_copy['amount'])
             del data_copy['amount']
 
@@ -208,7 +213,6 @@ class Handler(object):
             balance.locked_amount += lock.virtual_amount #IGNORE:E1101
             mapping.update(curs, balance)
 
-    @transaction()
     @logged
     @authentificate
     def lock(self, data, curs=None, billing_manager_id=None):

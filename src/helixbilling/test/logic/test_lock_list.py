@@ -24,8 +24,8 @@ class LockListTestCase(TestCaseWithBalance):
 
     def test_lock_list_ok(self):
         lock_data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'locks': [
                 {
                     'client_id': self.balance.client_id,
@@ -67,8 +67,8 @@ class LockListTestCase(TestCaseWithBalance):
         locked_before = self.balance.locked_amount
 
         unlock_data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'unlocks': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101
@@ -92,8 +92,8 @@ class LockListTestCase(TestCaseWithBalance):
         balance_real_increase = 1500
         balance_virtual_increase = 1000
         lock_data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'locks': [
                 {
                     'client_id': self.balance.client_id, #IGNORE:E1101
@@ -113,8 +113,8 @@ class LockListTestCase(TestCaseWithBalance):
     def test_unlock_list_failure(self):
         self.test_lock_list_ok()
         unlock_data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'unlocks': [
                 {
                     'client_id': self.balance.client_id,

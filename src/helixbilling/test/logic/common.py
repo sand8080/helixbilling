@@ -1,3 +1,4 @@
+from decimal import Decimal
 import datetime
 
 from helixbilling.test.db_based_test import ServiceTestCase
@@ -7,7 +8,7 @@ import helixcore.mapping.actions as mapping
 
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
-from helixbilling.logic.helper import decompose_amount
+from helixbilling.logic.helper import cents_to_decimal
 from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
 
@@ -91,10 +92,10 @@ class TestCaseWithBalance(TestCaseWithCurrency):
     def add_balance(self, client_id, currency, active=True, overdraft_limit=None,
         locking_order=None, curs=None):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': client_id,
-            'currency_code': currency.code,
+            'currency': currency.code,
             'active': active,
         }
         if locking_order is not None:
@@ -110,9 +111,9 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         self.assertEquals(0, balance.available_real_amount)
         self.assertEquals(0, balance.locked_amount)
         if overdraft_limit is None:
-            self.assertEquals((0, 0), decompose_amount(currency, balance.overdraft_limit))
+            self.assertEquals(Decimal(0), cents_to_decimal(currency, balance.overdraft_limit))
         else:
-            self.assertEquals(overdraft_limit, decompose_amount(currency, balance.overdraft_limit))
+            self.assertEquals(Decimal(overdraft_limit), cents_to_decimal(currency, balance.overdraft_limit))
         self.assertEquals(currency.id, balance.currency_id)
         self.assertEquals(locking_order, balance.locking_order)
         return balance

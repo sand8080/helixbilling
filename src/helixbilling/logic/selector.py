@@ -14,7 +14,7 @@ from helixbilling.domain import security
 import helper
 
 
-def select(curs, MAPPED_CLASS, cond, limit, offset):
+def select_data(curs, MAPPED_CLASS, cond, limit, offset):
     '''
     @return: list of fetched dicts
     '''
@@ -33,7 +33,7 @@ def _select_with_amount(curs, currency, cond, limit, offset, MAPPED_CLASS, AMOUN
     '''
     @return: tuple( list of receipt dicts, total_receipts_number )
     '''
-    select_result = select(curs, MAPPED_CLASS, cond, limit, offset)
+    select_result = select_data(curs, MAPPED_CLASS, cond, limit, offset)
     dicts = decompose_amounts(select_result, currency, AMOUNT_FIELDS)
     count = get_count(curs, MAPPED_CLASS.table, cond)
     return (dicts, count)
@@ -88,6 +88,10 @@ def get_currency_by_code(curs, code, for_update=False):
 
 def get_currency_by_balance(curs, balance, for_update=False):
     return mapping.get_obj_by_field(curs, Currency, 'id', balance.id, for_update)
+
+
+def get_currencies(curs, for_update=False):
+    return mapping.get_list(curs, Currency, None, for_update=for_update)
 
 
 def get_balance(curs, billing_manager_id, client_id, active_only=True, for_update=False):

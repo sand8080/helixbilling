@@ -22,14 +22,14 @@ class LockTestCase(TestCaseWithBalance):
 
     def test_lock_ok(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': 'super-light 555',
             'amount': (115, 00),
         }
         handle_action('lock', data)
-        balance = self._get_validated_balance(self.test_billing_manager_login, data['client_id'])
+        balance = self._get_validated_balance(self.test_login, data['client_id'])
 
         self.assertEquals(balance.available_real_amount, -6000)
         self.assertEquals(balance.available_virtual_amount, 500)
@@ -43,8 +43,8 @@ class LockTestCase(TestCaseWithBalance):
 
     def test_lock_overdraft_violation(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': 'lucky boy',
             'amount': (120, 43),
@@ -53,8 +53,8 @@ class LockTestCase(TestCaseWithBalance):
 
     def test_unlock_ok(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': (60, 00),
@@ -62,22 +62,22 @@ class LockTestCase(TestCaseWithBalance):
         handle_action('lock', data)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
         }
         handle_action('unlock', data)
 
-        balance = self._get_validated_balance(self.test_billing_manager_login, data['client_id'])
+        balance = self._get_validated_balance(self.test_login, data['client_id'])
         self.assertEquals(balance.available_real_amount, 5000)
         self.assertEquals(balance.locked_amount, 0)
         self.assertRaises(EmptyResultSetError, self._get_lock, self.balance.client_id, data['product_id']) #IGNORE:E1101
 
     def test_unlock_inexistent(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': (60, 00),
@@ -85,8 +85,8 @@ class LockTestCase(TestCaseWithBalance):
         handle_action('lock', data)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '999',
         }
@@ -101,8 +101,8 @@ class LockTestCase(TestCaseWithBalance):
         self.update_balance(self.balance)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': (60, 00),
@@ -121,8 +121,8 @@ class LockTestCase(TestCaseWithBalance):
         self.update_balance(self.balance)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '556',
             'amount': (60, 00),

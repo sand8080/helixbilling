@@ -11,13 +11,13 @@ from helixbilling.logic.actions import handle_action
 class EnrollBonusTestCase(TestCaseWithBalance):
     def test_enroll_bonus_ok(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'amount': (45, 88),
         }
         handle_action('enroll_bonus', data)
-        balance = self._get_validated_balance(self.test_billing_manager_login, data['client_id'])
+        balance = self._get_validated_balance(self.test_login, data['client_id'])
 
         self.assertTrue(balance.id > 0)
         self.assertEquals(balance.client_id, data['client_id'])
@@ -31,8 +31,8 @@ class EnrollBonusTestCase(TestCaseWithBalance):
 
     def test_enroll_bonus_no_balance(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': 'inexistent',
             'amount': (1000000, 0),
         }
@@ -41,8 +41,8 @@ class EnrollBonusTestCase(TestCaseWithBalance):
     def test_enroll_bonus_not_active(self):
         self._make_balance_passive(self.balance)
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'amount': (45, 88),
         }

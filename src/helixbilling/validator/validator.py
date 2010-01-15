@@ -56,7 +56,7 @@ ADD_BALANCE = dict(
     {
         'client_id': Text(),
         'active': bool,
-        'currency_code': Text(),
+        'currency': Text(),
         Optional('overdraft_limit'): DecimalText(),
         Optional('locking_order'): locking_order_validator
     },

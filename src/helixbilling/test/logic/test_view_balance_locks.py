@@ -56,8 +56,8 @@ class ViewBalanceLocksTestCase(TestCaseWithBalance):
         )
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': getattr(self.balance, 'client_id'),
             'locked_start_date': self.locked_start_date.isoformat(),
             'locked_end_date': self.locked_end_date.isoformat(),

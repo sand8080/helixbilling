@@ -18,8 +18,8 @@ class ProductStatusTestCase(TestCaseWithBalance):
         self.init_balance()
         lock_amount = (60, 00)
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': lock_amount,
@@ -28,8 +28,8 @@ class ProductStatusTestCase(TestCaseWithBalance):
         lock = self._get_lock(self.balance.client_id, data['product_id'])
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
         }
@@ -42,8 +42,8 @@ class ProductStatusTestCase(TestCaseWithBalance):
         self.init_balance()
         lock_amount = (60, 00)
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': lock_amount,
@@ -51,8 +51,8 @@ class ProductStatusTestCase(TestCaseWithBalance):
         handle_action('lock', data)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
         }
@@ -78,8 +78,8 @@ class ProductStatusTestCase(TestCaseWithBalance):
         self.init_balance()
         lock_amount = (60, 00)
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
             'amount': lock_amount,
@@ -87,8 +87,8 @@ class ProductStatusTestCase(TestCaseWithBalance):
         handle_action('lock', data)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': 'another product id',
         }

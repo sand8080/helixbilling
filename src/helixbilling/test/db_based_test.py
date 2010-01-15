@@ -1,13 +1,14 @@
 import helixbilling.test.test_environment #IGNORE:W0611 @UnusedImport
 
+
 from helixcore.install import install
+
 
 from helixbilling.conf.db import get_connection, transaction
 from helixbilling.conf.settings import patch_table_name
 from helixbilling.test.test_environment import patches_path
 from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
-
 from root_test import RootTestCase
 
 
@@ -17,12 +18,12 @@ class DbBasedTestCase(RootTestCase):
 
 
 class ServiceTestCase(DbBasedTestCase):
-    test_billing_manager_login = 'test_billing_manager'
-    test_billing_manager_password = 'qazwsx'
+    test_login = 'test_billing_manager'
+    test_password = 'qazwsx'
 
     def setUp(self):
         super(ServiceTestCase, self).setUp()
-        self.add_billing_manager(self.test_billing_manager_login, self.test_billing_manager_password)
+        self.add_billing_manager(self.test_login, self.test_password)
 
     def add_billing_manager(self, login, password):
         handle_action('add_billing_manager', {'login': login, 'password': password})
@@ -40,3 +41,7 @@ class ServiceTestCase(DbBasedTestCase):
     @transaction()
     def get_auth_billing_manager(self, login, password, curs=None):
         return selector.get_auth_billing_manager(curs, login, password)
+
+    @transaction()
+    def get_currencies(self, curs=None):
+        return selector.get_currencies(curs)

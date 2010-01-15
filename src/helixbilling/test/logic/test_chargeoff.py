@@ -19,8 +19,8 @@ class ChargeOffTestCase(TestCaseWithBalance):
 
         product_id = '33 cow'
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': product_id,
             'amount': (25, 00),
@@ -31,8 +31,8 @@ class ChargeOffTestCase(TestCaseWithBalance):
         lock = self._get_lock(self.balance.client_id, product_id)
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id, #IGNORE:E1101
             'product_id': product_id,
         }
@@ -55,8 +55,8 @@ class ChargeOffTestCase(TestCaseWithBalance):
 
     def test_chargeoff_not_locked(self):
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'product_id': '555',
         }

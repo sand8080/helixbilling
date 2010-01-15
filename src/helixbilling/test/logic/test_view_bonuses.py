@@ -31,8 +31,8 @@ class ViewBonusesTestCase(TestCaseWithBalance):
         self._make_bonus(self.balance.client_id, end_date, 1080) #too late
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'start_date': start_date.isoformat(),
             'end_date': end_date.isoformat(),
@@ -60,8 +60,8 @@ class ViewBonusesTestCase(TestCaseWithBalance):
         self._make_bonus(self.balance.client_id, end_date, 1080) #too late
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'start_date': start_date.isoformat(),
             'end_date': end_date.isoformat(),
@@ -93,8 +93,8 @@ class ViewBonusesTestCase(TestCaseWithBalance):
         self._make_bonus(self.balance.client_id, end_date, 1080) #too late
 
         data = {
-            'login': self.test_billing_manager_login,
-            'password': self.test_billing_manager_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'client_id': self.balance.client_id,
             'start_date': start_date.isoformat(),
             'end_date': end_date.isoformat(),
