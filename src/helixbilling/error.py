@@ -1,12 +1,20 @@
 #from helixcore.db.wrapper import EmptyResultSetError
 
 
-class HelixtbillingError(Exception):
+class HelixbillingError(Exception):
     pass
 
 
-class BalanceNotFound(HelixtbillingError):
-    def __init__(self, client_id):
-        super(BalanceNotFound, self).__init__('''Balance for client '%s' not found.''' % client_id)
+class ObjectNotFound(HelixbillingError):
+    pass
 
+
+class BalanceNotFound(ObjectNotFound):
+    def __init__(self, customer_id):
+        super(BalanceNotFound, self).__init__('Balance not found for customer %s' % customer_id)
+
+
+class CurrencyNotFound(ObjectNotFound):
+    def __init__(self, currency):
+        super(CurrencyNotFound, self).__init__('Currency %s not found' % currency)
 

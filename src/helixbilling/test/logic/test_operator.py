@@ -51,6 +51,13 @@ class OperatorTestCase(ServiceTestCase):
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_operator', data)
 
+    def test_auth_error(self):
+        data = {
+            'login': self.test_login,
+            'password': 'fake %s' % self.test_password,
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'modify_operator', data)
+
 
 if __name__ == '__main__':
     unittest.main()

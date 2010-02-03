@@ -9,7 +9,6 @@ import helixcore.mapping.actions as mapping
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff
 from helixbilling.logic.helper import cents_to_decimal
-from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
 
 
@@ -26,41 +25,45 @@ class LogicTestCase(ServiceTestCase):
         return mapping.get(curs, Currency, Eq('code', code))
 
     @transaction()
-    def _add_balance(self, client_id, currency_id, active=1, available_real_amount=0,
+    def _get_currency_by_balance(self, balance, curs=None):
+        return mapping.get(curs, Currency, Eq('id', balance.currency_id))
+
+    @transaction()
+    def _add_balance(self, customer_id, currency_id, active=1, available_real_amount=0,
         available_virtual_amount=0, overdraft_limit=0, locking_order=None,
         locked_amount=0, curs=None):
         if locking_order is None:
             locking_order = ['available_real_amount', 'available_virtual_amount']
-        mapping.insert(curs, Balance(client_id=client_id, currency_id=currency_id, active=active,
+        mapping.insert(curs, Balance(customer_id=customer_id, currency_id=currency_id, active=active,
             available_real_amount=available_real_amount, available_virtual_amount=available_virtual_amount,
             overdraft_limit=overdraft_limit, locking_order=locking_order, locked_amount=locked_amount))
 
     @transaction()
-    def _get_balance(self, client_id, curs=None):
-        return mapping.get(curs, Balance, Eq('client_id', client_id))
+    def _get_balance(self, o_id, c_id, curs=None):
+        return mapping.get(curs, Balance, And(Eq('operator_id', o_id), Eq('customer_id', c_id)))
 
     @transaction()
-    def _get_validated_balance(self, billing_manager_login, client_id, curs=None):
-        balance = mapping.get(curs, Balance, Eq('client_id', client_id))
-        manager = self.get_billing_manager_by_login(billing_manager_login)
-        self.assertEqual(manager.id, balance.billing_manager_id)
+    def _get_validated_balance(self, operator_login, customer_id, curs=None):
+        balance = mapping.get(curs, Balance, Eq('customer_id', customer_id))
+        operator = self.get_operator_by_login(operator_login)
+        self.assertEqual(operator.id, balance.operator_id)
         return balance
 
     @transaction()
-    def _get_receipts(self, client_id, curs=None):
-        return mapping.get_list(curs, Receipt, Eq('client_id', client_id))
+    def _get_receipts(self, customer_id, curs=None):
+        return mapping.get_list(curs, Receipt, Eq('customer_id', customer_id))
 
     @transaction()
-    def _get_bonuses(self, client_id, curs=None):
-        return mapping.get_list(curs, Bonus, Eq('client_id', client_id))
+    def _get_bonuses(self, customer_id, curs=None):
+        return mapping.get_list(curs, Bonus, Eq('customer_id', customer_id))
 
     @transaction()
-    def _get_lock(self, client_id, product_id, curs=None):
-        return mapping.get(curs, BalanceLock, And(Eq('client_id', client_id), Eq('product_id', product_id)))
+    def _get_lock(self, customer_id, product_id, curs=None):
+        return mapping.get(curs, BalanceLock, And(Eq('customer_id', customer_id), Eq('product_id', product_id)))
 
     @transaction()
-    def _get_chargeoff(self, client_id, product_id, curs=None):
-        return mapping.get(curs, ChargeOff, And(Eq('client_id', client_id), Eq('product_id', product_id)))
+    def _get_chargeoff(self, customer_id, product_id, curs=None):
+        return mapping.get(curs, ChargeOff, And(Eq('customer_id', customer_id), Eq('product_id', product_id)))
 
     @transaction()
     def _make_balance_passive(self, balance, curs=None):
@@ -89,25 +92,24 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         self.balance = self.add_balance('123', self.currency) #IGNORE:W0201
 
     @transaction()
-    def add_balance(self, client_id, currency, active=True, overdraft_limit=None,
+    def add_balance(self, customer_id, currency, active=True, overdraft_limit=None,
         locking_order=None, curs=None):
         data = {
             'login': self.test_login,
             'password': self.test_password,
-            'client_id': client_id,
+            'customer_id': customer_id,
             'currency': currency.code,
             'active': active,
+            'locking_order': locking_order,
         }
-        if locking_order is not None:
-            data['locking_order'] = locking_order
         if overdraft_limit is not None:
             data['overdraft_limit'] = overdraft_limit
 
-        handle_action('add_balance', data)
-        balance = mapping.get(curs, Balance, Eq('client_id', client_id))
-        self.assertTrue(balance.id > 0) #IGNORE:E1101
-        self.assertEquals(client_id, balance.client_id) #IGNORE:E1101
-        self.assertTrue(isinstance(balance.created_date, datetime.datetime)) #IGNORE:E1101
+        self.handle_action('add_balance', data)
+        balance = mapping.get(curs, Balance, Eq('customer_id', customer_id))
+        self.assertTrue(balance.id > 0)
+        self.assertEquals(customer_id, balance.customer_id)
+        self.assertTrue(isinstance(balance.created_date, datetime.datetime))
         self.assertEquals(0, balance.available_real_amount)
         self.assertEquals(0, balance.locked_amount)
         if overdraft_limit is None:
@@ -128,17 +130,26 @@ class TestCaseWithBalance(TestCaseWithCurrency):
         return balance
 
     @transaction()
-    def add_receipt(self, client_id, amount, curs=None):
-        mapping.insert(curs, Receipt(client_id=client_id, amount=amount))
+    def add_receipt(self, customer_id, amount, curs=None):
+        mapping.insert(curs, Receipt(customer_id=customer_id, amount=amount))
 
     @transaction()
-    def add_bonus(self, client_id, amount, curs=None):
-        mapping.insert(curs, Bonus(client_id=client_id, amount=amount))
+    def add_bonus(self, customer_id, amount, curs=None):
+        mapping.insert(curs, Bonus(customer_id=customer_id, amount=amount))
 
     @transaction()
-    def add_chargeoff(self, client_id, product_id, real_amount, virtual_amount, curs=None):
-        mapping.insert(curs, ChargeOff(client_id=client_id, product_id=product_id,
+    def add_chargeoff(self, customer_id, product_id, real_amount, virtual_amount, curs=None):
+        mapping.insert(curs, ChargeOff(customer_id=customer_id, product_id=product_id,
             locked_date=datetime.datetime.now(), real_amount=real_amount, virtual_amount=virtual_amount))
+
+    def _cast(self, list_of_dicts, list_of_f, caster):
+        result = list(list_of_dicts)
+        for d in result:
+            for f in list_of_f:
+                if d[f] is None:
+                    continue
+                d[f] = caster(d[f])
+        return result
 
 
 class ViewTestCase(TestCaseWithBalance):

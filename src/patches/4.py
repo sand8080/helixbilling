@@ -20,6 +20,12 @@ def apply(curs):
         )
     ''')
 
+    print 'Creating unique index balance_customer_id_idx on balance'
+    curs.execute(
+    '''
+        CREATE UNIQUE INDEX balance_customer_id_idx ON balance(customer_id)
+    ''')
+
     print 'Creating index balance_operator_id_customer_id_idx on balance'
     curs.execute(
     '''
@@ -30,6 +36,9 @@ def apply(curs):
 def revert(curs):
     print 'Dropping index balance_operator_id_customer_id_idx on balance'
     curs.execute('DROP INDEX balance_operator_id_customer_id_idx')
+
+    print 'Dropping unique index balance_customer_id_idx on balance'
+    curs.execute('DROP INDEX balance_customer_id_idx')
 
     print 'Dropping table balance'
     curs.execute('DROP TABLE balance')

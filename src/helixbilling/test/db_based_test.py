@@ -25,6 +25,7 @@ class ServiceTestCase(DbBasedTestCase):
 
     def setUp(self):
         super(ServiceTestCase, self).setUp()
+        self.add_operator(self.test_login, self.test_password)
 
     def add_operator(self, login, password):
         self.handle_action('add_operator', {'login': login, 'password': password})

@@ -24,7 +24,7 @@ RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 AUTH_INFO = {
     'login': Text(),
     'password': Text(),
-    Optional('custom_client_info'): NullableText,
+    Optional('custom_operator_info'): NullableText,
 }
 
 # --- currencies ---
@@ -54,80 +54,78 @@ MODIFY_OPERATOR = dict(
     **AUTH_INFO
 )
 
-## --- balance ---
-#ADD_BALANCE = dict(
-#    {
-#        'client_id': Text(),
-#        'active': bool,
-#        'currency': Text(),
-#        Optional('overdraft_limit'): DecimalText(),
-#        Optional('locking_order'): locking_order_validator
-#    },
-#    **AUTH_INFO
-#)
-#
-#MODIFY_BALANCE = dict(
-#    {
-#        'client_id': Text(),
-#        Optional('new_active'): bool,
-#        Optional('new_overdraft_limit'): DecimalText(),
-#        Optional('new_locking_order'): locking_order_validator
-#    },
-#    **AUTH_INFO
-#)
-#
-#DELETE_BALANCE = dict(
-#    {
-#        'client_id': Text()
-#    },
-#    **AUTH_INFO
-#)
-#
-#GET_BALANCE = dict(
-#    {
-#        'client_id': Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#BALANCE_INFO = {
-#    'client_id': Text(),
-#    'active': bool,
-#    'currency_code': Text(),
-#    'overdraft_limit': DecimalText(),
-#    'locking_order': locking_order_validator,
-#    'created_date': IsoDatetime(),
-#    'available_real_amount': DecimalText(),
-#    'available_virtual_amount': DecimalText(),
-#    'locked_amount': DecimalText(),
-#}
-#
-#GET_BALANCE_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **BALANCE_INFO
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
-#VIEW_BALANCES = dict(
-#    {
-#        Optional('filter'): {
-#            Optional('clients_ids'): [Text()],
-#        }
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_BALANCES_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        balances = [BALANCE_INFO]
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
+# --- balance ---
+ADD_BALANCE = dict(
+    {
+        'customer_id': Text(),
+        'active': bool,
+        'currency': Text(),
+        Optional('overdraft_limit'): DecimalText(),
+        Optional('locking_order'): locking_order_validator
+    },
+    **AUTH_INFO
+)
+
+MODIFY_BALANCE = dict(
+    {
+        'customer_id': Text(),
+        Optional('new_active'): bool,
+        Optional('new_overdraft_limit'): DecimalText(),
+        Optional('new_locking_order'): locking_order_validator
+    },
+    **AUTH_INFO
+)
+
+DELETE_BALANCE = dict(
+    {'customer_id': Text()},
+    **AUTH_INFO
+)
+
+GET_BALANCE = dict(
+    {'customer_id': Text()},
+    **AUTH_INFO
+)
+
+BALANCE_INFO = {
+    'customer_id': Text(),
+    'active': bool,
+    'currency_code': Text(),
+    'created_date': IsoDatetime(),
+    'available_real_amount': DecimalText(),
+    'available_virtual_amount': DecimalText(),
+    'overdraft_limit': DecimalText(),
+    'locked_amount': DecimalText(),
+    'locking_order': locking_order_validator,
+}
+
+GET_BALANCE_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **BALANCE_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
+VIEW_BALANCES = dict(
+    {
+        'filter_params': {
+            Optional('customer_ids'): [Text()],
+            Optional('limit'): NonNegative(int),
+            Optional('offset'): NonNegative(int),
+        }
+    },
+    **AUTH_INFO
+)
+
+VIEW_BALANCES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        balances = [BALANCE_INFO]
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 #
 ## --- operations ---
 #ENROLL_RECEIPT = dict(
@@ -359,22 +357,22 @@ protocol = [
     ApiCall('modify_operator_request', Scheme(MODIFY_OPERATOR)),
     ApiCall('modify_operator_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-#    # balance
-#    ApiCall('add_balance_request', Scheme(ADD_BALANCE)),
-#    ApiCall('add_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE)),
-#    ApiCall('modify_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('delete_balance_request', Scheme(DELETE_BALANCE)),
-#    ApiCall('delete_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('get_balance_request', Scheme(GET_BALANCE)),
-#    ApiCall('get_balance_response', Scheme(GET_BALANCE_RESPONSE)),
-#
-#    ApiCall('view_balances_request', Scheme(VIEW_BALANCES)),
-#    ApiCall('view_balances_response', Scheme(VIEW_BALANCES_RESPONSE)),
-#
+    # balance
+    ApiCall('add_balance_request', Scheme(ADD_BALANCE)),
+    ApiCall('add_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE)),
+    ApiCall('modify_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_balance_request', Scheme(DELETE_BALANCE)),
+    ApiCall('delete_balance_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('get_balance_request', Scheme(GET_BALANCE)),
+    ApiCall('get_balance_response', Scheme(GET_BALANCE_RESPONSE)),
+
+    ApiCall('view_balances_request', Scheme(VIEW_BALANCES)),
+    ApiCall('view_balances_response', Scheme(VIEW_BALANCES_RESPONSE)),
+
 #    # receipt
 #    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
 #    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),

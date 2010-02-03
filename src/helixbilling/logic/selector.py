@@ -12,6 +12,8 @@ from helixbilling.domain.objects import (Receipt, Bonus, ChargeOff, BalanceLock,
 
 from helixbilling.logic import helper
 from helixbilling.domain import security
+from helixcore.db.sql import Select, Eq, And
+from helixbilling.error import BalanceNotFound
 
 
 def select_data(curs, MAPPED_CLASS, cond, limit, offset):
@@ -94,12 +96,21 @@ def get_currencies(curs, for_update=False):
     return mapping.get_list(curs, Currency, None, for_update=for_update)
 
 
-def get_balance(curs, billing_manager_id, client_id, active_only=True, for_update=False):
-    balance = mapping.get_obj_by_fields(curs, Balance,
-        {'billing_manager_id': billing_manager_id, 'client_id': client_id}, for_update)
-    if active_only and balance.active == 0:
-        raise ActionNotAllowedError('Balance of client %s is inactive' % client_id)
-    return balance
+def get_currencies_indexed_by_id(curs):
+    currencies = get_currencies(curs)
+    return dict([(c.id, c) for c in currencies])
+
+
+def get_balance(curs, operator, customer_id, active_only=True, for_update=False):
+    try:
+        cond = And(Eq('operator_id', operator.id), Eq('customer_id', customer_id))
+        if active_only:
+            cond = And(cond, Eq('active', True))
+        q = Select(Balance.table, cond=cond, for_update=for_update)
+        curs.execute(*q.glue())
+        return Balance(**fetchone_dict(curs))
+    except EmptyResultSetError:
+        raise BalanceNotFound(customer_id)
 
 
 def try_get_lock(curs, client_id, product_id, for_update=False):
