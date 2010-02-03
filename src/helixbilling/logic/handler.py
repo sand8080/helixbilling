@@ -129,7 +129,7 @@ class Handler(object):
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     def modify_balance(self, data, operator, curs=None):
         c_id = data['customer_id']
-        balance = selector.get_balance(curs, operator, c_id, active_only=False, for_update=True)
+        balance = selector.get_balance(curs, operator, c_id, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
         data.update(self.decimal_texts_to_cents(data, currency, ['new_overdraft_limit']))
         self.update_obj(curs, data, partial(lambda x: x, balance))
@@ -139,8 +139,7 @@ class Handler(object):
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     def delete_balance(self, data, operator, curs=None):
-        obj = selector.get_balance(curs, operator, data['customer_id'],
-            active_only=False, for_update=True)
+        obj = selector.get_balance(curs, operator, data['customer_id'], for_update=True)
         mapping.delete(curs, obj)
         return response_ok()
 
@@ -166,7 +165,8 @@ class Handler(object):
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     def get_balance(self, data, operator, curs=None):
-        balance = selector.get_balance(curs, operator, data['customer_id'], active_only=False)
+        c_id = data['customer_id']
+        balance = selector.get_balance(curs, operator, c_id)
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
         b_info = self._balances_info([balance], currencies_idx)[0]
         return response_ok(**b_info)
@@ -175,11 +175,12 @@ class Handler(object):
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     def view_balances(self, data, operator, curs=None):
-#        balance = selector.get_balance(curs, operator, data['customer_id'], active_only=False)
-#        currencies_idx = selector.get_currencies_indexed_by_id(curs)
-#        b_info = self._balances_info([balance], currencies_idx)[0]
-#        return response_ok(**b_info)
-        return response_ok()
+        f_params = data['filter_params']
+        balances = selector.get_balances(curs, operator, f_params)
+        total = selector.get_balances_count(curs, operator, f_params)
+        currencies_idx = selector.get_currencies_indexed_by_id(curs)
+        b_info = self._balances_info(balances, currencies_idx)
+        return response_ok(balances=b_info, total=total)
 #
 #    # --- enroll receipt ---
 #    @transaction()

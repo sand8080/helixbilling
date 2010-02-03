@@ -121,7 +121,10 @@ VIEW_BALANCES = dict(
 VIEW_BALANCES_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        balances = [BALANCE_INFO]
+        **{
+            'balances': [BALANCE_INFO],
+            'total': NonNegative(int),
+        }
     ),
     RESPONSE_STATUS_ERROR
 )

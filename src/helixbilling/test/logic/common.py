@@ -1,4 +1,5 @@
 from decimal import Decimal
+from eventlet.api import select
 import datetime
 
 from helixbilling.test.db_based_test import ServiceTestCase
@@ -89,14 +90,14 @@ class TestCaseWithCurrency(LogicTestCase):
 class TestCaseWithBalance(TestCaseWithCurrency):
     def setUp(self):
         super(TestCaseWithBalance, self).setUp()
-        self.balance = self.add_balance('123', self.currency) #IGNORE:W0201
+        self.balance = self.add_balance(self.test_login, self.test_password, '123', self.currency) #IGNORE:W0201
 
     @transaction()
-    def add_balance(self, customer_id, currency, active=True, overdraft_limit=None,
+    def add_balance(self, login, password, customer_id, currency, active=True, overdraft_limit=None,
         locking_order=None, curs=None):
         data = {
-            'login': self.test_login,
-            'password': self.test_password,
+            'login': login,
+            'password': password,
             'customer_id': customer_id,
             'currency': currency.code,
             'active': active,
@@ -106,8 +107,10 @@ class TestCaseWithBalance(TestCaseWithCurrency):
             data['overdraft_limit'] = overdraft_limit
 
         self.handle_action('add_balance', data)
-        balance = mapping.get(curs, Balance, Eq('customer_id', customer_id))
+        operator = self.get_operator_by_login(login)
+        balance = selector.get_balance(curs, operator, customer_id)
         self.assertTrue(balance.id > 0)
+        self.assertEquals(operator.id, balance.operator_id)
         self.assertEquals(customer_id, balance.customer_id)
         self.assertTrue(isinstance(balance.created_date, datetime.datetime))
         self.assertEquals(0, balance.available_real_amount)

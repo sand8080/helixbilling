@@ -3,7 +3,8 @@ import iso8601 #@UnresolvedImport
 
 import helixcore.mapping.actions as mapping
 from helixcore.db import sql
-from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, EmptyResultSetError
+from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, EmptyResultSetError,\
+    SelectedMoreThanOneRow
 from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError,\
     AuthError
 
@@ -12,7 +13,7 @@ from helixbilling.domain.objects import (Receipt, Bonus, ChargeOff, BalanceLock,
 
 from helixbilling.logic import helper
 from helixbilling.domain import security
-from helixcore.db.sql import Select, Eq, And
+from helixcore.db.sql import Select, Eq, And, In
 from helixbilling.error import BalanceNotFound
 
 
@@ -101,16 +102,43 @@ def get_currencies_indexed_by_id(curs):
     return dict([(c.id, c) for c in currencies])
 
 
-def get_balance(curs, operator, customer_id, active_only=True, for_update=False):
-    try:
-        cond = And(Eq('operator_id', operator.id), Eq('customer_id', customer_id))
-        if active_only:
-            cond = And(cond, Eq('active', True))
-        q = Select(Balance.table, cond=cond, for_update=for_update)
-        curs.execute(*q.glue())
-        return Balance(**fetchone_dict(curs))
-    except EmptyResultSetError:
+def _get_filter_params(seed, cond_map, filter_params):
+    cond = seed
+    for p_name, db_f_name, c in cond_map:
+        if p_name in filter_params:
+            cond = And(cond, c(db_f_name, filter_params[p_name]))
+    return cond
+
+
+def _balances_filtering_cond(operator, filter_params):
+    cond = Eq('operator_id', operator.id)
+    cond_map = [
+        ('customer_ids', 'customer_id', In),
+        ('active', 'active', True),
+    ]
+    return _get_filter_params(cond, cond_map, filter_params)
+
+
+def get_balances(curs, operator, filter_params, for_update=False):
+    cond = _balances_filtering_cond(operator, filter_params)
+    limit = filter_params.get('limit', None)
+    offset = filter_params.get('offset', 0)
+    return mapping.get_list(curs, Balance, cond=cond, limit=limit, offset=offset, for_update=for_update)
+
+
+def get_balances_count(curs, operator, filter_params):
+    cond = _balances_filtering_cond(operator, filter_params)
+    return int(get_count(curs, Balance.table, cond))
+
+
+def get_balance(curs, operator, customer_id, for_update=False):
+    balances = get_balances(curs, operator, {'customer_ids': [customer_id]}, for_update=for_update)
+    if len(balances) > 1:
+        raise SelectedMoreThanOneRow()
+    elif len(balances) == 0:
         raise BalanceNotFound(customer_id)
+    else:
+        return balances[0]
 
 
 def try_get_lock(curs, client_id, product_id, for_update=False):
