@@ -4,24 +4,33 @@ def apply(curs):
     '''
         CREATE TABLE balance (
             id serial,
-            billing_manager_id integer NOT NULL,
+            PRIMARY KEY(id),
+            operator_id integer NOT NULL,
+            FOREIGN KEY(operator_id) REFERENCES operator(id),
             active bool NOT NULL DEFAULT True,
-            client_id varchar NOT NULL,
+            customer_id varchar NOT NULL,
             currency_id int NOT NULL,
+            FOREIGN KEY(currency_id) REFERENCES currency(id),
             created_date timestamp with time zone NOT NULL DEFAULT now(),
             available_real_amount int DEFAULT 0,
             available_virtual_amount int DEFAULT 0,
             locking_order varchar[] DEFAULT NULL,
             locked_amount int DEFAULT 0,
-            overdraft_limit int DEFAULT 0,
-            PRIMARY KEY(id),
-            FOREIGN KEY(currency_id) REFERENCES currency(id),
-            FOREIGN KEY(billing_manager_id) REFERENCES billing_manager(id),
-            UNIQUE(client_id)
+            overdraft_limit int DEFAULT 0
         )
     ''')
 
+    print 'Creating index balance_operator_id_customer_id_idx on balance'
+    curs.execute(
+    '''
+        CREATE INDEX balance_operator_id_customer_id_idx ON balance(operator_id, customer_id)
+    ''')
+
+
 def revert(curs):
+    print 'Dropping index balance_operator_id_customer_id_idx on balance'
+    curs.execute('DROP INDEX balance_operator_id_customer_id_idx')
+
     print 'Dropping table balance'
     curs.execute('DROP TABLE balance')
 

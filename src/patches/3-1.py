@@ -168,6 +168,7 @@ def apply(curs):
         print 'Adding currency %s' % t[0]
         curs.execute('INSERT INTO currency (code, cent_factor, name, location) VALUES(%s, %s, %s, %s)', t)
 
+
 def revert(curs):
     print 'Deleting currencies'
     curs.execute('DELETE FROM currency')

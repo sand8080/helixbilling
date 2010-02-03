@@ -1,26 +1,28 @@
-
 def apply(curs):
     print 'Creating table bonus'
     curs.execute(
     '''
         CREATE TABLE bonus (
             id serial,
-            client_id varchar NOT NULL,
+            PRIMARY KEY(id),
+            operator_id integer NOT NULL,
+            FOREIGN KEY(operator_id) REFERENCES operator(id),
+            customer_id varchar NOT NULL,
             created_date timestamp with time zone NOT NULL DEFAULT now(),
-            amount int,
-            PRIMARY KEY(id)
+            amount int
         )
     ''')
 
-    print 'Creating index bonus_client_id_idx on bonus'
+    print 'Creating index bonus_operator_id_customer_id_idx on bonus'
     curs.execute(
     '''
-        CREATE INDEX bonus_client_id_idx ON bonus(client_id);
+        CREATE INDEX bonus_operator_id_customer_id_idx ON bonus(operator_id, customer_id)
     ''')
 
+
 def revert(curs):
-    print 'Dropping index bonus_client_id_idx on bonus'
-    curs.execute('DROP INDEX bonus_client_id_idx')
+    print 'Dropping index bonus_operator_id_customer_id_idx on bonus'
+    curs.execute('DROP INDEX bonus_operator_id_customer_id_idx')
 
     print 'Dropping table bonus'
     curs.execute('DROP TABLE bonus')

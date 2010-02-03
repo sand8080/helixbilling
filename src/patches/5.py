@@ -4,22 +4,25 @@ def apply(curs):
     '''
         CREATE TABLE receipt (
             id serial,
-            client_id varchar NOT NULL,
-            created_date timestamp with time zone NOT NULL DEFAULT now(),
+            operator_id integer NOT NULL,
+            FOREIGN KEY(operator_id) REFERENCES operator(id),
+            customer_id varchar NOT NULL,
             amount int,
+            created_date timestamp with time zone NOT NULL DEFAULT now(),
             PRIMARY KEY(id)
         )
     ''')
 
-    print 'Creating index receipt_client_id_idx on receipt'
+    print 'Creating index receipt_operator_id_customer_id_idx on receipt'
     curs.execute(
     '''
-        CREATE INDEX receipt_client_id_idx ON receipt(client_id);
+        CREATE INDEX receipt_operator_id_customer_id_idx ON receipt(operator_id, customer_id)
     ''')
 
+
 def revert(curs):
-    print 'Dropping index receipt_client_id_idx on receipt'
-    curs.execute('DROP INDEX receipt_client_id_idx')
+    print 'Dropping index receipt_operator_id_customer_id_idx on receipt'
+    curs.execute('DROP INDEX receipt_operator_id_customer_id_idx')
 
     print 'Dropping table receipt'
     curs.execute('DROP TABLE receipt')

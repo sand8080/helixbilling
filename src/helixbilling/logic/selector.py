@@ -1,17 +1,17 @@
 from functools import partial
 import iso8601 #@UnresolvedImport
 
-import helixcore.db.query_builder as query_builder
 import helixcore.mapping.actions as mapping
 from helixcore.db import sql
 from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, EmptyResultSetError
-from helixcore.server.exceptions import DataIntegrityError, AuthError, ActionNotAllowedError
+from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError,\
+    AuthError
 
-from helixbilling.domain.objects import Receipt, Bonus, ChargeOff, BalanceLock, BillingManager, \
-    Currency, Balance
+from helixbilling.domain.objects import (Receipt, Bonus, ChargeOff, BalanceLock, Operator,
+    Currency, Balance)
+
+from helixbilling.logic import helper
 from helixbilling.domain import security
-
-import helper
 
 
 def select_data(curs, MAPPED_CLASS, cond, limit, offset):
@@ -20,12 +20,12 @@ def select_data(curs, MAPPED_CLASS, cond, limit, offset):
     '''
     columns = list(MAPPED_CLASS.__slots__)
     columns.remove('id')
-    req, params = query_builder.select(
+    q = sql.Select(
         MAPPED_CLASS.table, columns=columns, cond=cond,
         limit=limit, offset=offset,
         order_by='id'
     )
-    curs.execute(req, params)
+    curs.execute(*q.glue())
     return fetchall_dicts(curs)
 
 
@@ -46,8 +46,8 @@ select_balance_locks = partial(_select_with_amount, MAPPED_CLASS=BalanceLock, AM
 
 
 def get_count(curs, table, cond):
-    req, params = query_builder.select(table, columns=[sql.Columns.COUNT_ALL], cond=cond)
-    curs.execute(req, params)
+    q = sql.Select(table, columns=[sql.Columns.COUNT_ALL], cond=cond)
+    curs.execute(*q.glue())
     count_dict = fetchone_dict(curs)
     _, count = count_dict.popitem()
     return count
@@ -63,17 +63,17 @@ def decompose_amounts(dicts, currency, data_field_names):
     return result
 
 
-def get_billing_manager(curs, id, for_update=False): #IGNORE:W0622
-    return mapping.get_obj_by_field(curs, BillingManager, 'id', id, for_update)
+def get_operator(curs, o_id, for_update=False): #IGNORE:W0622
+    return mapping.get_obj_by_field(curs, Operator, 'id', o_id, for_update)
 
 
-def get_billing_manager_by_login(curs, login, for_update=False):
-    return mapping.get_obj_by_field(curs, BillingManager, 'login', login, for_update)
+def get_operator_by_login(curs, login, for_update=False):
+    return mapping.get_obj_by_field(curs, Operator, 'login', login, for_update)
 
 
-def get_auth_billing_manager(curs, login, password, for_update=False):
+def get_auth_opertator(curs, login, password, for_update=False):
     try:
-        return mapping.get_obj_by_fields(curs, BillingManager,
+        return mapping.get_obj_by_fields(curs, Operator,
             {'login': login, 'password': security.encrypt_password(password)}, for_update)
     except EmptyResultSetError:
         raise AuthError('Access denied.')

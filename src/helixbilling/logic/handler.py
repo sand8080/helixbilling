@@ -1,13 +1,15 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
 from helixcore.db.sql import Eq, And
 from helixcore.server.response import response_ok
-from helixcore.server.exceptions import ActionNotAllowedError
+from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
+    DataIntegrityError
+from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, BillingManager
+from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, Operator
 import helixbilling.logic.product_status as product_status
 from helixbilling.domain import security
 from helixbilling.error import BalanceNotFound
@@ -18,12 +20,26 @@ from decimal import Decimal
 import selector
 
 
+def detalize_error(err_cls, category, f_name):
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except err_cls, e:
+                raise RequestProcessingError(category, e.message,
+                    details=[{'field': f_name, 'message': e.message}])
+        return decorated
+    return decorator
+
+
+@detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
 def authentificate(method):
     def decroated(self, data, curs):
-        billing_manager_id=self.get_billing_manager_id(curs, data)
+        data['operator_id'] = self.get_operator_id(curs, data)
         del data['login']
         del data['password']
-        return method(self, data, curs=curs, billing_manager_id=billing_manager_id)
+        data.pop('custom_operator_info', None)
+        return method(self, data, curs)
     return decroated
 
 
@@ -34,8 +50,8 @@ class Handler(object):
     def ping(self, data): #IGNORE:W0613
         return response_ok()
 
-    def get_billing_manager_id(self, curs, data):
-        return selector.get_auth_billing_manager(curs, data['login'], data['password']).id
+    def get_operator_id(self, curs, data):
+        return selector.get_auth_opertator(curs, data['login'], data['password']).id
 
     def get_fields_for_update(self, data, prefix_of_new='new_'):
         '''
@@ -71,394 +87,386 @@ class Handler(object):
 
     # --- currencies ---
     @transaction()
-    @logged
     def view_currencies(self, data, curs=None): #IGNORE:W0613
         return response_ok(currencies=selector.select_data(curs, Currency, None, None, 0))
 
-    # --- billing manager ---
+    # --- operator ---
     @transaction()
-    def add_billing_manager(self, data, curs=None):
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'login')
+    def add_operator(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
-        mapping.insert(curs, BillingManager(**data))
+        mapping.insert(curs, Operator(**data))
         return response_ok()
 
     @transaction()
     @authentificate
-    def modify_billing_manager(self, data, curs=None, billing_manager_id=None):
+    @detalize_error(DataIntegrityError, RequestProcessingError.Category.data_integrity, 'new_login')
+    def modify_operator(self, data, curs=None):
         if 'new_password' in data:
             data['new_password'] = security.encrypt_password(data['new_password'])
-        data['billing_manager_id'] = billing_manager_id
-        loader = partial(selector.get_billing_manager, curs, billing_manager_id, for_update=True)
+        loader = partial(selector.get_operator, curs, data['operator_id'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
-    @transaction()
-    @authentificate
-    def delete_billing_manager(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
-        obj = selector.get_billing_manager(curs, billing_manager_id)
-        mapping.delete(curs, obj)
-        return response_ok()
-
-    # --- balance ---
-    @transaction()
-    @logged
-    @authentificate
-    def add_balance(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
-        currency = selector.get_currency_by_code(curs, data['currency'])
-        del data['currency']
-        data['currency_id'] = currency.id
-        data['billing_manager_id'] = billing_manager_id
-        data.update(self.decimal_texts_to_cents(data, currency, ['overdraft_limit']))
-        balance = Balance(**data)
-        mapping.insert(curs, balance)
-        return response_ok()
-
-    @transaction()
-    @logged
-    @authentificate
-    def modify_balance(self, data, curs=None, billing_manager_id=None):
-        client_id = data['client_id']
-        try:
-            balance = selector.get_balance(curs, billing_manager_id, client_id,
-                active_only=False, for_update=True)
-            currency = selector.get_currency_by_balance(curs, balance)
-            data.update(self.decimal_texts_to_cents(data, currency, ['new_overdraft_limit']))
-            self.update_obj(curs, data, partial(lambda x: x, balance))
-            return response_ok()
-        except EmptyResultSetError:
-            raise BalanceNotFound(client_id)
-
-    @transaction()
-    @logged
-    @authentificate
-    def delete_balance(self, data, curs=None, billing_manager_id=None):
-        obj = selector.get_balance(curs, billing_manager_id, data['client_id'],
-            active_only=False, for_update=True)
-        mapping.delete(curs, obj)
-        return response_ok()
-
-    @transaction()
-    @logged
-    @authentificate
-    def get_balance(self, data, curs=None, billing_manager_id=None):
-        b = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
-        c = selector.get_currency_by_balance(curs, b)
-        b_data = {
-            'client_id': b.client_id,
-            'active': b.active,
-            'currency_code': c.code,
-            'created_date': '%s' % b.created_date,
-#            'available_real_amount': decompose_amount(c, b.available_real_amount),
-#            'available_virtual_amount': decompose_amount(c, b.available_virtual_amount),
-#            'overdraft_limit': decompose_amount(c, b.overdraft_limit),
-#            'locking_order': b.locking_order,
-#            'locked_amount': decompose_amount(c, b.locked_amount)
-        }
-        print '###', b_data
-        return response_ok(**b_data)
-
-    # --- enroll receipt ---
-    @transaction()
-    @logged
-    @authentificate
-    def enroll_receipt(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
-            active_only=True, for_update=True)
-        currency = selector.get_currency_by_balance(curs, balance)
-        data = self.decimal_texts_to_cents(data, currency, ['amount'])
-
-        receipt = Receipt(**data)
-        mapping.insert(curs, receipt)
-
-        balance.available_real_amount += receipt.amount  #IGNORE:E1101
-        mapping.update(curs, balance)
-        return response_ok()
-
-    # --- enroll bonus ---
-    @transaction()
-    @logged
-    @authentificate
-    def enroll_bonus(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
-            active_only=True, for_update=True)
-        currency = selector.get_currency_by_balance(curs, balance)
-        data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
-
-        bonus = Bonus(**data_copy)
-        mapping.insert(curs, bonus)
-
-        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
-        mapping.update(curs, balance)
-        return response_ok()
-
-    # --- lock ---
-    def _lock(self, billing_manager_id, data_list, curs):
-        for data in data_list:
-            balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=True, for_update=True)
-            currency = selector.get_currency_by_balance(curs, balance)
-            data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
-            locks = compute_locks(currency, balance, data_copy['amount'])
-            del data_copy['amount']
-
-            lock = BalanceLock(
-                real_amount=locks['available_real_amount'],
-                virtual_amount=locks['available_virtual_amount'],
-                **data_copy
-            )
-            mapping.insert(curs, lock)
-
-            balance.available_real_amount -= lock.real_amount #IGNORE:E1101
-            balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
-            balance.locked_amount += lock.real_amount #IGNORE:E1101
-            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
-            mapping.update(curs, balance)
-
-    @logged
-    @authentificate
-    def lock(self, data, curs=None, billing_manager_id=None):
-        """
-        data = {
-            'login': Text(),
-            'password': Text(),
-            'client_id': Text(),
-            'product_id': Text(),
-            'amount': nonnegative_amount_validator
-        }
-        """
-        self._lock(billing_manager_id, [data], curs)
-        return response_ok()
-
-    @transaction()
-    @logged_bulk
-    @authentificate
-    def lock_list(self, data, curs=None, billing_manager_id=None):
-        """
-        data = {
-            'login': Text(),
-            'password': Text(),
-            'locks': [
-                {'client_id': Text(), 'product_id': Text()}
-                ...
-            ]
-        }
-        """
-        self._lock(billing_manager_id, data['locks'], curs)
-        return response_ok()
-
-    def _unlock(self, billing_manager_id, data_list, curs=None):
-        balances = {}
-        # locking all balances
-        for data in data_list:
-            balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
-                active_only=True, for_update=True)
-            balances[balance.client_id] = balance
-
-        for data in data_list:
-            try:
-                lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
-            except EmptyResultSetError:
-                raise ActionNotAllowedError(
-                    'Cannot unlock money for product %s: '
-                    'amount was not locked for this product'
-                    % data['product_id']
-                )
-
-            mapping.delete(curs, lock)
-
-            balance = balances[lock.client_id]
-            balance.available_real_amount += lock.real_amount
-            balance.available_virtual_amount += lock.virtual_amount
-            balance.locked_amount -= lock.real_amount #IGNORE:E1101
-            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
-
-            mapping.update(curs, balance)
-
-    @transaction()
-    @logged
-    @authentificate
-    def unlock(self, data, curs=None, billing_manager_id=None):
-        """
-        data = {
-            'login': Text(),
-            'password': Text(),
-            'client_id': Text(),
-            'product_id': Text(),
-        }
-        """
-        self._unlock(billing_manager_id, [data], curs)
-        return response_ok()
-
-    @transaction()
-    @logged_bulk
-    @authentificate
-    def unlock_list(self, data, curs=None, billing_manager_id=None):
-        """
-        data = {
-            'login': Text(),
-            'password': Text(),
-            'unlocks': [
-                {'client_id': Text(), 'product_id': Text(),}
-                ...
-            ]
-        }
-        """
-        self._unlock(billing_manager_id, data['unlocks'], curs)
-        return response_ok()
-
-    def _chargeoff(self, billing_manager_id, data_list, curs=None):
-        balances = {}
-        for data in data_list:
-            balance = selector.get_balance(curs, billing_manager_id,
-                data['client_id'], active_only=True, for_update=True)
-            balances[balance.client_id] = balance
-
-        for data in data_list:
-            try:
-                lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
-            except EmptyResultSetError:
-                raise ActionNotAllowedError(
-                    'Cannot charge off money for product %s: '
-                    'amount was not locked for this product'
-                    % data['product_id']
-                )
-
-            chargeoff = ChargeOff(locked_date=lock.locked_date,
-                real_amount=lock.real_amount, virtual_amount=lock.virtual_amount, **data)
-
-            mapping.delete(curs, lock)
-            mapping.insert(curs, chargeoff)
-
-            balance.locked_amount -= lock.real_amount #IGNORE:E1101
-            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
-
-            mapping.update(curs, balance)
-
-    @transaction()
-    @logged
-    @authentificate
-    def chargeoff(self, data, curs=None, billing_manager_id=None):
-        """
-        data = {
-            'login': Text(),
-            'password': Text(),
-            'client_id': Text(),
-            'product_id': Text(),
-            'amount': (positive int, non negative int)
-        }
-        """
-        self._chargeoff(billing_manager_id, [data], curs)
-        return response_ok()
-
-    @transaction()
-    @logged_bulk
-    @authentificate
-    def chargeoff_list(self, data, curs=None, billing_manager_id=None):
-        """
-        data = {
-            'login': Text(),
-            'password': Text(),
-            'chargeoffs': [
-                {'client_id': Text(), 'product_id': Text(), 'amount': (positive int, non negative int)}
-                ...
-            ]
-        }
-        """
-        self._chargeoff(billing_manager_id, data['chargeoffs'], curs)
-        return response_ok()
-
-    #view operations
-
-    @transaction()
-    @authentificate
-    def product_status(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
-            active_only=False, for_update=False)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        response = {'product_status': product_status.unknown}
-        try:
-            lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
-            response['product_status'] = product_status.locked
-            response['locked_date'] = lock.locked_date
-            response['real_amount'] = decompose_amount(currency, lock.real_amount)
-            response['virtual_amount'] = decompose_amount(currency, lock.virtual_amount)
-        except EmptyResultSetError: #IGNORE:W0704
-            pass
-
-        try:
-            chargeoff = selector.try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
-            response['product_status'] = product_status.charged_off
-            response['locked_date'] = chargeoff.locked_date
-            response['chargeoff_date'] = chargeoff.chargeoff_date
-            response['real_amount'] = decompose_amount(currency, chargeoff.real_amount)
-            response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
-        except EmptyResultSetError: #IGNORE:W0704
-            pass
-        return response_ok(**response)
-
-    @transaction()
-    @authentificate
-    def view_receipts(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        cond = Eq('client_id', data['client_id'])
-        date_filters = (
-            ('start_date', 'end_date', 'created_date'),
-        )
-        cond = And(cond, selector.get_date_filters(date_filters, data))
-
-        receipts, total = selector.select_receipts(curs, currency, cond, data['limit'], data['offset'])
-        return response_ok(receipts=receipts, total=total)
-
-    @transaction()
-    @authentificate
-    def view_bonuses(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        cond = Eq('client_id', data['client_id'])
-        date_filters = (
-            ('start_date', 'end_date', 'created_date'),
-        )
-        cond = And(cond, selector.get_date_filters(date_filters, data))
-
-        bonuses, total = selector.select_bonuses(curs, currency, cond, data['limit'], data['offset'])
-        return response_ok(bonuses=bonuses, total=total)
-
-    @transaction()
-    @authentificate
-    def view_chargeoffs(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        cond = Eq('client_id', data['client_id'])
-        if 'product_id' in data:
-            cond = And(cond, Eq('product_id', data['product_id']))
-
-        date_filters = (
-            ('locked_start_date', 'locked_end_date', 'locked_date'),
-            ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date'),
-        )
-        cond = And(cond, selector.get_date_filters(date_filters, data))
-
-        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['limit'], data['offset'])
-        return response_ok(chargeoffs=chargeoffs, total=total)
-
-    @transaction()
-    @authentificate
-    def view_balance_locks(self, data, curs=None, billing_manager_id=None):
-        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        cond = Eq('client_id', data['client_id'])
-        if 'product_id' in data:
-            cond = And(cond, Eq('product_id', data['product_id']))
-
-        date_filters = (
-            ('locked_start_date', 'locked_end_date', 'locked_date'),
-        )
-        cond = And(cond, selector.get_date_filters(date_filters, data))
-
-        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
-        return response_ok(balance_locks=balance_locks, total=total)
+#    # --- balance ---
+#    @transaction()
+#    @authentificate
+#    def add_balance(self, data, curs=None, billing_manager_id=None): #IGNORE:W0613
+#        currency = selector.get_currency_by_code(curs, data['currency'])
+#        del data['currency']
+#        data['currency_id'] = currency.id
+#        data['billing_manager_id'] = billing_manager_id
+#        data.update(self.decimal_texts_to_cents(data, currency, ['overdraft_limit']))
+#        balance = Balance(**data)
+#        mapping.insert(curs, balance)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def modify_balance(self, data, curs=None, billing_manager_id=None):
+#        client_id = data['client_id']
+#        try:
+#            balance = selector.get_balance(curs, billing_manager_id, client_id,
+#                active_only=False, for_update=True)
+#            currency = selector.get_currency_by_balance(curs, balance)
+#            data.update(self.decimal_texts_to_cents(data, currency, ['new_overdraft_limit']))
+#            self.update_obj(curs, data, partial(lambda x: x, balance))
+#            return response_ok()
+#        except EmptyResultSetError:
+#            raise BalanceNotFound(client_id)
+#
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def delete_balance(self, data, curs=None, billing_manager_id=None):
+#        obj = selector.get_balance(curs, billing_manager_id, data['client_id'],
+#            active_only=False, for_update=True)
+#        mapping.delete(curs, obj)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def get_balance(self, data, curs=None, billing_manager_id=None):
+#        b = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+#        c = selector.get_currency_by_balance(curs, b)
+#        b_data = {
+#            'client_id': b.client_id,
+#            'active': b.active,
+#            'currency_code': c.code,
+#            'created_date': '%s' % b.created_date,
+##            'available_real_amount': decompose_amount(c, b.available_real_amount),
+##            'available_virtual_amount': decompose_amount(c, b.available_virtual_amount),
+##            'overdraft_limit': decompose_amount(c, b.overdraft_limit),
+##            'locking_order': b.locking_order,
+##            'locked_amount': decompose_amount(c, b.locked_amount)
+#        }
+#        print '###', b_data
+#        return response_ok(**b_data)
+#
+#    # --- enroll receipt ---
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def enroll_receipt(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+#            active_only=True, for_update=True)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#        data = self.decimal_texts_to_cents(data, currency, ['amount'])
+#
+#        receipt = Receipt(**data)
+#        mapping.insert(curs, receipt)
+#
+#        balance.available_real_amount += receipt.amount  #IGNORE:E1101
+#        mapping.update(curs, balance)
+#        return response_ok()
+#
+#    # --- enroll bonus ---
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def enroll_bonus(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+#            active_only=True, for_update=True)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#        data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
+#
+#        bonus = Bonus(**data_copy)
+#        mapping.insert(curs, bonus)
+#
+#        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
+#        mapping.update(curs, balance)
+#        return response_ok()
+#
+#    # --- lock ---
+#    def _lock(self, billing_manager_id, data_list, curs):
+#        for data in data_list:
+#            balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=True, for_update=True)
+#            currency = selector.get_currency_by_balance(curs, balance)
+#            data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
+#            locks = compute_locks(currency, balance, data_copy['amount'])
+#            del data_copy['amount']
+#
+#            lock = BalanceLock(
+#                real_amount=locks['available_real_amount'],
+#                virtual_amount=locks['available_virtual_amount'],
+#                **data_copy
+#            )
+#            mapping.insert(curs, lock)
+#
+#            balance.available_real_amount -= lock.real_amount #IGNORE:E1101
+#            balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
+#            balance.locked_amount += lock.real_amount #IGNORE:E1101
+#            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
+#            mapping.update(curs, balance)
+#
+#    @logged
+#    @authentificate
+#    def lock(self, data, curs=None, billing_manager_id=None):
+#        """
+#        data = {
+#            'login': Text(),
+#            'password': Text(),
+#            'client_id': Text(),
+#            'product_id': Text(),
+#            'amount': nonnegative_amount_validator
+#        }
+#        """
+#        self._lock(billing_manager_id, [data], curs)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged_bulk
+#    @authentificate
+#    def lock_list(self, data, curs=None, billing_manager_id=None):
+#        """
+#        data = {
+#            'login': Text(),
+#            'password': Text(),
+#            'locks': [
+#                {'client_id': Text(), 'product_id': Text()}
+#                ...
+#            ]
+#        }
+#        """
+#        self._lock(billing_manager_id, data['locks'], curs)
+#        return response_ok()
+#
+#    def _unlock(self, billing_manager_id, data_list, curs=None):
+#        balances = {}
+#        # locking all balances
+#        for data in data_list:
+#            balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+#                active_only=True, for_update=True)
+#            balances[balance.client_id] = balance
+#
+#        for data in data_list:
+#            try:
+#                lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+#            except EmptyResultSetError:
+#                raise ActionNotAllowedError(
+#                    'Cannot unlock money for product %s: '
+#                    'amount was not locked for this product'
+#                    % data['product_id']
+#                )
+#
+#            mapping.delete(curs, lock)
+#
+#            balance = balances[lock.client_id]
+#            balance.available_real_amount += lock.real_amount
+#            balance.available_virtual_amount += lock.virtual_amount
+#            balance.locked_amount -= lock.real_amount #IGNORE:E1101
+#            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
+#
+#            mapping.update(curs, balance)
+#
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def unlock(self, data, curs=None, billing_manager_id=None):
+#        """
+#        data = {
+#            'login': Text(),
+#            'password': Text(),
+#            'client_id': Text(),
+#            'product_id': Text(),
+#        }
+#        """
+#        self._unlock(billing_manager_id, [data], curs)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged_bulk
+#    @authentificate
+#    def unlock_list(self, data, curs=None, billing_manager_id=None):
+#        """
+#        data = {
+#            'login': Text(),
+#            'password': Text(),
+#            'unlocks': [
+#                {'client_id': Text(), 'product_id': Text(),}
+#                ...
+#            ]
+#        }
+#        """
+#        self._unlock(billing_manager_id, data['unlocks'], curs)
+#        return response_ok()
+#
+#    def _chargeoff(self, billing_manager_id, data_list, curs=None):
+#        balances = {}
+#        for data in data_list:
+#            balance = selector.get_balance(curs, billing_manager_id,
+#                data['client_id'], active_only=True, for_update=True)
+#            balances[balance.client_id] = balance
+#
+#        for data in data_list:
+#            try:
+#                lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=True)
+#            except EmptyResultSetError:
+#                raise ActionNotAllowedError(
+#                    'Cannot charge off money for product %s: '
+#                    'amount was not locked for this product'
+#                    % data['product_id']
+#                )
+#
+#            chargeoff = ChargeOff(locked_date=lock.locked_date,
+#                real_amount=lock.real_amount, virtual_amount=lock.virtual_amount, **data)
+#
+#            mapping.delete(curs, lock)
+#            mapping.insert(curs, chargeoff)
+#
+#            balance.locked_amount -= lock.real_amount #IGNORE:E1101
+#            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
+#
+#            mapping.update(curs, balance)
+#
+#    @transaction()
+#    @logged
+#    @authentificate
+#    def chargeoff(self, data, curs=None, billing_manager_id=None):
+#        """
+#        data = {
+#            'login': Text(),
+#            'password': Text(),
+#            'client_id': Text(),
+#            'product_id': Text(),
+#            'amount': (positive int, non negative int)
+#        }
+#        """
+#        self._chargeoff(billing_manager_id, [data], curs)
+#        return response_ok()
+#
+#    @transaction()
+#    @logged_bulk
+#    @authentificate
+#    def chargeoff_list(self, data, curs=None, billing_manager_id=None):
+#        """
+#        data = {
+#            'login': Text(),
+#            'password': Text(),
+#            'chargeoffs': [
+#                {'client_id': Text(), 'product_id': Text(), 'amount': (positive int, non negative int)}
+#                ...
+#            ]
+#        }
+#        """
+#        self._chargeoff(billing_manager_id, data['chargeoffs'], curs)
+#        return response_ok()
+#
+#    #view operations
+#
+#    @transaction()
+#    @authentificate
+#    def product_status(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'],
+#            active_only=False, for_update=False)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#
+#        response = {'product_status': product_status.unknown}
+#        try:
+#            lock = selector.try_get_lock(curs, data['client_id'], data['product_id'], for_update=False)
+#            response['product_status'] = product_status.locked
+#            response['locked_date'] = lock.locked_date
+#            response['real_amount'] = decompose_amount(currency, lock.real_amount)
+#            response['virtual_amount'] = decompose_amount(currency, lock.virtual_amount)
+#        except EmptyResultSetError: #IGNORE:W0704
+#            pass
+#
+#        try:
+#            chargeoff = selector.try_get_chargeoff(curs, data['client_id'], data['product_id'], for_update=False)
+#            response['product_status'] = product_status.charged_off
+#            response['locked_date'] = chargeoff.locked_date
+#            response['chargeoff_date'] = chargeoff.chargeoff_date
+#            response['real_amount'] = decompose_amount(currency, chargeoff.real_amount)
+#            response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
+#        except EmptyResultSetError: #IGNORE:W0704
+#            pass
+#        return response_ok(**response)
+#
+#    @transaction()
+#    @authentificate
+#    def view_receipts(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#
+#        cond = Eq('client_id', data['client_id'])
+#        date_filters = (
+#            ('start_date', 'end_date', 'created_date'),
+#        )
+#        cond = And(cond, selector.get_date_filters(date_filters, data))
+#
+#        receipts, total = selector.select_receipts(curs, currency, cond, data['limit'], data['offset'])
+#        return response_ok(receipts=receipts, total=total)
+#
+#    @transaction()
+#    @authentificate
+#    def view_bonuses(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#
+#        cond = Eq('client_id', data['client_id'])
+#        date_filters = (
+#            ('start_date', 'end_date', 'created_date'),
+#        )
+#        cond = And(cond, selector.get_date_filters(date_filters, data))
+#
+#        bonuses, total = selector.select_bonuses(curs, currency, cond, data['limit'], data['offset'])
+#        return response_ok(bonuses=bonuses, total=total)
+#
+#    @transaction()
+#    @authentificate
+#    def view_chargeoffs(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#
+#        cond = Eq('client_id', data['client_id'])
+#        if 'product_id' in data:
+#            cond = And(cond, Eq('product_id', data['product_id']))
+#
+#        date_filters = (
+#            ('locked_start_date', 'locked_end_date', 'locked_date'),
+#            ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date'),
+#        )
+#        cond = And(cond, selector.get_date_filters(date_filters, data))
+#
+#        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['limit'], data['offset'])
+#        return response_ok(chargeoffs=chargeoffs, total=total)
+#
+#    @transaction()
+#    @authentificate
+#    def view_balance_locks(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['client_id'], active_only=False)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#
+#        cond = Eq('client_id', data['client_id'])
+#        if 'product_id' in data:
+#            cond = And(cond, Eq('product_id', data['product_id']))
+#
+#        date_filters = (
+#            ('locked_start_date', 'locked_end_date', 'locked_date'),
+#        )
+#        cond = And(cond, selector.get_date_filters(date_filters, data))
+#
+#        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
+#        return response_ok(balance_locks=balance_locks, total=total)

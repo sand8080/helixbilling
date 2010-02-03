@@ -1,19 +1,12 @@
 from helixcore.mapping.objects import Mapped
 
 
-class BillingManager(Mapped):
+class Operator(Mapped):
     __slots__ = ['id', 'login', 'password']
-    table = 'billing_manager'
+    table = 'operator'
 
-
-class ActionLog(Mapped):
-    __slots__ = [
-        'id',
-        'client_ids', 'action',
-        'request_date',
-        'request', 'response',
-    ]
-    table = 'action_log'
+    def __repr__(self, except_attrs=()):
+        return super(Operator, self).__repr__(except_attrs=except_attrs + ('password',))
 
 
 class Currency(Mapped):
@@ -22,16 +15,9 @@ class Currency(Mapped):
 
 
 class Balance(Mapped):
-    __slots__ = [
-        'id', 'active',
-        'billing_manager_id',
-        'client_id', 'currency_id',
-        'created_date',
-        'available_real_amount',
-        'available_virtual_amount',
+    __slots__ = ['id', 'operator_id', 'active', 'customer_id', 'currency_id', 'created_date',
+        'available_real_amount', 'available_virtual_amount', 'locking_order', 'locked_amount',
         'overdraft_limit',
-        'locking_order',
-        'locked_amount',
     ]
     table = 'balance'
 
@@ -98,3 +84,13 @@ class ChargeoffTotalView(Mapped):
         'virtual_amount'
     ]
     table = 'chargeoff_total_view'
+
+
+class ActionLog(Mapped):
+    __slots__ = [
+        'id',
+        'client_ids', 'action',
+        'request_date',
+        'request', 'response',
+    ]
+    table = 'action_log'
