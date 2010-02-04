@@ -15,7 +15,7 @@ class Currency(Mapped):
 
 
 class Balance(Mapped):
-    __slots__ = ['id', 'operator_id', 'active', 'customer_id', 'currency_id', 'created_date',
+    __slots__ = ['id', 'operator_id', 'active', 'customer_id', 'currency_id', 'creation_date',
         'available_real_amount', 'available_virtual_amount', 'locking_order', 'locked_amount',
         'overdraft_limit',
     ]
@@ -23,12 +23,7 @@ class Balance(Mapped):
 
 
 class Receipt(Mapped):
-    __slots__ = [
-        'id',
-        'client_id',
-        'created_date',
-        'amount'
-    ]
+    __slots__ = ['id', 'operator_id', 'customer_id', 'creation_date', 'amount']
     table = 'receipt'
 
 
@@ -36,7 +31,7 @@ class Bonus(Mapped):
     __slots__ = [
         'id',
         'client_id',
-        'created_date',
+        'creation_date',
         'amount'
     ]
     table = 'bonus'
@@ -46,7 +41,7 @@ class BalanceLock(Mapped):
     __slots__ = [
         'id',
         'client_id', 'product_id',
-        'locked_date',
+        'locking_date',
         'real_amount', 'virtual_amount'
     ]
     table = 'balance_lock'
@@ -56,7 +51,7 @@ class ChargeOff(Mapped):
     __slots__ = [
         'id',
         'client_id', 'product_id',
-        'locked_date', 'chargeoff_date',
+        'locking_date', 'chargeoff_date',
         'real_amount', 'virtual_amount'
     ]
     table = 'chargeoff'
@@ -89,7 +84,9 @@ class ChargeoffTotalView(Mapped):
 class ActionLog(Mapped):
     __slots__ = [
         'id',
-        'client_ids', 'action',
+        'operator_id',
+        'custom_operator_info'
+        'customer_ids', 'action',
         'request_date',
         'request', 'response',
     ]

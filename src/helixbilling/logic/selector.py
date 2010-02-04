@@ -3,17 +3,16 @@ import iso8601 #@UnresolvedImport
 
 import helixcore.mapping.actions as mapping
 from helixcore.db import sql
-from helixcore.db.wrapper import fetchall_dicts, fetchone_dict, EmptyResultSetError,\
-    SelectedMoreThanOneRow
-from helixcore.server.exceptions import DataIntegrityError, ActionNotAllowedError,\
-    AuthError
+from helixcore.db.wrapper import (fetchall_dicts, fetchone_dict, EmptyResultSetError,
+    SelectedMoreThanOneRow)
+from helixcore.server.exceptions import (DataIntegrityError, AuthError)
 
 from helixbilling.domain.objects import (Receipt, Bonus, ChargeOff, BalanceLock, Operator,
     Currency, Balance)
 
 from helixbilling.logic import helper
 from helixbilling.domain import security
-from helixcore.db.sql import Select, Eq, And, In
+from helixcore.db.sql import Eq, And, In, MoreEq, LessEq
 from helixbilling.error import BalanceNotFound
 
 
@@ -32,20 +31,20 @@ def select_data(curs, MAPPED_CLASS, cond, limit, offset):
     return fetchall_dicts(curs)
 
 
-def _select_with_amount(curs, currency, cond, limit, offset, MAPPED_CLASS, AMOUNT_FIELDS):
-    '''
-    @return: tuple( list of receipt dicts, total_receipts_number )
-    '''
-    select_result = select_data(curs, MAPPED_CLASS, cond, limit, offset)
-    dicts = decompose_amounts(select_result, currency, AMOUNT_FIELDS)
-    count = get_count(curs, MAPPED_CLASS.table, cond)
-    return (dicts, count)
-
-
-select_receipts = partial(_select_with_amount, MAPPED_CLASS=Receipt, AMOUNT_FIELDS=['amount'])
-select_bonuses = partial(_select_with_amount, MAPPED_CLASS=Bonus, AMOUNT_FIELDS=['amount'])
-select_chargeoffs = partial(_select_with_amount, MAPPED_CLASS=ChargeOff, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
-select_balance_locks = partial(_select_with_amount, MAPPED_CLASS=BalanceLock, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
+#def _select_with_amount(curs, currency, cond, limit, offset, MAPPED_CLASS, AMOUNT_FIELDS):
+#    '''
+#    @return: tuple( list of receipt dicts, total_receipts_number )
+#    '''
+#    select_result = select_data(curs, MAPPED_CLASS, cond, limit, offset)
+#    dicts = decompose_amounts(select_result, currency, AMOUNT_FIELDS)
+#    count = get_count(curs, MAPPED_CLASS.table, cond)
+#    return (dicts, count)
+#
+#
+#select_receipts = partial(_select_with_amount, MAPPED_CLASS=Receipt, AMOUNT_FIELDS=['amount'])
+#select_bonuses = partial(_select_with_amount, MAPPED_CLASS=Bonus, AMOUNT_FIELDS=['amount'])
+#select_chargeoffs = partial(_select_with_amount, MAPPED_CLASS=ChargeOff, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
+#select_balance_locks = partial(_select_with_amount, MAPPED_CLASS=BalanceLock, AMOUNT_FIELDS=['real_amount', 'virtual_amount'])
 
 
 def get_count(curs, table, cond):
@@ -56,14 +55,14 @@ def get_count(curs, table, cond):
     return count
 
 
-def decompose_amounts(dicts, currency, data_field_names):
-    result = []
-    for d in dicts:
-        copy = dict(d)
-        for data_field_name in data_field_names:
-            copy[data_field_name] = helper.decompose_amount(currency, copy[data_field_name])
-        result.append(copy)
-    return result
+#def decompose_amounts(dicts, currency, data_field_names):
+#    result = []
+#    for d in dicts:
+#        copy = dict(d)
+#        for data_field_name in data_field_names:
+#            copy[data_field_name] = helper.decompose_amount(currency, copy[data_field_name])
+#        result.append(copy)
+#    return result
 
 
 def get_operator(curs, o_id, for_update=False): #IGNORE:W0622
@@ -102,12 +101,16 @@ def get_currencies_indexed_by_id(curs):
     return dict([(c.id, c) for c in currencies])
 
 
-def _get_filter_params(seed, cond_map, filter_params):
+def _cond_by_filter_params(seed, cond_map, filter_params):
     cond = seed
     for p_name, db_f_name, c in cond_map:
         if p_name in filter_params:
             cond = And(cond, c(db_f_name, filter_params[p_name]))
     return cond
+
+
+def _get_paging_params(paging_params):
+    return paging_params.get('limit'), paging_params.get('offset', 0)
 
 
 def _balances_filtering_cond(operator, filter_params):
@@ -116,13 +119,12 @@ def _balances_filtering_cond(operator, filter_params):
         ('customer_ids', 'customer_id', In),
         ('active', 'active', True),
     ]
-    return _get_filter_params(cond, cond_map, filter_params)
+    return _cond_by_filter_params(cond, cond_map, filter_params)
 
 
-def get_balances(curs, operator, filter_params, for_update=False):
+def get_balances(curs, operator, filter_params, paging_params, for_update=False):
     cond = _balances_filtering_cond(operator, filter_params)
-    limit = filter_params.get('limit', None)
-    offset = filter_params.get('offset', 0)
+    limit, offset = _get_paging_params(paging_params)
     return mapping.get_list(curs, Balance, cond=cond, limit=limit, offset=offset, for_update=for_update)
 
 
@@ -132,13 +134,30 @@ def get_balances_count(curs, operator, filter_params):
 
 
 def get_balance(curs, operator, customer_id, for_update=False):
-    balances = get_balances(curs, operator, {'customer_ids': [customer_id]}, for_update=for_update)
+    balances = get_balances(curs, operator, {'customer_ids': [customer_id]}, {}, for_update=for_update)
     if len(balances) > 1:
         raise SelectedMoreThanOneRow()
     elif len(balances) == 0:
         raise BalanceNotFound(customer_id)
     else:
         return balances[0]
+
+
+def _receipts_filtering_cond(operator, filter_params):
+    cond = Eq('operator_id', operator.id)
+    cond_map = [
+        ('customer_ids', 'customer_id', In),
+        ('from_creation_date', 'creation_date', MoreEq),
+        ('to_creation_date', 'creation_date', LessEq),
+    ]
+    return _cond_by_filter_params(cond, cond_map, filter_params)
+
+
+def get_receipts(curs, operator, filter_params, for_update=False):
+    cond = _balances_filtering_cond(operator, filter_params)
+    limit = filter_params.get('limit', None)
+    offset = filter_params.get('offset', 0)
+    return mapping.get_list(curs, Receipt, cond=cond, limit=limit, offset=offset, for_update=for_update)
 
 
 def try_get_lock(curs, client_id, product_id, for_update=False):

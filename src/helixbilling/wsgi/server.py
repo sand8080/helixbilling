@@ -5,7 +5,8 @@ from helixcore.server.wsgi_application import Application
 from helixbilling.conf import settings
 from helixbilling.conf.log import logger
 from helixbilling.logic.actions import handle_action
-from helixbilling.validator.validator import api_scheme
+from helixbilling.validator.validator import protocol
+
 
 class Server(object):
     class ServerLog(object):
@@ -16,7 +17,7 @@ class Server(object):
     def run():
         wsgi.server(
             api.tcp_listener((settings.server_host, settings.server_port)),
-            Application(handle_action, api_scheme, logger),
+            Application(handle_action, protocol, logger),
             max_size=5000,
             log=Server.ServerLog()
         )

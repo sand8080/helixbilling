@@ -8,7 +8,7 @@ def apply(curs):
             FOREIGN KEY(operator_id) REFERENCES operator(id),
             customer_id varchar NOT NULL,
             amount int,
-            created_date timestamp with time zone NOT NULL DEFAULT now(),
+            creation_date timestamp with time zone NOT NULL DEFAULT now(),
             PRIMARY KEY(id)
         )
     ''')

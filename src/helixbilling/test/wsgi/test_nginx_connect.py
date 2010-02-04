@@ -27,7 +27,7 @@ class NginxTestCase(DbBasedTestCase):
         self.assertEqual('ok', cjson.decode(raw_result)['status'])
 
     def ping(self):
-        return self.cli.ping()
+        return self.cli.ping() #IGNORE:E1101
 
     @profile
     def ping_loading(self, repeats=1): #IGNORE:W0613

@@ -1,5 +1,4 @@
 from decimal import Decimal
-from eventlet.api import select
 import datetime
 
 from helixbilling.test.db_based_test import ServiceTestCase
@@ -72,90 +71,90 @@ class LogicTestCase(ServiceTestCase):
         mapping.update(curs, balance)
 
 
-class TestCaseWithCurrency(LogicTestCase):
-    def setUp(self):
-        super(TestCaseWithCurrency, self).setUp()
-        self._fixture()
+#class TestCaseWithCurrency(LogicTestCase):
+#    def setUp(self):
+#        super(TestCaseWithCurrency, self).setUp()
+#        self._fixture()
+#
+#    @transaction()
+#    def _fixture(self, curs=None):
+#        self.currency = Currency(code='YYY', name='y currency', location='y country', cent_factor=100) #IGNORE:W0201
+#        mapping.insert(curs, self.currency)
+#        self.currency = mapping.reload(curs, self.currency)
+#
+#    @transaction()
+#    def get_currency_by_balance(self, balance, curs=None):
+#        return selector.get_currency_by_balance(curs, balance)
 
-    @transaction()
-    def _fixture(self, curs=None):
-        self.currency = Currency(code='YYY', name='y currency', location='y country', cent_factor=100) #IGNORE:W0201
-        mapping.insert(curs, self.currency)
-        self.currency = mapping.reload(curs, self.currency)
-
-    @transaction()
-    def get_currency_by_balance(self, balance, curs=None):
-        return selector.get_currency_by_balance(curs, balance)
-
-class TestCaseWithBalance(TestCaseWithCurrency):
-    def setUp(self):
-        super(TestCaseWithBalance, self).setUp()
-        self.balance = self.add_balance(self.test_login, self.test_password, '123', self.currency) #IGNORE:W0201
-
-    @transaction()
-    def add_balance(self, login, password, customer_id, currency, active=True, overdraft_limit=None,
-        locking_order=None, curs=None):
-        data = {
-            'login': login,
-            'password': password,
-            'customer_id': customer_id,
-            'currency': currency.code,
-            'active': active,
-            'locking_order': locking_order,
-        }
-        if overdraft_limit is not None:
-            data['overdraft_limit'] = overdraft_limit
-
-        self.handle_action('add_balance', data)
-        operator = self.get_operator_by_login(login)
-        balance = selector.get_balance(curs, operator, customer_id)
-        self.assertTrue(balance.id > 0)
-        self.assertEquals(operator.id, balance.operator_id)
-        self.assertEquals(customer_id, balance.customer_id)
-        self.assertTrue(isinstance(balance.created_date, datetime.datetime))
-        self.assertEquals(0, balance.available_real_amount)
-        self.assertEquals(0, balance.locked_amount)
-        if overdraft_limit is None:
-            self.assertEquals(Decimal(0), cents_to_decimal(currency, balance.overdraft_limit))
-        else:
-            self.assertEquals(Decimal(overdraft_limit), cents_to_decimal(currency, balance.overdraft_limit))
-        self.assertEquals(currency.id, balance.currency_id)
-        self.assertEquals(locking_order, balance.locking_order)
-        return balance
-
-    @transaction()
-    def reload_balance(self, balance, curs=None):
-        return mapping.reload(curs, balance, for_update=True)
-
-    @transaction()
-    def update_balance(self, balance, curs=None):
-        mapping.update(curs, balance)
-        return balance
-
-    @transaction()
-    def add_receipt(self, customer_id, amount, curs=None):
-        mapping.insert(curs, Receipt(customer_id=customer_id, amount=amount))
-
-    @transaction()
-    def add_bonus(self, customer_id, amount, curs=None):
-        mapping.insert(curs, Bonus(customer_id=customer_id, amount=amount))
-
-    @transaction()
-    def add_chargeoff(self, customer_id, product_id, real_amount, virtual_amount, curs=None):
-        mapping.insert(curs, ChargeOff(customer_id=customer_id, product_id=product_id,
-            locked_date=datetime.datetime.now(), real_amount=real_amount, virtual_amount=virtual_amount))
-
-    def _cast(self, list_of_dicts, list_of_f, caster):
-        result = list(list_of_dicts)
-        for d in result:
-            for f in list_of_f:
-                if d[f] is None:
-                    continue
-                d[f] = caster(d[f])
-        return result
+#class TestCaseWithBalance(TestCaseWithCurrency):
+#    def setUp(self):
+#        super(TestCaseWithBalance, self).setUp()
+#        self.balance = self.add_balance(self.test_login, self.test_password, '123', self.currency) #IGNORE:W0201
+#
+#    @transaction()
+#    def add_balance(self, login, password, customer_id, currency, active=True, overdraft_limit=None,
+#        locking_order=None, curs=None):
+#        data = {
+#            'login': login,
+#            'password': password,
+#            'customer_id': customer_id,
+#            'currency': currency.code,
+#            'active': active,
+#            'locking_order': locking_order,
+#        }
+#        if overdraft_limit is not None:
+#            data['overdraft_limit'] = overdraft_limit
+#
+#        self.handle_action('add_balance', data)
+#        operator = self.get_operator_by_login(login)
+#        balance = selector.get_balance(curs, operator, customer_id)
+#        self.assertTrue(balance.id > 0)
+#        self.assertEquals(operator.id, balance.operator_id)
+#        self.assertEquals(customer_id, balance.customer_id)
+#        self.assertTrue(isinstance(balance.created_date, datetime.datetime))
+#        self.assertEquals(0, balance.available_real_amount)
+#        self.assertEquals(0, balance.locked_amount)
+#        if overdraft_limit is None:
+#            self.assertEquals(Decimal(0), cents_to_decimal(currency, balance.overdraft_limit))
+#        else:
+#            self.assertEquals(Decimal(overdraft_limit), cents_to_decimal(currency, balance.overdraft_limit))
+#        self.assertEquals(currency.id, balance.currency_id)
+#        self.assertEquals(locking_order, balance.locking_order)
+#        return balance
+#
+#    @transaction()
+#    def reload_balance(self, balance, curs=None):
+#        return mapping.reload(curs, balance, for_update=True)
+#
+#    @transaction()
+#    def update_balance(self, balance, curs=None):
+#        mapping.update(curs, balance)
+#        return balance
+#
+#    @transaction()
+#    def add_receipt(self, customer_id, amount, curs=None):
+#        mapping.insert(curs, Receipt(customer_id=customer_id, amount=amount))
+#
+#    @transaction()
+#    def add_bonus(self, customer_id, amount, curs=None):
+#        mapping.insert(curs, Bonus(customer_id=customer_id, amount=amount))
+#
+#    @transaction()
+#    def add_chargeoff(self, customer_id, product_id, real_amount, virtual_amount, curs=None):
+#        mapping.insert(curs, ChargeOff(customer_id=customer_id, product_id=product_id,
+#            locked_date=datetime.datetime.now(), real_amount=real_amount, virtual_amount=virtual_amount))
+#
+#    def _cast(self, list_of_dicts, list_of_f, caster):
+#        result = list(list_of_dicts)
+#        for d in result:
+#            for f in list_of_f:
+#                if d[f] is None:
+#                    continue
+#                d[f] = caster(d[f])
+#        return result
 
 
-class ViewTestCase(TestCaseWithBalance):
-    def check_view(self, obj, expect_values):
-        for k, v in expect_values.iteritems():
-            self.assertEqual(v, getattr(obj, k))
+#class ViewTestCase(TestCaseWithBalance):
+#    def check_view(self, obj, expect_values):
+#        for k, v in expect_values.iteritems():
+#            self.assertEqual(v, getattr(obj, k))

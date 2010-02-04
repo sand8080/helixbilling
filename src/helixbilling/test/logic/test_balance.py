@@ -2,13 +2,14 @@ import unittest
 from decimal import Decimal
 
 from helixcore.db.wrapper import EmptyResultSetError
-
-from common import TestCaseWithBalance
-from helixbilling.logic.helper import cents_to_decimal
 from helixcore.server.errors import RequestProcessingError
 
+from helixbilling.logic.helper import cents_to_decimal
+from helixbilling.test.db_based_test import TestCaseWithCurrency
+from helixbilling.error import BalanceNotFound
 
-class BalanceTestCase(TestCaseWithBalance):
+
+class BalanceTestCase(TestCaseWithCurrency):
     def test_add_balance(self):
         self.add_balance(self.test_login, self.test_password, 'U-23-52', self.currency, active=True)
         self.add_balance(self.test_login, self.test_password, 'U-23-53', self.currency, active=True,
@@ -30,12 +31,11 @@ class BalanceTestCase(TestCaseWithBalance):
         }
         self.handle_action('modify_balance', data)
         operator = self.get_operator_by_login(self.test_login)
-        balance = self._get_balance(operator.id, c_id)
-        currency = self._get_currency_by_balance(balance)
+        balance = self.get_balance(operator, c_id)
         self.assertEqual(operator.id, balance.operator_id)
         self.assertEqual(
             Decimal(data['new_overdraft_limit']),
-            cents_to_decimal(currency, balance.overdraft_limit)
+            cents_to_decimal(self.currency, balance.overdraft_limit)
         )
         self.assertEqual(data['new_active'], balance.active)
         self.assertEqual(data['new_locking_order'], balance.locking_order)
@@ -46,7 +46,7 @@ class BalanceTestCase(TestCaseWithBalance):
         self.handle_action('delete_balance', {'login': self.test_login, 'password': self.test_password,
             'customer_id': c_id})
         operator = self.get_operator_by_login(self.test_login)
-        self.assertRaises(EmptyResultSetError, self._get_balance, operator.id, c_id)
+        self.assertRaises(BalanceNotFound, self.get_balance, operator, c_id)
 
     def test_not_owned_balance_access(self):
         c_id = 'client 34'
@@ -86,7 +86,8 @@ class BalanceTestCase(TestCaseWithBalance):
         expected_c_ids = c_ids[:3]
         response = self.handle_action('view_balances', {
             'login': l, 'password': p,
-            'filter_params': {'customer_ids': expected_c_ids}
+            'filter_params': {'customer_ids': expected_c_ids},
+            'paging_params': {},
         })
         b_info = response['balances']
         self.assertEqual(len(expected_c_ids), len(b_info))
@@ -98,7 +99,8 @@ class BalanceTestCase(TestCaseWithBalance):
         expected_c_ids = c_ids[offset:]
         response = self.handle_action('view_balances', {
             'login': l, 'password': p,
-            'filter_params': {'offset': offset}
+            'filter_params': {},
+            'paging_params': {'offset': offset},
         })
         b_info = response['balances']
         self.assertEqual(len(expected_c_ids), len(b_info))
@@ -111,7 +113,8 @@ class BalanceTestCase(TestCaseWithBalance):
         expected_c_ids = c_ids[offset:offset + limit]
         response = self.handle_action('view_balances', {
             'login': l, 'password': p,
-            'filter_params': {'offset': offset, 'limit': 2}
+            'filter_params': {},
+            'paging_params': {'offset': offset, 'limit': 2}
         })
         b_info = response['balances']
         self.assertEqual(len(expected_c_ids), len(b_info))

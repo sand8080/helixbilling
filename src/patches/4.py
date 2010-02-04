@@ -11,7 +11,7 @@ def apply(curs):
             customer_id varchar NOT NULL,
             currency_id int NOT NULL,
             FOREIGN KEY(currency_id) REFERENCES currency(id),
-            created_date timestamp with time zone NOT NULL DEFAULT now(),
+            creation_date timestamp with time zone NOT NULL DEFAULT now(),
             available_real_amount int DEFAULT 0,
             available_virtual_amount int DEFAULT 0,
             locking_order varchar[] DEFAULT NULL,

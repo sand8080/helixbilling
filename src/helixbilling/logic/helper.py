@@ -1,39 +1,42 @@
 from math import log10
 from decimal import Decimal
-from helixcore.server.exceptions import  DataIntegrityError, ActionNotAllowedError
+from helixcore.server.exceptions import ActionNotAllowedError
 
 
-def decimal_to_cents(currency, value):
-    int_part = int(value)
+def decimal_to_cents(currency, dec):
+    int_part = int(dec)
     prec = int(round(log10(currency.cent_factor)))
-    cent_part = int((value - int_part) * 10 ** prec)
-    return compose_amount(currency, int_part, cent_part)
+    cent_part = int((dec - int_part) * 10 ** prec)
+    return currency.cent_factor * int_part + cent_part
+
 
 def cents_to_decimal(currency, cents):
     prec = int(round(log10(currency.cent_factor)))
     format = '%%d.%%0%dd' % prec
-    return Decimal(format % decompose_amount(currency, cents))
+    int_part = cents / currency.cent_factor
+    cent_part =  cents % currency.cent_factor
+    return Decimal(format % (int_part, cent_part))
 
 
-def compose_amount(currency, int_part, cent_part):
-    '''
-    (500, 50) -> 50050 if cent_factor is 100
-    '''
-    if int_part < 0:
-        raise DataIntegrityError('Integer part of amount is negative')
-    if cent_part < 0:
-        raise DataIntegrityError('Cent part of amount is negative')
-    return currency.cent_factor * int_part + cent_part
+#def compose_amount(currency, int_part, cent_part):
+#    '''
+#    (500, 50) -> 50050 if cent_factor is 100
+#    '''
+#    if int_part < 0:
+#        raise DataIntegrityError('Integer part of amount is negative')
+#    if cent_part < 0:
+#        raise DataIntegrityError('Cent part of amount is negative')
+#    return currency.cent_factor * int_part + cent_part
+#
+#
+#def decompose_amount(currency, cent_amount):
+#    '''
+#    50050 -> (500, 50) if cent_factor is 100
+#    '''
+#    return (cent_amount / currency.cent_factor, cent_amount % currency.cent_factor)
 
 
-def decompose_amount(currency, cent_amount):
-    '''
-    50050 -> (500, 50) if cent_factor is 100
-    '''
-    return (cent_amount / currency.cent_factor, cent_amount % currency.cent_factor)
-
-
-def get_available_resources(balance):
+def get_lockable_amounts(balance):
     return {
         'available_real_amount': balance.available_real_amount + balance.overdraft_limit,
         'available_virtual_amount': balance.available_virtual_amount
@@ -55,37 +58,33 @@ def compute_locks(currency, balance, lock_amount):
     else:
         locking_order = balance.locking_order
 
-    available_resources = get_available_resources(balance)
-    amount_to_lock = lock_amount
-    locked_resources = dict(zip(locking_order, [0 for _i in locking_order]))
-    for resource_name in locking_order:
-        if amount_to_lock <= 0:
+    locked_amounts = dict([(a, 0) for a in locking_order])
+    lockable_amounts = get_lockable_amounts(balance)
+
+    remain_to_lock = lock_amount
+    for amount_name in locking_order:
+        if remain_to_lock <= 0:
             break
-        available_to_lock = min(amount_to_lock, available_resources[resource_name])
-        locked_resources[resource_name] += available_to_lock
+        available_to_lock = min(remain_to_lock, lockable_amounts[amount_name])
+        locked_amounts[amount_name] += available_to_lock
 
-        amount_to_lock -= available_to_lock
-        available_resources[resource_name] -= available_to_lock
+        remain_to_lock -= available_to_lock
+        lockable_amounts[amount_name] -= available_to_lock
 
-    if amount_to_lock > 0:
+    if remain_to_lock > 0:
+        def human_amount(a):
+            return '%s %s' % (cents_to_decimal(currency, a), currency.code)
         lockable_descr = []
-        available_resources = get_available_resources(balance)
-        for resource_name in locking_order:
-            lockable_descr.append('%s %s' % (resource_name,
-                human_readable_amount(currency, available_resources[resource_name]))
-            )
+        for name, avail in get_lockable_amounts(balance).items():
+            descr = '%s: %s' % (name, human_amount(avail))
+            lockable_descr.append(descr)
         error = {
-            'lock_amount': human_readable_amount(currency, lock_amount),
-            'client_id': balance.client_id,
-            'lockable_descr': ', '.join(lockable_descr)
+            'lock_amount': human_amount(lock_amount),
+            'customer_id': balance.customer_id,
+            'lockable_descr': ', '.join(lockable_descr),
         }
         raise ActionNotAllowedError(
-            'Can not lock %(lock_amount)s on balance of client %(client_id)s.'
+            'Can not lock %(lock_amount)s on balance of customer %(customer_id)s.'
             'Available to lock: %(lockable_descr)s' % error
         )
-    return locked_resources
-
-
-def human_readable_amount(currency, composed_amount):
-    return '%s %s' % ('.'.join(map(str, decompose_amount(currency, composed_amount))), currency.name)
-
+    return locked_amounts

@@ -14,7 +14,7 @@ import helixbilling.logic.product_status as product_status
 from helixbilling.domain import security
 from helixbilling.error import BalanceNotFound, CurrencyNotFound
 
-from helper import compose_amount, decompose_amount, compute_locks, decimal_to_cents
+from helper import compute_locks, decimal_to_cents
 from action_log import logged, logged_bulk
 from decimal import Decimal
 import selector
@@ -80,12 +80,12 @@ class Handler(object):
             (f, decimal_to_cents(currency, Decimal(data[f]))) for f in amount_fields if f in data
         ])
 
-    def _money_to_db(self, data, currency, amount_fields):
-        result = dict(data)
-        for f in amount_fields:
-            if f in result:
-                result[f] = compose_amount(currency, *result[f])
-        return result
+#    def _money_to_db(self, data, currency, amount_fields):
+#        result = dict(data)
+#        for f in amount_fields:
+#            if f in result:
+#                result[f] = compose_amount(currency, *result[f])
+#        return result
 
     # --- currencies ---
     @transaction()
@@ -152,7 +152,7 @@ class Handler(object):
                 'customer_id': balance.customer_id,
                 'active': balance.active,
                 'currency_code': currency.code,
-                'created_date': '%s' % balance.created_date.isoformat(),
+                'creation_date': '%s' % balance.creation_date.isoformat(),
                 'available_real_amount': '%s' % c_to_d(balance.available_real_amount),
                 'available_virtual_amount': '%s' % c_to_d(balance.available_virtual_amount),
                 'overdraft_limit': '%s' % c_to_d(balance.overdraft_limit),
@@ -176,7 +176,8 @@ class Handler(object):
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     def view_balances(self, data, operator, curs=None):
         f_params = data['filter_params']
-        balances = selector.get_balances(curs, operator, f_params)
+        p_params = data['paging_params']
+        balances = selector.get_balances(curs, operator, f_params, p_params)
         total = selector.get_balances_count(curs, operator, f_params)
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
         b_info = self._balances_info(balances, currencies_idx)

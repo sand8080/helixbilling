@@ -4,8 +4,8 @@ from helixcore.validol.validol import (Optional, AnyOf, NonNegative, Positive, S
 
 NullableText = AnyOf(Text(), None)
 
-amount_validator = (NonNegative(int), NonNegative(int))
-nonnegative_amount_validator = (Positive(int), NonNegative(int))
+#amount_validator = (NonNegative(int), NonNegative(int))
+#positive_amount_validator = (Positive(int), NonNegative(int))
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
 PING = {}
@@ -28,7 +28,7 @@ AUTH_INFO = {
 }
 
 # --- currencies ---
-VIEW_CURRENCIES = {}
+VIEW_CURRENCIES = {Optional('custom_operator_info'): NullableText,}
 
 VIEW_CURRENCIES_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK, currencies=[
@@ -90,7 +90,7 @@ BALANCE_INFO = {
     'customer_id': Text(),
     'active': bool,
     'currency_code': Text(),
-    'created_date': IsoDatetime(),
+    'creation_date': IsoDatetime(),
     'available_real_amount': DecimalText(),
     'available_virtual_amount': DecimalText(),
     'overdraft_limit': DecimalText(),
@@ -111,6 +111,8 @@ VIEW_BALANCES = dict(
     {
         'filter_params': {
             Optional('customer_ids'): [Text()],
+        },
+        'paging_params': {
             Optional('limit'): NonNegative(int),
             Optional('offset'): NonNegative(int),
         }
@@ -129,20 +131,50 @@ VIEW_BALANCES_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-#
-## --- operations ---
-#ENROLL_RECEIPT = dict(
-#    {
-#        'client_id': Text(),
-#        'amount': nonnegative_amount_validator,
-#    },
-#    **AUTH_INFO
-#)
-#
+# --- receipt ---
+ENROLL_RECEIPT = dict(
+    {
+        'customer_id': Text(),
+        'amount': DecimalText(),
+    },
+    **AUTH_INFO
+)
+
+VIEW_RECEIPTS = dict(
+    {
+        'filter_params': {
+            Optional('customer_ids'): Text(),
+            Optional('from_creation_date'): IsoDatetime(),
+            Optional('to_creation_date'): IsoDatetime(),
+        },
+        'paging_params': {
+            Optional('limit'): NonNegative(int),
+            Optional('offset'): NonNegative(int),
+        }
+    },
+    **AUTH_INFO
+)
+
+VIEW_RECEIPTS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'receipts': [{
+                'customer_id': Text(),
+                'amount': DecimalText(),
+                'created_date': IsoDatetime(),
+            }],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
 #ENROLL_BONUS = dict(
 #    {
 #        'client_id': Text(),
-#        'amount': nonnegative_amount_validator,
+#        'amount': positive_amount_validator,
 #    },
 #    **AUTH_INFO
 #)
@@ -150,7 +182,7 @@ VIEW_BALANCES_RESPONSE = AnyOf(
 #LOCK_INFO = {
 #    'client_id': Text(),
 #    'product_id': Text(),
-#    'amount': nonnegative_amount_validator,
+#    'amount': positive_amount_validator,
 #}
 #
 #LOCK = dict(
@@ -233,32 +265,6 @@ VIEW_BALANCES_RESPONSE = AnyOf(
 #    RESPONSE_STATUS_ERROR
 #)
 #
-## --- view operations ---
-#VIEW_RECEIPTS = dict(
-#    {
-#        'client_id': Text(),
-#        Optional('start_date'): IsoDatetime(),
-#        Optional('end_date'): IsoDatetime(),
-#        'offset': NonNegative(int),
-#        'limit': Positive(int),
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_RECEIPTS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'total': NonNegative(int),
-#            'receipts': [{
-#                'client_id': Text(),
-#                'amount': nonnegative_amount_validator,
-#                'created_date': IsoDatetime(),
-#            }],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
 #VIEW_BONUSES = dict(
 #    {
 #        'client_id': Text(),
@@ -276,7 +282,7 @@ VIEW_BALANCES_RESPONSE = AnyOf(
 #            'total': NonNegative(int),
 #            'bonuses': [{
 #                'client_id': Text(),
-#                'amount': nonnegative_amount_validator,
+#                'amount': positive_amount_validator,
 #                'created_date': IsoDatetime(),
 #            }],
 #        }
@@ -376,10 +382,13 @@ protocol = [
     ApiCall('view_balances_request', Scheme(VIEW_BALANCES)),
     ApiCall('view_balances_response', Scheme(VIEW_BALANCES_RESPONSE)),
 
-#    # receipt
-#    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
-#    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
+    # receipt
+    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
+    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
+    ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
+
 #    # bonus
 #    ApiCall('enroll_bonus_request', Scheme(ENROLL_BONUS)),
 #    ApiCall('enroll_bonus_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -410,9 +419,6 @@ protocol = [
 #    ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),
 #
 #    # list view operations
-#    ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
-#    ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
-#
 #    ApiCall('view_bonuses_request', Scheme(VIEW_BONUSES)),
 #    ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
 #
