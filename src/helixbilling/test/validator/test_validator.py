@@ -119,39 +119,53 @@ class ValidatorTestCase(RootTestCase):
             'amount': '10.01'})
         self.validate_status_response(a_name)
 
-#    def test_view_receipts(self):
-#        self.api.validate_request('view_receipts', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3})
-#        self.api.validate_request('view_receipts', {'login': 'l', 'password': 'p', 'client_id': 'U',
-#            'start_date': datetime.datetime.now().isoformat(), 'offset': 2, 'limit': 3})
-#        self.api.validate_request('view_receipts', {'login': 'l', 'password': 'p', 'client_id': 'U',
-#            'start_date': datetime.datetime.now().isoformat(),
-#            'end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(), 'offset': 2, 'limit': 3})
-#        self.api.validate_response('view_receipts', {'status': 'ok', 'total': 0, 'receipts': []})
-#        self.api.validate_response('view_receipts', {'status': 'ok', 'total': 10,
-#            'receipts': [
-#                {
-#                    'client_id': 'U2',
-#                    'amount': (2, 49),
-#                    'created_date': datetime.datetime.now().isoformat(),
-#                }
-#            ]
-#        })
-#        self.api.validate_response('view_receipts', {'status': 'ok', 'total': 10,
-#            'receipts': [
-#                {
-#                    'client_id': 'U2',
-#                    'amount': (2, 49),
-#                    'created_date': datetime.datetime.now().isoformat(),
-#                },
-#                {
-#                    'client_id': 'U3',
-#                    'amount': (3, 77),
-#                    'created_date': datetime.datetime.now().isoformat(),
-#                }
-#            ]
-#        })
-#
+    def test_view_receipts(self):
+        a_name = 'view_receipts'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b']}, 'paging_params': {}})
+        d = datetime.datetime.now(pytz.utc)
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat()},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
+            'to_creation_date': d.isoformat()},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
+            'to_creation_date': d.isoformat(), 'amount': '1.0'},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
+            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0'},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
+            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0',
+            'to_amount': '10'},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
+            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0',
+            'to_amount': '10'},
+            'paging_params': {'limit': 10}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
+            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0',
+            'to_amount': '10'},
+            'paging_params': {'limit': 10, 'offset': 3}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'currency': 'YYY',
+            'receipts': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'currency': 'YYY',
+            'receipts': [
+                {'customer_id': 'U2', 'amount': '1.1', 'creation_date': d.isoformat()},
+                {'customer_id': 'U2', 'amount': '1.1', 'creation_date': d.isoformat()},
+            ]
+        })
+        self.validate_error_response(a_name)
 
 #    def test_enroll_bonus(self):
 #        self.api.validate_request('enroll_bonus', {'login': 'l', 'password': 'p',

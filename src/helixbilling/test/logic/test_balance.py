@@ -1,15 +1,14 @@
 import unittest
 from decimal import Decimal
 
-from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.logic.helper import cents_to_decimal
-from helixbilling.test.db_based_test import TestCaseWithCurrency
+from helixbilling.test.db_based_test import ServiceTestCase
 from helixbilling.error import BalanceNotFound
 
 
-class BalanceTestCase(TestCaseWithCurrency):
+class BalanceTestCase(ServiceTestCase):
     def test_add_balance(self):
         self.add_balance(self.test_login, self.test_password, 'U-23-52', self.currency, active=True)
         self.add_balance(self.test_login, self.test_password, 'U-23-53', self.currency, active=True,

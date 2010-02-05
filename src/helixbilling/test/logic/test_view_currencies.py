@@ -1,10 +1,10 @@
-from helixbilling.domain.objects import Currency
 import unittest
 
-from common import LogicTestCase
+from helixbilling.domain.objects import Currency
+from helixbilling.test.db_based_test import ServiceTestCase
 
 
-class ViewCurrencyTestCase(LogicTestCase):
+class ViewCurrencyTestCase(ServiceTestCase):
     def test_view_currencyes(self):
         response = self.handle_action('view_currencies', {})
         self.assertEqual('ok', response['status'])

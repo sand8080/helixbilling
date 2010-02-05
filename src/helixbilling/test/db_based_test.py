@@ -32,9 +32,27 @@ class ServiceTestCase(DbBasedTestCase):
     def setUp(self):
         super(ServiceTestCase, self).setUp()
         self.add_operator(self.test_login, self.test_password)
+        self.create_fake_currency()
 
-    def add_operator(self, login, password):
-        self.handle_action('add_operator', {'login': login, 'password': password})
+    @transaction()
+    def create_fake_currency(self, curs=None):
+        code = 'YES'
+        currency = Currency(code=code, name='y currency', location='y country',
+            cent_factor=100) #IGNORE:W0201
+        mapping.insert(curs, currency)
+        self.currency = selector.get_currency_by_code(curs, code) #IGNORE:W0201
+
+    @transaction()
+    def get_currency_by_balance(self, balance, curs=None):
+        return selector.get_currency_by_balance(curs, balance)
+
+    @transaction()
+    def get_currency(self, code, curs=None):
+        return selector.get_currency_by_code(curs, code)
+
+    def add_operator(self, login, password, custom_operator_info=None):
+        self.handle_action('add_operator', {'login': login, 'password': password,
+            'custom_operator_info': custom_operator_info})
         op = self.get_operator_by_login(login)
         self.assertEqual(login, op.login)
 
@@ -61,14 +79,16 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_receipt(self, login, password, customer_id, amount):
         d = datetime.datetime.now(pytz.utc)
-        self.handle_action('add_receipt', {'login': login, 'password': password,
+        self.handle_action('enroll_receipt', {'login': login, 'password': password,
             'customer_id': customer_id, 'amount': amount})
         operator = self.get_operator_by_login(login)
+        balance = self.get_balance(operator, customer_id)
+        currency = self.get_currency_by_balance(balance)
         receipt = self.get_reciepits(operator, customer_id)[-1]
-        self.assertTrue(d < receipt.created_date)
+        self.assertTrue(d < receipt.creation_date)
         self.assertEqual(operator.id, receipt.operator_id)
         self.assertEqual(customer_id, receipt.customer_id)
-        self.assertEqual(decimal_to_cents(amount), receipt.amount)
+        self.assertEqual(decimal_to_cents(currency, Decimal(amount)), receipt.amount)
 
     @transaction()
     def get_balance(self, operator, customer_id, curs=None):
@@ -103,21 +123,3 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEquals(currency.id, balance.currency_id)
         self.assertEquals(locking_order, balance.locking_order)
         return balance
-
-
-class TestCaseWithCurrency(ServiceTestCase):
-    def setUp(self):
-        super(TestCaseWithCurrency, self).setUp()
-        self._fixture()
-
-    @transaction()
-    def _fixture(self, curs=None):
-        code = 'YES'
-        currency = Currency(code=code, name='y currency', location='y country',
-            cent_factor=100) #IGNORE:W0201
-        mapping.insert(curs, currency)
-        self.currency = selector.get_currency_by_code(curs, code) #IGNORE:W0201
-
-    @transaction()
-    def get_currency_by_balance(self, balance, curs=None):
-        return selector.get_currency_by_balance(curs, balance)

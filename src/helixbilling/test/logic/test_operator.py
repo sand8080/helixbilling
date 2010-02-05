@@ -9,7 +9,7 @@ from helixbilling.domain.security import encrypt_password
 
 class OperatorTestCase(ServiceTestCase):
     def test_add_billing_manager(self):
-        self.add_operator('a', 'b')
+        self.add_operator('a', 'b', custom_operator_info='jah')
         self.assertRaises(RequestProcessingError, self.add_operator, 'a', 'b')
 
     def test_modify_billing_manager(self):

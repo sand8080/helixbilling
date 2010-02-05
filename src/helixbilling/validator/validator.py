@@ -143,9 +143,12 @@ ENROLL_RECEIPT = dict(
 VIEW_RECEIPTS = dict(
     {
         'filter_params': {
-            Optional('customer_ids'): Text(),
+            Optional('customer_ids'): [Text()],
             Optional('from_creation_date'): IsoDatetime(),
             Optional('to_creation_date'): IsoDatetime(),
+            Optional('amount'): DecimalText(),
+            Optional('from_amount'): DecimalText(),
+            Optional('to_amount'): DecimalText(),
         },
         'paging_params': {
             Optional('limit'): NonNegative(int),
@@ -162,8 +165,9 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
             'receipts': [{
                 'customer_id': Text(),
                 'amount': DecimalText(),
-                'created_date': IsoDatetime(),
+                'creation_date': IsoDatetime(),
             }],
+            'currency': Text(),
             'total': NonNegative(int),
         }
     ),

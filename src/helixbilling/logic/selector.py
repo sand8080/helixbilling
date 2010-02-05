@@ -14,6 +14,7 @@ from helixbilling.logic import helper
 from helixbilling.domain import security
 from helixcore.db.sql import Eq, And, In, MoreEq, LessEq
 from helixbilling.error import BalanceNotFound
+from helixbilling.logic.filters import BalanceFilter
 
 
 def select_data(curs, MAPPED_CLASS, cond, limit, offset):
@@ -101,63 +102,49 @@ def get_currencies_indexed_by_id(curs):
     return dict([(c.id, c) for c in currencies])
 
 
-def _cond_by_filter_params(seed, cond_map, filter_params):
-    cond = seed
-    for p_name, db_f_name, c in cond_map:
-        if p_name in filter_params:
-            cond = And(cond, c(db_f_name, filter_params[p_name]))
-    return cond
+
+#
+#
+#def get_balances(curs, operator, filter_params, paging_params, for_update=False):
+#    cond = _balances_filtering_cond(operator, filter_params)
+#    limit, offset = _get_paging_params(paging_params)
+#    return mapping.get_list(curs, Balance, cond=cond, limit=limit, offset=offset, for_update=for_update)
+#
+#
+#def get_balances_count(curs, operator, filter_params):
+#    cond = _balances_filtering_cond(operator, filter_params)
+#    return int(get_count(curs, Balance.table, cond))
 
 
-def _get_paging_params(paging_params):
-    return paging_params.get('limit'), paging_params.get('offset', 0)
+#def get_balance(curs, operator, customer_id, for_update=False):
+#    balances = get_balances(curs, operator, {'customer_ids': [customer_id]}, {}, for_update=for_update)
+#    if len(balances) > 1:
+#        raise SelectedMoreThanOneRow()
+#    elif len(balances) == 0:
+#        raise BalanceNotFound(customer_id)
+#    else:
+#        return balances[0]
 
 
-def _balances_filtering_cond(operator, filter_params):
-    cond = Eq('operator_id', operator.id)
-    cond_map = [
-        ('customer_ids', 'customer_id', In),
-        ('active', 'active', True),
-    ]
-    return _cond_by_filter_params(cond, cond_map, filter_params)
-
-
-def get_balances(curs, operator, filter_params, paging_params, for_update=False):
-    cond = _balances_filtering_cond(operator, filter_params)
-    limit, offset = _get_paging_params(paging_params)
-    return mapping.get_list(curs, Balance, cond=cond, limit=limit, offset=offset, for_update=for_update)
-
-
-def get_balances_count(curs, operator, filter_params):
-    cond = _balances_filtering_cond(operator, filter_params)
-    return int(get_count(curs, Balance.table, cond))
-
-
-def get_balance(curs, operator, customer_id, for_update=False):
-    balances = get_balances(curs, operator, {'customer_ids': [customer_id]}, {}, for_update=for_update)
-    if len(balances) > 1:
-        raise SelectedMoreThanOneRow()
-    elif len(balances) == 0:
-        raise BalanceNotFound(customer_id)
-    else:
-        return balances[0]
-
-
-def _receipts_filtering_cond(operator, filter_params):
-    cond = Eq('operator_id', operator.id)
-    cond_map = [
-        ('customer_ids', 'customer_id', In),
-        ('from_creation_date', 'creation_date', MoreEq),
-        ('to_creation_date', 'creation_date', LessEq),
-    ]
-    return _cond_by_filter_params(cond, cond_map, filter_params)
-
-
-def get_receipts(curs, operator, filter_params, for_update=False):
-    cond = _balances_filtering_cond(operator, filter_params)
-    limit = filter_params.get('limit', None)
-    offset = filter_params.get('offset', 0)
-    return mapping.get_list(curs, Receipt, cond=cond, limit=limit, offset=offset, for_update=for_update)
+#def _receipts_filtering_cond(operator, filter_params):
+#    cond = Eq('operator_id', operator.id)
+#    cond_map = [
+#        ('customer_ids', 'customer_id', In),
+#        ('from_creation_date', 'creation_date', MoreEq),
+#        ('to_creation_date', 'creation_date', LessEq),
+#    ]
+#    return _cond_by_filter_params(cond, cond_map, filter_params)
+#
+#
+#def get_receipts(curs, operator, filter_params, paging_params, for_update=False):
+#    cond = _balances_filtering_cond(operator, filter_params)
+#    limit, offset = _get_paging_params(paging_params)
+#    return mapping.get_list(curs, Receipt, cond=cond, limit=limit, offset=offset, for_update=for_update)
+#
+#
+#def get_receipts_count(curs, operator, filter_params):
+#    cond = _balances_filtering_cond(operator, filter_params)
+#    return int(get_count(curs, Receipt.table, cond))
 
 
 def try_get_lock(curs, client_id, product_id, for_update=False):
@@ -191,3 +178,7 @@ def get_date_filters(date_filters, data):
         if end_date in data:
             cond = sql.And(cond, sql.Less(db_field, iso8601.parse_date(data[end_date])))
     return cond
+
+def get_balance(curs, operator, customer_id, for_update=False):
+    return BalanceFilter(operator, {'customer_id': customer_id}, {}).filter_one_obj(curs)
+

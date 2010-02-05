@@ -7,10 +7,10 @@ from helixcore.server.exceptions import ActionNotAllowedError
 from helixbilling.logic.helper import (decimal_to_cents, cents_to_decimal, compute_locks,
     get_lockable_amounts)
 from helixbilling.domain.objects import Balance
-from helixbilling.test.logic.common import TestCaseWithCurrency
+from helixbilling.test.db_based_test import ServiceTestCase
 
 
-class HelpersTestCase(TestCaseWithCurrency):
+class HelpersTestCase(ServiceTestCase):
     def test_get_available_resources(self):
         b = Balance(
             active=1, customer_id='customer_id',
@@ -205,7 +205,7 @@ class HelpersTestCase(TestCaseWithCurrency):
             'JPY': [0, 0, 13, 53, 1113, 03, 13],
         }
         for code, cent_factor in currencies.items():
-            currency = self._get_currency(code)
+            currency = self.get_currency(code)
             self.assertEqual(cent_factor, currency.cent_factor)
             actual = [decimal_to_cents(currency, amount) for amount in amounts]
             self.assertEqual(expects[currency.code], actual)
@@ -221,7 +221,7 @@ class HelpersTestCase(TestCaseWithCurrency):
             'JPY': ['6', '86', '13000', '53001', '1113036', '3001', '13359'],
         }
         for code, cent_factor in currencies.items():
-            currency = self._get_currency(code)
+            currency = self.get_currency(code)
             self.assertEqual(cent_factor, currency.cent_factor)
             actual = [cents_to_decimal(currency, amount) for amount in amounts]
             self.assertEqual(map(Decimal, expects[currency.code]), actual)
