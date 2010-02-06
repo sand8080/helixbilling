@@ -1,4 +1,4 @@
-def apply(curs):
+def apply(curs): #IGNORE:W0622
     print 'Creating table balance_lock'
     curs.execute(
     '''
@@ -9,7 +9,7 @@ def apply(curs):
             FOREIGN KEY(operator_id) REFERENCES operator(id),
             customer_id varchar NOT NULL,
             product_id varchar NOT NULL,
-            locked_date timestamp with time zone NOT NULL DEFAULT now(),
+            locking_date timestamp with time zone NOT NULL DEFAULT now(),
             real_amount int,
             virtual_amount int
         )

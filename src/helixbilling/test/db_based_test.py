@@ -18,7 +18,7 @@ from helixbilling.logic import selector
 from helixbilling.validator.validator import protocol
 from helixbilling.logic.helper import decimal_to_cents, cents_to_decimal
 from helixbilling.domain.objects import Currency
-from helixbilling.logic.filters import ReceiptFilter
+from helixbilling.logic.filters import ReceiptFilter, BonusFilter
 
 
 class DbBasedTestCase(RootTestCase):
@@ -77,6 +77,10 @@ class ServiceTestCase(DbBasedTestCase):
     def get_reciepits(self, operator, customer_id, curs=None):
         return ReceiptFilter(operator, {'customer_id': customer_id}, {}).filter_objs(curs)
 
+    @transaction()
+    def get_bonuses(self, operator, customer_id, curs=None):
+        return BonusFilter(operator, {'customer_id': customer_id}, {}).filter_objs(curs)
+
     def add_receipt(self, login, password, customer_id, amount):
         d = datetime.datetime.now(pytz.utc)
         self.handle_action('enroll_receipt', {'login': login, 'password': password,
@@ -89,6 +93,19 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(operator.id, receipt.operator_id)
         self.assertEqual(customer_id, receipt.customer_id)
         self.assertEqual(decimal_to_cents(currency, Decimal(amount)), receipt.amount)
+
+    def add_bonus(self, login, password, customer_id, amount):
+        d = datetime.datetime.now(pytz.utc)
+        self.handle_action('enroll_bonus', {'login': login, 'password': password,
+            'customer_id': customer_id, 'amount': amount})
+        operator = self.get_operator_by_login(login)
+        balance = self.get_balance(operator, customer_id)
+        currency = self.get_currency_by_balance(balance)
+        bonus = self.get_bonuses(operator, customer_id)[-1]
+        self.assertTrue(d < bonus.creation_date)
+        self.assertEqual(operator.id, bonus.operator_id)
+        self.assertEqual(customer_id, bonus.customer_id)
+        self.assertEqual(decimal_to_cents(currency, Decimal(amount)), bonus.amount)
 
     @transaction()
     def get_balance(self, operator, customer_id, curs=None):

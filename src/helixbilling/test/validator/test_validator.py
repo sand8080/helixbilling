@@ -111,16 +111,14 @@ class ValidatorTestCase(RootTestCase):
         ]})
         self.validate_error_response(a_name)
 
-    def test_enroll_receipt(self):
-        a_name = 'enroll_receipt'
+    def enroll_income(self, a_name):
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'customer_id': 'N5',
             'amount': '0.0'})
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'customer_id': 'N5',
             'amount': '10.01'})
         self.validate_status_response(a_name)
 
-    def test_view_receipts(self):
-        a_name = 'view_receipts'
+    def view_income(self, a_name, res_name):
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {}, 'paging_params': {}})
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
@@ -135,14 +133,26 @@ class ValidatorTestCase(RootTestCase):
             'paging_params': {}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
-            'receipts': []})
+            res_name: []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
-            'receipts': [
+            res_name: [
                 {'customer_id': 'U2', 'amount': '1.1', 'currency': 'YYY', 'creation_date': d.isoformat()},
                 {'customer_id': 'U2', 'amount': '1.1', 'currency': 'ZZZ', 'creation_date': d.isoformat()},
             ]
         })
         self.validate_error_response(a_name)
+
+    def test_enroll_receipt(self):
+        self.enroll_income('enroll_receipt')
+
+    def test_view_receipts(self):
+        self.view_income('view_receipts', 'receipts')
+
+    def test_enroll_bonus(self):
+        self.enroll_income('enroll_bonus')
+
+    def test_view_bonuses(self):
+        self.view_income('view_bonuses', 'bonuses')
 
 #    def test_enroll_bonus(self):
 #        self.api.validate_request('enroll_bonus', {'login': 'l', 'password': 'p',

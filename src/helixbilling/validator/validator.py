@@ -180,18 +180,18 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
 
 
 # ---  bonus ---
-#ENROLL_BONUS = ENROLL_INCOME
-#VIEW_BONUSES = VIEW_INCOMES
-#VIEW_BONUSES_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'bonuses': [INCOME_INFO],
-#            'total': NonNegative(int),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
+ENROLL_BONUS = ENROLL_INCOME
+VIEW_BONUSES = VIEW_INCOMES
+VIEW_BONUSES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'bonuses': [INCOME_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 #LOCK_INFO = {
 #    'client_id': Text(),
@@ -378,10 +378,13 @@ protocol = [
     ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
     ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
 
-#    # bonus
-#    ApiCall('enroll_bonus_request', Scheme(ENROLL_BONUS)),
-#    ApiCall('enroll_bonus_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
+    # bonus
+    ApiCall('enroll_bonus_request', Scheme(ENROLL_BONUS)),
+    ApiCall('enroll_bonus_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('view_bonuses_request', Scheme(VIEW_BONUSES)),
+    ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
+
 #    # lock
 #    ApiCall('lock_request', Scheme(LOCK)),
 #    ApiCall('lock_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -408,9 +411,6 @@ protocol = [
 #    ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),
 #
 #    # list view operations
-#    ApiCall('view_bonuses_request', Scheme(VIEW_BONUSES)),
-#    ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
-#
 #    ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
 #    ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
 #

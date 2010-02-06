@@ -20,7 +20,7 @@ from action_log import logged, logged_bulk
 from decimal import Decimal
 import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
-from helixbilling.logic.filters import BalanceFilter, ReceiptFilter
+from helixbilling.logic.filters import BalanceFilter, ReceiptFilter, BonusFilter
 
 
 def detalize_error(err_cls, category, f_name):
@@ -174,25 +174,22 @@ class Handler(object):
         viewer = partial(self.balance_viewer, currencies_idx)
         return response_ok(balances=self.objects_info(balances, viewer), total=total)
 
-    # --- receipt ---
-    def check_income_amount(self, data):
+    def check_income_money_amount(self, data):
         val = Decimal(data['amount'])
         if not val:
             raise ActionNotAllowedError("Receipt with amount '%s' can't be enrolled" % val)
 
-    @transaction()
-    @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
-    def enroll_receipt(self, data, operator, curs=None):
+    def enroll_income_money(self, curs, data, operator, obj_cls):
         c_id = data['customer_id']
         balance = selector.get_balance(curs, operator, c_id, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
 
         amount_fields = ['amount']
         prep_data = decimal_texts_to_cents(data, currency, amount_fields)
-        self.check_income_amount(prep_data)
-        receipt = Receipt(**prep_data)
+        self.check_income_money_amount(prep_data)
+        receipt = obj_cls(**prep_data)
         mapping.insert(curs, receipt)
 
         balance.available_real_amount += receipt.amount #IGNORE:E1101
@@ -200,29 +197,51 @@ class Handler(object):
 
         return response_ok()
 
-    @transaction()
-    @authentificate
-    def view_receipts(self, data, operator, curs=None):
+    def view_income_money(self, curs, data, operator, filter_cls):
         filter_params = data['filter_params']
         paging_params = data['paging_params']
-        f = ReceiptFilter(operator, filter_params, paging_params)
-        receipts, total = f.filter_counted(curs)
+        f = filter_cls(operator, filter_params, paging_params)
+        objects, total = f.filter_counted(curs)
 
         filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
         balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
         balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
 
-        def viewer(receipt):
-            balance = balances_c_id_idx[receipt.customer_id]
+        def viewer(obj):
+            balance = balances_c_id_idx[obj.customer_id]
             currency = currencies_idx[balance.currency_id]
             return {
-                'customer_id': receipt.customer_id,
-                'creation_date': receipt.creation_date.isoformat(),
-                'amount': '%s' % cents_to_decimal(currency, receipt.amount),
+                'customer_id': obj.customer_id,
+                'creation_date': obj.creation_date.isoformat(),
+                'amount': '%s' % cents_to_decimal(currency, obj.amount),
                 'currency': currency.code,
             }
-        return response_ok(receipts=self.objects_info(receipts, viewer), total=total)
+        return (self.objects_info(objects, viewer), total)
+
+    # --- receipt ---
+    @transaction()
+    @authentificate
+    def enroll_receipt(self, data, operator, curs=None):
+        return self.enroll_income_money(curs, data, operator, Receipt)
+
+    @transaction()
+    @authentificate
+    def view_receipts(self, data, operator, curs=None):
+        receipts, total = self.view_income_money(curs, data, operator, ReceiptFilter)
+        return response_ok(receipts=receipts, total=total)
+
+    # --- bonus ---
+    @transaction()
+    @authentificate
+    def enroll_bonus(self, data, operator, curs=None):
+        return self.enroll_income_money(curs, data, operator, Bonus)
+
+    @transaction()
+    @authentificate
+    def view_bonuses(self, data, operator, curs=None):
+        bonuses, total = self.view_income_money(curs, data, operator, BonusFilter)
+        return response_ok(bonuses=bonuses, total=total)
 
 #    # --- enroll bonus ---
 #    @transaction()

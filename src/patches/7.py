@@ -1,4 +1,4 @@
-def apply(curs):
+def apply(curs): #IGNORE:W0622
     print 'Creating table bonus'
     curs.execute(
     '''
@@ -8,7 +8,7 @@ def apply(curs):
             operator_id integer NOT NULL,
             FOREIGN KEY(operator_id) REFERENCES operator(id),
             customer_id varchar NOT NULL,
-            created_date timestamp with time zone NOT NULL DEFAULT now(),
+            creation_date timestamp with time zone NOT NULL DEFAULT now(),
             amount int
         )
     ''')

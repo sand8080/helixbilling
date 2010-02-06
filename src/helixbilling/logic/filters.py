@@ -2,7 +2,7 @@ from helixcore.db.sql import And, Eq, In, Select, Columns, MoreEq, LessEq
 from helixcore.db.wrapper import SelectedMoreThanOneRow, fetchone_dict
 import helixcore.mapping.actions as mapping
 
-from helixbilling.domain.objects import Balance, Receipt
+from helixbilling.domain.objects import Balance, Receipt, Bonus
 from helixbilling.error import ObjectNotFound, BalanceNotFound
 from helixbilling.logic.helper import decimal_texts_to_cents
 
@@ -80,3 +80,15 @@ class ReceiptFilter(ObjectsFilter):
 
     def __init__(self, operator, filter_params, paging_params):
         super(ReceiptFilter, self).__init__(operator, filter_params, paging_params, Receipt)
+
+
+class BonusFilter(ObjectsFilter):
+    cond_map = [
+        ('customer_id', 'customer_id', Eq),
+        ('customer_ids', 'customer_id', In),
+        ('from_creation_date', 'creation_date', MoreEq),
+        ('to_creation_date', 'creation_date', LessEq),
+    ]
+
+    def __init__(self, operator, filter_params, paging_params):
+        super(BonusFilter, self).__init__(operator, filter_params, paging_params, Bonus)
