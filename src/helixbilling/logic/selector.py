@@ -102,6 +102,8 @@ def get_currencies_indexed_by_id(curs):
     return dict([(c.id, c) for c in currencies])
 
 
+def get_balance(curs, operator, customer_id, for_update=False):
+    return BalanceFilter(operator, {'customer_id': customer_id}, {}).filter_one_obj(curs, for_update=for_update)
 
 #
 #
@@ -178,7 +180,4 @@ def get_date_filters(date_filters, data):
         if end_date in data:
             cond = sql.And(cond, sql.Less(db_field, iso8601.parse_date(data[end_date])))
     return cond
-
-def get_balance(curs, operator, customer_id, for_update=False):
-    return BalanceFilter(operator, {'customer_id': customer_id}, {}).filter_one_obj(curs)
 

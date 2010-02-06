@@ -54,6 +54,7 @@ MODIFY_OPERATOR = dict(
     **AUTH_INFO
 )
 
+
 # --- balance ---
 ADD_BALANCE = dict(
     {
@@ -131,8 +132,9 @@ VIEW_BALANCES_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-# --- receipt ---
-ENROLL_RECEIPT = dict(
+
+# --- common income money structures ---
+ENROLL_INCOME = dict(
     {
         'customer_id': Text(),
         'amount': DecimalText(),
@@ -140,15 +142,12 @@ ENROLL_RECEIPT = dict(
     **AUTH_INFO
 )
 
-VIEW_RECEIPTS = dict(
+VIEW_INCOMES = dict(
     {
         'filter_params': {
             Optional('customer_ids'): [Text()],
             Optional('from_creation_date'): IsoDatetime(),
             Optional('to_creation_date'): IsoDatetime(),
-            Optional('amount'): DecimalText(),
-            Optional('from_amount'): DecimalText(),
-            Optional('to_amount'): DecimalText(),
         },
         'paging_params': {
             Optional('limit'): NonNegative(int),
@@ -158,16 +157,21 @@ VIEW_RECEIPTS = dict(
     **AUTH_INFO
 )
 
+INCOME_INFO = {
+    'customer_id': Text(),
+    'amount': DecimalText(),
+    'currency': Text(),
+    'creation_date': IsoDatetime(),
+}
+
+# --- receipt ---
+ENROLL_RECEIPT = ENROLL_INCOME
+VIEW_RECEIPTS = VIEW_INCOMES
 VIEW_RECEIPTS_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
-            'receipts': [{
-                'customer_id': Text(),
-                'amount': DecimalText(),
-                'creation_date': IsoDatetime(),
-            }],
-            'currency': Text(),
+            'receipts': [INCOME_INFO],
             'total': NonNegative(int),
         }
     ),
@@ -175,14 +179,20 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
 )
 
 
-#ENROLL_BONUS = dict(
-#    {
-#        'client_id': Text(),
-#        'amount': positive_amount_validator,
-#    },
-#    **AUTH_INFO
+# ---  bonus ---
+#ENROLL_BONUS = ENROLL_INCOME
+#VIEW_BONUSES = VIEW_INCOMES
+#VIEW_BONUSES_RESPONSE = AnyOf(
+#    dict(
+#        RESPONSE_STATUS_OK,
+#        **{
+#            'bonuses': [INCOME_INFO],
+#            'total': NonNegative(int),
+#        }
+#    ),
+#    RESPONSE_STATUS_ERROR
 #)
-#
+
 #LOCK_INFO = {
 #    'client_id': Text(),
 #    'product_id': Text(),
@@ -264,31 +274,6 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
 #            'virtual_amount': amount_validator,
 #            'locked_date': IsoDatetime(),
 #            'chargeoff_date': IsoDatetime(),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_BONUSES = dict(
-#    {
-#        'client_id': Text(),
-#        Optional('start_date'): IsoDatetime(),
-#        Optional('end_date'): IsoDatetime(),
-#        'offset': NonNegative(int),
-#        'limit': Positive(int),
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_BONUSES_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'total': NonNegative(int),
-#            'bonuses': [{
-#                'client_id': Text(),
-#                'amount': positive_amount_validator,
-#                'created_date': IsoDatetime(),
-#            }],
 #        }
 #    ),
 #    RESPONSE_STATUS_ERROR

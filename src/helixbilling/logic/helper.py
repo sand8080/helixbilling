@@ -1,6 +1,7 @@
 from math import log10
 from decimal import Decimal
 from helixcore.server.exceptions import ActionNotAllowedError
+from helixcore.utils import filter_dict
 
 
 def decimal_to_cents(currency, dec):
@@ -16,6 +17,15 @@ def cents_to_decimal(currency, cents):
     int_part = cents / currency.cent_factor
     cent_part =  cents % currency.cent_factor
     return Decimal(format % (int_part, cent_part))
+
+
+def decimal_texts_to_cents(data, currency, amount_fields):
+    result = dict(data)
+    amount_data = filter_dict(amount_fields, data)
+    for k, v in amount_data.items():
+        amount_data[k] = decimal_to_cents(currency, Decimal(v))
+    result.update(amount_data)
+    return result
 
 
 #def compose_amount(currency, int_part, cent_part):

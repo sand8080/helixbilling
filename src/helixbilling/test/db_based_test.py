@@ -18,6 +18,7 @@ from helixbilling.logic import selector
 from helixbilling.validator.validator import protocol
 from helixbilling.logic.helper import decimal_to_cents, cents_to_decimal
 from helixbilling.domain.objects import Currency
+from helixbilling.logic.filters import ReceiptFilter
 
 
 class DbBasedTestCase(RootTestCase):
@@ -74,8 +75,7 @@ class ServiceTestCase(DbBasedTestCase):
 
     @transaction()
     def get_reciepits(self, operator, customer_id, curs=None):
-        return selector.get_receipts(curs, operator, {'customer_ids': [customer_id]})
-
+        return ReceiptFilter(operator, {'customer_id': customer_id}, {}).filter_objs(curs)
 
     def add_receipt(self, login, password, customer_id, amount):
         d = datetime.datetime.now(pytz.utc)

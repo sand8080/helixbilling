@@ -133,36 +133,13 @@ class ValidatorTestCase(RootTestCase):
             'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
             'to_creation_date': d.isoformat()},
             'paging_params': {}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
-            'to_creation_date': d.isoformat(), 'amount': '1.0'},
-            'paging_params': {}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
-            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0'},
-            'paging_params': {}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
-            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0',
-            'to_amount': '10'},
-            'paging_params': {}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
-            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0',
-            'to_amount': '10'},
-            'paging_params': {'limit': 10}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
-            'to_creation_date': d.isoformat(), 'amount': '1.0', 'from_amount': '0',
-            'to_amount': '10'},
-            'paging_params': {'limit': 10, 'offset': 3}})
 
-        self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'currency': 'YYY',
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
             'receipts': []})
-        self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'currency': 'YYY',
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
             'receipts': [
-                {'customer_id': 'U2', 'amount': '1.1', 'creation_date': d.isoformat()},
-                {'customer_id': 'U2', 'amount': '1.1', 'creation_date': d.isoformat()},
+                {'customer_id': 'U2', 'amount': '1.1', 'currency': 'YYY', 'creation_date': d.isoformat()},
+                {'customer_id': 'U2', 'amount': '1.1', 'currency': 'ZZZ', 'creation_date': d.isoformat()},
             ]
         })
         self.validate_error_response(a_name)

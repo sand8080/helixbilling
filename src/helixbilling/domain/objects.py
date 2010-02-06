@@ -28,12 +28,7 @@ class Receipt(Mapped):
 
 
 class Bonus(Mapped):
-    __slots__ = [
-        'id',
-        'client_id',
-        'creation_date',
-        'amount'
-    ]
+    __slots__ = ['id', 'customer_id', 'creation_date', 'amount']
     table = 'bonus'
 
 

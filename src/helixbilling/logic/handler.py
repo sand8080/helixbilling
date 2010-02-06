@@ -3,6 +3,7 @@ from functools import partial
 import helixcore.mapping.actions as mapping
 from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
 from helixcore.db.sql import Eq, And
+from helixcore import utils
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
     DataIntegrityError
@@ -18,8 +19,8 @@ from helper import compute_locks, decimal_to_cents
 from action_log import logged, logged_bulk
 from decimal import Decimal
 import selector
-from helixbilling.logic.helper import cents_to_decimal
-from helixbilling.logic.filters import BalanceFilter
+from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
+from helixbilling.logic.filters import BalanceFilter, ReceiptFilter
 
 
 def detalize_error(err_cls, category, f_name):
@@ -76,19 +77,11 @@ class Handler(object):
                 setattr(obj, f, data[new_f])
             mapping.update(curs, obj)
 
-    def _decimal_texts_to_cents(self, data, currency, amount_fields):
-        result = dict(data)
-        for a_field in amount_fields:
-            if a_field in result:
-                result[a_field] = decimal_to_cents(currency, Decimal(data[a_field]))
+    def objects_info(self, objects, viewer):
+        result = []
+        for o in objects:
+            result.append(viewer(o))
         return result
-
-#    def _money_to_db(self, data, currency, amount_fields):
-#        result = dict(data)
-#        for f in amount_fields:
-#            if f in result:
-#                result[f] = compose_amount(currency, *result[f])
-#        return result
 
     # --- currencies ---
     @transaction()
@@ -124,7 +117,7 @@ class Handler(object):
         data['currency_id'] = currency.id
         del data['currency']
         amount_fields = ['overdraft_limit']
-        balance = Balance(**self._decimal_texts_to_cents(data, currency, amount_fields))
+        balance = Balance(**decimal_texts_to_cents(data, currency, amount_fields))
         mapping.insert(curs, balance)
         return response_ok()
 
@@ -136,7 +129,7 @@ class Handler(object):
         balance = selector.get_balance(curs, operator, c_id, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
         amount_fields = ['new_overdraft_limit']
-        self.update_obj(curs, self._decimal_texts_to_cents(data, currency, amount_fields),
+        self.update_obj(curs, decimal_texts_to_cents(data, currency, amount_fields),
             partial(lambda x: x, balance))
         return response_ok()
 
@@ -148,24 +141,6 @@ class Handler(object):
         mapping.delete(curs, obj)
         return response_ok()
 
-    def _balances_info(self, balances, currencies_idx):
-        b_info = []
-        for balance in balances:
-            currency = currencies_idx[balance.currency_id]
-            c_to_d = partial(cents_to_decimal, currency)
-            b_info.append({
-                'customer_id': balance.customer_id,
-                'active': balance.active,
-                'currency_code': currency.code,
-                'creation_date': '%s' % balance.creation_date.isoformat(),
-                'available_real_amount': '%s' % c_to_d(balance.available_real_amount),
-                'available_virtual_amount': '%s' % c_to_d(balance.available_virtual_amount),
-                'overdraft_limit': '%s' % c_to_d(balance.overdraft_limit),
-                'locked_amount': '%s' % c_to_d(balance.locked_amount),
-                'locking_order': balance.locking_order,
-            })
-        return b_info
-
     @transaction()
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
@@ -173,15 +148,21 @@ class Handler(object):
         c_id = data['customer_id']
         balance = selector.get_balance(curs, operator, c_id)
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
-        b_info = self._balances_info([balance], currencies_idx)[0]
-        return response_ok(**b_info)
+        return response_ok(**self.balance_viewer(currencies_idx, balance))
 
-    def _view_objects(self, curs, data, operator, loader, counter):
-        f_params = data['filter_params']
-        p_params = data['paging_params']
-        objects = loader(curs, operator, f_params, p_params)
-        total = counter(curs, operator, f_params)
-        return objects, total
+    def balance_viewer(self, currencies_idx, balance):
+        currency = currencies_idx[balance.currency_id]
+        return {
+            'customer_id': balance.customer_id,
+            'active': balance.active,
+            'currency_code': currency.code,
+            'creation_date': '%s' % balance.creation_date.isoformat(),
+            'available_real_amount': '%s' % cents_to_decimal(currency, balance.available_real_amount),
+            'available_virtual_amount': '%s' % cents_to_decimal(currency, balance.available_virtual_amount),
+            'overdraft_limit': '%s' % cents_to_decimal(currency, balance.overdraft_limit),
+            'locked_amount': '%s' % cents_to_decimal(currency, balance.locked_amount),
+            'locking_order': balance.locking_order,
+        }
 
     @transaction()
     @authentificate
@@ -190,11 +171,11 @@ class Handler(object):
         f = BalanceFilter(operator, data['filter_params'], data['paging_params'])
         balances, total = f.filter_counted(curs)
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
-        b_info = self._balances_info(balances, currencies_idx)
-        return response_ok(balances=b_info, total=total)
+        viewer = partial(self.balance_viewer, currencies_idx)
+        return response_ok(balances=self.objects_info(balances, viewer), total=total)
 
     # --- receipt ---
-    def check_receipt_amount(self, data):
+    def check_income_amount(self, data):
         val = Decimal(data['amount'])
         if not val:
             raise ActionNotAllowedError("Receipt with amount '%s' can't be enrolled" % val)
@@ -209,8 +190,8 @@ class Handler(object):
         currency = selector.get_currency_by_balance(curs, balance)
 
         amount_fields = ['amount']
-        prep_data = self._decimal_texts_to_cents(data, currency, amount_fields)
-        self.check_receipt_amount(prep_data)
+        prep_data = decimal_texts_to_cents(data, currency, amount_fields)
+        self.check_income_amount(prep_data)
         receipt = Receipt(**prep_data)
         mapping.insert(curs, receipt)
 
@@ -221,29 +202,27 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_ids')
     def view_receipts(self, data, operator, curs=None):
-#        receipts, total = self._view_objects(curs, data, operator, selector.get_receipts,
-#            selector.get_receipts_count)
-#        return response_ok(receipts=receipts, total=total)
+        filter_params = data['filter_params']
+        paging_params = data['paging_params']
+        f = ReceiptFilter(operator, filter_params, paging_params)
+        receipts, total = f.filter_counted(curs)
 
-#        balance = selector.get_balance(curs, operator, c_id)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#        receipts =
-#        f_params = data['filter_params']
-#        p_params = data['paging_params']
-#        balances = selector.get_balances(curs, operator, f_params, p_params)
-#        total = selector.get_balances_count(curs, operator, f_params)
+        filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
+        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
+        currencies_idx = selector.get_currencies_indexed_by_id(curs)
 
-#
-#        cond = Eq('customer_id', data['customer_id'])
-#        date_filters = (
-#            ('start_date', 'end_date', 'created_date'),
-#        )
-#        cond = And(cond, selector.get_date_filters(date_filters, data))
-#
-#        receipts, total = selector.select_receipts(curs, currency, cond, data['limit'], data['offset'])
-        return response_ok(receipts=[], total=0)
+        def viewer(receipt):
+            balance = balances_c_id_idx[receipt.customer_id]
+            currency = currencies_idx[balance.currency_id]
+            return {
+                'customer_id': receipt.customer_id,
+                'creation_date': receipt.creation_date.isoformat(),
+                'amount': '%s' % cents_to_decimal(currency, receipt.amount),
+                'currency': currency.code,
+            }
+        return response_ok(receipts=self.objects_info(receipts, viewer), total=total)
 
 #    # --- enroll bonus ---
 #    @transaction()
