@@ -174,28 +174,10 @@ class Handler(object):
         viewer = partial(self.balance_viewer, currencies_idx)
         return response_ok(balances=self.objects_info(balances, viewer), total=total)
 
-    def check_income_money_amount(self, data):
-        val = Decimal(data['amount'])
-        if not val:
-            raise ActionNotAllowedError("Receipt with amount '%s' can't be enrolled" % val)
-
-    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
-    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
-    def enroll_income_money(self, curs, data, operator, obj_cls):
-        c_id = data['customer_id']
-        balance = selector.get_balance(curs, operator, c_id, for_update=True)
-        currency = selector.get_currency_by_balance(curs, balance)
-
-        amount_fields = ['amount']
-        prep_data = decimal_texts_to_cents(data, currency, amount_fields)
-        self.check_income_money_amount(prep_data)
-        receipt = obj_cls(**prep_data)
-        mapping.insert(curs, receipt)
-
-        balance.available_real_amount += receipt.amount #IGNORE:E1101
-        mapping.update(curs, balance)
-
-        return response_ok()
+    def check_amount_is_positive(self, data, f_name='amount'):
+        val = Decimal(data[f_name])
+        if val <= 0:
+            raise ActionNotAllowedError("'%s' amount can't be processed" % val)
 
     def view_income_money(self, curs, data, operator, filter_cls):
         filter_params = data['filter_params']
@@ -222,8 +204,22 @@ class Handler(object):
     # --- receipt ---
     @transaction()
     @authentificate
+    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
     def enroll_receipt(self, data, operator, curs=None):
-        return self.enroll_income_money(curs, data, operator, Receipt)
+        c_id = data['customer_id']
+        balance = selector.get_balance(curs, operator, c_id, for_update=True)
+        currency = selector.get_currency_by_balance(curs, balance)
+
+        amount_fields = ['amount']
+        prep_data = decimal_texts_to_cents(data, currency, amount_fields)
+        self.check_amount_is_positive(prep_data)
+        receipt = Receipt(**prep_data)
+        mapping.insert(curs, receipt)
+
+        balance.available_real_amount += receipt.amount #IGNORE:E1101
+        mapping.update(curs, balance)
+        return response_ok()
 
     @transaction()
     @authentificate
@@ -235,7 +231,19 @@ class Handler(object):
     @transaction()
     @authentificate
     def enroll_bonus(self, data, operator, curs=None):
-        return self.enroll_income_money(curs, data, operator, Bonus)
+        c_id = data['customer_id']
+        balance = selector.get_balance(curs, operator, c_id, for_update=True)
+        currency = selector.get_currency_by_balance(curs, balance)
+
+        amount_fields = ['amount']
+        prep_data = decimal_texts_to_cents(data, currency, amount_fields)
+        self.check_amount_is_positive(prep_data)
+        bonus = Bonus(**prep_data)
+        mapping.insert(curs, bonus)
+
+        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
+        mapping.update(curs, balance)
+        return response_ok()
 
     @transaction()
     @authentificate
@@ -243,76 +251,53 @@ class Handler(object):
         bonuses, total = self.view_income_money(curs, data, operator, BonusFilter)
         return response_ok(bonuses=bonuses, total=total)
 
-#    # --- enroll bonus ---
-#    @transaction()
-#    @logged
-#    @authentificate
-#    def enroll_bonus(self, data, curs=None, billing_manager_id=None):
-#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'],
-#            active_only=True, for_update=True)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#        data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
-#
-#        bonus = Bonus(**data_copy)
-#        mapping.insert(curs, bonus)
-#
-#        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
-#        mapping.update(curs, balance)
-#        return response_ok()
-#
-#    # --- lock ---
-#    def _lock(self, billing_manager_id, data_list, curs):
-#        for data in data_list:
-#            balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=True, for_update=True)
-#            currency = selector.get_currency_by_balance(curs, balance)
-#            data_copy = self.decimal_texts_to_cents(data, currency, ['amount'])
-#            locks = compute_locks(currency, balance, data_copy['amount'])
-#            del data_copy['amount']
-#
-#            lock = BalanceLock(
-#                real_amount=locks['available_real_amount'],
-#                virtual_amount=locks['available_virtual_amount'],
-#                **data_copy
-#            )
-#            mapping.insert(curs, lock)
-#
-#            balance.available_real_amount -= lock.real_amount #IGNORE:E1101
-#            balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
-#            balance.locked_amount += lock.real_amount #IGNORE:E1101
-#            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
-#            mapping.update(curs, balance)
-#
-#    @logged
-#    @authentificate
-#    def lock(self, data, curs=None, billing_manager_id=None):
-#        """
-#        data = {
-#            'login': Text(),
-#            'password': Text(),
-#            'customer_id': Text(),
-#            'product_id': Text(),
-#            'amount': nonnegative_amount_validator
-#        }
-#        """
-#        self._lock(billing_manager_id, [data], curs)
-#        return response_ok()
-#
-#    @transaction()
-#    @logged_bulk
-#    @authentificate
-#    def lock_list(self, data, curs=None, billing_manager_id=None):
-#        """
-#        data = {
-#            'login': Text(),
-#            'password': Text(),
-#            'locks': [
-#                {'customer_id': Text(), 'product_id': Text()}
-#                ...
-#            ]
-#        }
-#        """
-#        self._lock(billing_manager_id, data['locks'], curs)
-#        return response_ok()
+    # --- lock ---
+    def _lock(self, curs, operator, data_list):
+        currencies_idx = selector.get_currencies_indexed_by_id(curs)
+        c_ids = [d['customer_id'] for d in data_list]
+        f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
+        # ordering by id excepts deadlocks
+        balances = f.filter_objs(curs, for_update=True)
+        balances_idx = dict([(b.customer_id, b) for b in balances])
+        customers_no_balance = set(c_ids) - set(balances_idx.keys())
+        if customers_no_balance:
+            raise BalanceNotFound(', '.join(customers_no_balance))
+
+        for data in data_list:
+            c_id = data['customer_id']
+            balance = balances_idx[c_id]
+            currency = currencies_idx[balance.currency_id]
+            self.check_amount_is_positive(data)
+
+            cents_amount = decimal_to_cents(currency, Decimal(data['amount']))
+            locks = compute_locks(currency, balance, cents_amount)
+            lock = BalanceLock(**{'operator_id': operator.id, 'customer_id': c_id,
+                'product_id': data['product_id'],
+                'real_amount': locks['available_real_amount'],
+                'virtual_amount': locks['available_virtual_amount'],
+            })
+            mapping.insert(curs, lock)
+
+            balance.available_real_amount -= lock.real_amount #IGNORE:E1101
+            balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
+            balance.locked_amount += lock.real_amount #IGNORE:E1101
+            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
+            mapping.update(curs, balance)
+
+    @transaction()
+    @authentificate
+    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'product_id')
+    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
+    def lock(self, data, operator, curs=None):
+        self._lock(curs, operator, [data])
+        return response_ok()
+
+    @transaction()
+    @authentificate
+    def lock_list(self, data, operator, curs=None):
+        self._lock(operator, data['locks'], curs)
+        return response_ok()
 #
 #    def _unlock(self, billing_manager_id, data_list, curs=None):
 #        balances = {}

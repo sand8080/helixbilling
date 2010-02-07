@@ -15,15 +15,25 @@ def apply(curs): #IGNORE:W0622
         )
     ''')
 
-    print 'Creating index balance_lock_operator_id_customer_id_product_id_idx on balance_lock'
+    print 'Creating index balance_lock_operator_id_customer_id_idx on balance_lock'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX balance_lock_operator_id_customer_id_product_id_idx ON
+        CREATE INDEX balance_lock_operator_id_customer_id_idx ON
+            balance_lock(operator_id, customer_id)
+    ''')
+
+    print 'Creating unique index balance_lock_operator_id_customer_id_product_id_idx on balance_lock'
+    curs.execute(
+    '''
+        CREATE INDEX balance_lock_operator_id_customer_id_product_id_idx ON
             balance_lock(operator_id, customer_id, product_id)
     ''')
 
 
 def revert(curs):
+    print 'Dropping index balance_lock_operator_id_customer_id_idx on balance_lock'
+    curs.execute('DROP INDEX balance_lock_operator_id_customer_id_idx')
+
     print 'Dropping index balance_lock_operator_id_customer_id_product_id_idx on balance_lock'
     curs.execute('DROP INDEX balance_lock_operator_id_customer_id_product_id_idx')
 

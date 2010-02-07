@@ -28,24 +28,6 @@ def decimal_texts_to_cents(data, currency, amount_fields):
     return result
 
 
-#def compose_amount(currency, int_part, cent_part):
-#    '''
-#    (500, 50) -> 50050 if cent_factor is 100
-#    '''
-#    if int_part < 0:
-#        raise DataIntegrityError('Integer part of amount is negative')
-#    if cent_part < 0:
-#        raise DataIntegrityError('Cent part of amount is negative')
-#    return currency.cent_factor * int_part + cent_part
-#
-#
-#def decompose_amount(currency, cent_amount):
-#    '''
-#    50050 -> (500, 50) if cent_factor is 100
-#    '''
-#    return (cent_amount / currency.cent_factor, cent_amount % currency.cent_factor)
-
-
 def get_lockable_amounts(balance):
     return {
         'available_real_amount': balance.available_real_amount + balance.overdraft_limit,
@@ -94,7 +76,7 @@ def compute_locks(currency, balance, lock_amount):
             'lockable_descr': ', '.join(lockable_descr),
         }
         raise ActionNotAllowedError(
-            'Can not lock %(lock_amount)s on balance of customer %(customer_id)s.'
+            'Can not lock %(lock_amount)s on balance of customer %(customer_id)s. '
             'Available to lock: %(lockable_descr)s' % error
         )
     return locked_amounts

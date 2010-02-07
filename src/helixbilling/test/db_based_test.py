@@ -17,8 +17,10 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
 from helixbilling.validator.validator import protocol
 from helixbilling.logic.helper import decimal_to_cents, cents_to_decimal
-from helixbilling.domain.objects import Currency
-from helixbilling.logic.filters import ReceiptFilter, BonusFilter
+from helixbilling.domain.objects import Currency, BalanceLock
+from helixbilling.logic.filters import ReceiptFilter, BonusFilter,\
+    BalanceLockFilter
+from helixbilling.error import BalanceNotFound
 
 
 class DbBasedTestCase(RootTestCase):
@@ -83,12 +85,17 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_receipt(self, login, password, customer_id, amount):
         d = datetime.datetime.now(pytz.utc)
+        operator = self.get_operator_by_login(login)
+        try:
+            balance_before = self.get_balance(operator, customer_id)
+        except BalanceNotFound, e:
+            print e.message
         self.handle_action('enroll_receipt', {'login': login, 'password': password,
             'customer_id': customer_id, 'amount': amount})
-        operator = self.get_operator_by_login(login)
         balance = self.get_balance(operator, customer_id)
         currency = self.get_currency_by_balance(balance)
         receipt = self.get_reciepits(operator, customer_id)[-1]
+        self.assertEqual(balance_before.available_real_amount + receipt.amount, balance.available_real_amount)
         self.assertTrue(d < receipt.creation_date)
         self.assertEqual(operator.id, receipt.operator_id)
         self.assertEqual(customer_id, receipt.customer_id)
@@ -96,12 +103,17 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_bonus(self, login, password, customer_id, amount):
         d = datetime.datetime.now(pytz.utc)
+        operator = self.get_operator_by_login(login)
+        try:
+            balance_before = self.get_balance(operator, customer_id)
+        except BalanceNotFound, e:
+            print e.message
         self.handle_action('enroll_bonus', {'login': login, 'password': password,
             'customer_id': customer_id, 'amount': amount})
-        operator = self.get_operator_by_login(login)
         balance = self.get_balance(operator, customer_id)
         currency = self.get_currency_by_balance(balance)
         bonus = self.get_bonuses(operator, customer_id)[-1]
+        self.assertEqual(balance_before.available_virtual_amount + bonus.amount, balance.available_virtual_amount)
         self.assertTrue(d < bonus.creation_date)
         self.assertEqual(operator.id, bonus.operator_id)
         self.assertEqual(customer_id, bonus.customer_id)
@@ -140,3 +152,20 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEquals(currency.id, balance.currency_id)
         self.assertEquals(locking_order, balance.locking_order)
         return balance
+
+    def modify_balance(self, login, password, customer_id, locking_order):
+        data = {
+            'login': login,
+            'password': password,
+            'customer_id': customer_id,
+            'new_locking_order': locking_order,
+        }
+        self.handle_action('modify_balance', data)
+        operator = self.get_operator_by_login(login)
+        balance = self.get_balance(operator, customer_id)
+        self.assertEqual(locking_order, balance.locking_order)
+
+    @transaction()
+    def get_balance_locks(self, operator, customer_id, product_id, curs=None):
+        f= BalanceLockFilter(operator, {'customer_id': customer_id, 'product_id': product_id}, {})
+        return f.filter_objs(curs)

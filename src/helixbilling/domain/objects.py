@@ -33,12 +33,8 @@ class Bonus(Mapped):
 
 
 class BalanceLock(Mapped):
-    __slots__ = [
-        'id',
-        'client_id', 'product_id',
-        'locking_date',
-        'real_amount', 'virtual_amount'
-    ]
+    __slots__ = ['id', 'operator_id',  'customer_id', 'product_id', 'locking_date',
+        'real_amount', 'virtual_amount']
     table = 'balance_lock'
 
 

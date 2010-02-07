@@ -166,7 +166,9 @@ INCOME_INFO = {
 
 # --- receipt ---
 ENROLL_RECEIPT = ENROLL_INCOME
+
 VIEW_RECEIPTS = VIEW_INCOMES
+
 VIEW_RECEIPTS_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
@@ -181,7 +183,9 @@ VIEW_RECEIPTS_RESPONSE = AnyOf(
 
 # ---  bonus ---
 ENROLL_BONUS = ENROLL_INCOME
+
 VIEW_BONUSES = VIEW_INCOMES
+
 VIEW_BONUSES_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
@@ -193,23 +197,22 @@ VIEW_BONUSES_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-#LOCK_INFO = {
-#    'client_id': Text(),
-#    'product_id': Text(),
-#    'amount': positive_amount_validator,
-#}
-#
-#LOCK = dict(
-#    LOCK_INFO,
-#    **AUTH_INFO
-#)
-#
-#LOCK_LIST = dict(
-#    {
-#        'locks': [LOCK_INFO]
-#    },
-#    **AUTH_INFO
-#)
+
+# --- lock ---
+LOCK_DATA = {
+    'customer_id': Text(),
+    'product_id': Text(),
+    'amount': DecimalText(),
+}
+
+LOCK = dict(LOCK_DATA, **AUTH_INFO)
+
+LOCK_LIST = dict(
+    {
+        'locks': [LOCK_DATA]
+    },
+    **AUTH_INFO
+)
 #
 #UNLOCK_INFO = {
 #    'client_id': Text(),
@@ -385,13 +388,16 @@ protocol = [
     ApiCall('view_bonuses_request', Scheme(VIEW_BONUSES)),
     ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
 
-#    # lock
-#    ApiCall('lock_request', Scheme(LOCK)),
-#    ApiCall('lock_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('lock_list_request', Scheme(LOCK_LIST)),
-#    ApiCall('lock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
+    # lock
+    ApiCall('lock_request', Scheme(LOCK)),
+    ApiCall('lock_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('lock_list_request', Scheme(LOCK_LIST)),
+    ApiCall('lock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+#    ApiCall('view_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
+#    ApiCall('view_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
+
 #    # unlock
 #    ApiCall('unlock_request', Scheme(UNLOCK)),
 #    ApiCall('unlock_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -414,7 +420,4 @@ protocol = [
 #    ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
 #    ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
 #
-#    ApiCall('view_balance_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
-#    ApiCall('view_balance_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
-
 ]

@@ -154,18 +154,12 @@ class ValidatorTestCase(RootTestCase):
     def test_view_bonuses(self):
         self.view_income('view_bonuses', 'bonuses')
 
-#    def test_enroll_bonus(self):
-#        self.api.validate_request('enroll_bonus', {'login': 'l', 'password': 'p',
-#            'client_id': 'N5', 'amount': (30, 00)})
-#        self.assertRaises(ValidationError, self.api.validate_request, 'enroll_bonus',
-#            {'login': 'l', 'password': 'p', 'client_id': 'N5', 'amount': (00, 00)})
-#        self.validate_status_response('enroll_bonus')
-#
-#    def test_lock(self):
-#        self.api.validate_request('lock', {'login': 'l', 'password': 'p',
-#            'client_id': 'id', 'product_id': 'super', 'amount': (60, 00)})
-#        self.validate_status_response('lock')
-#
+    def test_lock(self):
+        a_name = 'lock'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'customer_id': 'id', 'product_id': 'super', 'amount': '60.00'})
+        self.validate_status_response(a_name)
+
 #    def test_lock_invalid(self):
 #        self.assertRaises(ValidationError, self.api.validate_request, 'lock', {'login': 'l', 'password': 'p',
 #            'client_id': 'id', 'product_id': 'super-light 555', 'amount': (-60, 00)})
