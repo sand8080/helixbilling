@@ -10,7 +10,7 @@ from helixbilling.test.logic.test_operator import OperatorTestCase #IGNORE:W0611
 from helixbilling.test.logic.test_balance import BalanceTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_receipt import ReceiptTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_bonus import BonusTestCase #IGNORE:W0611 @UnusedImport
-from helixbilling.test.logic.test_lock import BalanceLockTestCase #IGNORE:W0611 @UnusedImport
+from helixbilling.test.logic.test_balance_lock import BalanceLockTestCase #IGNORE:W0611 @UnusedImport
 
 #from helixbilling.test.logic.test_lock_list import LockListTestCase #IGNORE:W0611 @UnusedImport
 #
@@ -20,8 +20,6 @@ from helixbilling.test.logic.test_lock import BalanceLockTestCase #IGNORE:W0611 
 #
 #from helixbilling.test.logic.test_product_status import ProductStatusTestCase #IGNORE:W0611 @UnusedImport
 #
-#from helixbilling.test.logic.test_view_receipts import ViewReceiptsTestCase #IGNORE:W0611 @UnusedImport
-#from helixbilling.test.logic.test_view_bonuses import ViewBonusesTestCase #IGNORE:W0611 @UnusedImport
 #from helixbilling.test.logic.test_view_chargeoffs import ViewChargeoffsTestCase #IGNORE:W0611 @UnusedImport
 #from helixbilling.test.logic.test_view_balance_locks import ViewBalanceLocksTestCase #IGNORE:W0611 @UnusedImport
 #

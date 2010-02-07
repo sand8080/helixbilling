@@ -252,7 +252,7 @@ class Handler(object):
         return response_ok(bonuses=bonuses, total=total)
 
     # --- lock ---
-    def _lock(self, curs, operator, data_list):
+    def _balance_lock(self, curs, operator, data_list):
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
         c_ids = [d['customer_id'] for d in data_list]
         f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
@@ -272,9 +272,10 @@ class Handler(object):
             cents_amount = decimal_to_cents(currency, Decimal(data['amount']))
             locks = compute_locks(currency, balance, cents_amount)
             lock = BalanceLock(**{'operator_id': operator.id, 'customer_id': c_id,
-                'product_id': data['product_id'],
-                'real_amount': locks['available_real_amount'],
-                'virtual_amount': locks['available_virtual_amount'],
+                'order_id': data['order_id'],
+                'order_type': data.get('order_type'),
+                'real_amount': locks.get('available_real_amount', 0),
+                'virtual_amount': locks.get('available_virtual_amount', 0),
             })
             mapping.insert(curs, lock)
 
@@ -289,15 +290,34 @@ class Handler(object):
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'product_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
-    def lock(self, data, operator, curs=None):
-        self._lock(curs, operator, [data])
+    def balance_lock(self, data, operator, curs=None):
+        self._balance_lock(curs, operator, [data])
         return response_ok()
 
     @transaction()
     @authentificate
-    def lock_list(self, data, operator, curs=None):
-        self._lock(operator, data['locks'], curs)
+    def balance_lock_list(self, data, operator, curs=None):
+        self._balance_lock(curs, operator, data['locks'])
         return response_ok()
+
+#    @transaction()
+#    @authentificate
+#    def view_balance_locks(self, data, curs=None, billing_manager_id=None):
+#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=False)
+#        currency = selector.get_currency_by_balance(curs, balance)
+#
+#        cond = Eq('customer_id', data['customer_id'])
+#        if 'product_id' in data:
+#            cond = And(cond, Eq('product_id', data['product_id']))
+#
+#        date_filters = (
+#            ('locked_start_date', 'locked_end_date', 'locked_date'),
+#        )
+#        cond = And(cond, selector.get_date_filters(date_filters, data))
+#
+#        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
+#        return response_ok(balance_locks=balance_locks, total=total)
+
 #
 #    def _unlock(self, billing_manager_id, data_list, curs=None):
 #        balances = {}
@@ -452,21 +472,6 @@ class Handler(object):
 #
 #    @transaction()
 #    @authentificate
-#    def view_bonuses(self, data, curs=None, billing_manager_id=None):
-#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=False)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#
-#        cond = Eq('customer_id', data['customer_id'])
-#        date_filters = (
-#            ('start_date', 'end_date', 'created_date'),
-#        )
-#        cond = And(cond, selector.get_date_filters(date_filters, data))
-#
-#        bonuses, total = selector.select_bonuses(curs, currency, cond, data['limit'], data['offset'])
-#        return response_ok(bonuses=bonuses, total=total)
-#
-#    @transaction()
-#    @authentificate
 #    def view_chargeoffs(self, data, curs=None, billing_manager_id=None):
 #        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=False)
 #        currency = selector.get_currency_by_balance(curs, balance)
@@ -484,20 +489,3 @@ class Handler(object):
 #        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['limit'], data['offset'])
 #        return response_ok(chargeoffs=chargeoffs, total=total)
 #
-#    @transaction()
-#    @authentificate
-#    def view_balance_locks(self, data, curs=None, billing_manager_id=None):
-#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=False)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#
-#        cond = Eq('customer_id', data['customer_id'])
-#        if 'product_id' in data:
-#            cond = And(cond, Eq('product_id', data['product_id']))
-#
-#        date_filters = (
-#            ('locked_start_date', 'locked_end_date', 'locked_date'),
-#        )
-#        cond = And(cond, selector.get_date_filters(date_filters, data))
-#
-#        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
-#        return response_ok(balance_locks=balance_locks, total=total)

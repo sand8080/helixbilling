@@ -154,59 +154,63 @@ class ValidatorTestCase(RootTestCase):
     def test_view_bonuses(self):
         self.view_income('view_bonuses', 'bonuses')
 
-    def test_lock(self):
-        a_name = 'lock'
+    def test_balance_lock(self):
+        a_name = 'balance_lock'
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'customer_id': 'id', 'product_id': 'super', 'amount': '60.00'})
+            'customer_id': 'id', 'order_id': '1', 'amount': '60.00'})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'customer_id': 'id', 'order_id': '1', 'order_type': 'super', 'amount': '60.00'})
         self.validate_status_response(a_name)
 
-#    def test_lock_invalid(self):
-#        self.assertRaises(ValidationError, self.api.validate_request, 'lock', {'login': 'l', 'password': 'p',
-#            'client_id': 'id', 'product_id': 'super-light 555', 'amount': (-60, 00)})
-#
-#    def test_lock_list(self):
-#        self.api.validate_request(
-#            'lock_list',
-#            {
-#                'login': 'l',
-#                'password': 'p',
-#                'locks': [
-#                    {
-#                        'client_id': 'id_one',
-#                        'product_id': 'super-light 555',
-#                        'amount': (60, 00),
-#                    },
-#                    {
-#                        'client_id': 'id_two',
-#                        'product_id': 'brb',
-#                        'amount': (60, 00),
-#                    }
-#                ]
-#            }
-#        )
-#        self.validate_status_response('lock_list')
-#
-#    def test_lock_list_invalid(self):
-#        self.assertRaises(ValidationError, self.api.validate_request,
-#            'lock_list',
-#            {
-#                'login': 'l',
-#                'password': 'p',
-#                'locks': [
-#                    {
-#                        'client_id': 'id_one',
-#                        'product_id': 'super-light 555',
-#                        'amount': (60, 00),
-#                    },
-#                    {
-#                        'client_id': 'id_two',
-#                        'ERROR_HERE': 'brb',
-#                        'amount': (60, 00),
-#                    }
-#                ]
-#            }
-#        )
-#
+    def test_balance_lock_list(self):
+        a_name = 'balance_lock_list'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'locks': []})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'locks': [
+            {'customer_id': 'c0', 'order_id': '110', 'amount': '60.00'},
+            {'customer_id': 'c1', 'order_id': '10', 'order_type': 'space', 'amount': '50.00'},
+        ]})
+        self.validate_status_response(a_name)
+
+    def test_view_balance_locks(self):
+        a_name = 'view_balance_locks'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b']}, 'paging_params': {}})
+        d = datetime.datetime.now(pytz.utc)
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'filter_params':
+            {'customer_id': 'u', 'customer_ids': [], 'from_locking_date': d.isoformat()},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': [], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat()}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat()}, 'paging_params': {'limit': 5}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat()}, 'paging_params': {'limit': 5, 'offset': 10}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat(), 'order_id': '77H'}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat(), 'order_type': 'moon'}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 0, 'balance_locks': []})
+        self.api.validate_response('view_balance_locks', {'status': 'ok', 'total': 10,
+            'balance_locks': [
+                {'customer_id': 'U2', 'order_id': 'k9', 'order_type': 'mia', 'real_amount': '2.49',
+                    'virtual_amount': '0.0', 'locking_date': d.isoformat(), 'currency': 'YYY'},
+                {'customer_id': 'U3', 'order_id': 'k9', 'order_type': None, 'real_amount': '2.49',
+                    'virtual_amount': '0.0', 'locking_date': d.isoformat(), 'currency': 'YES'},
+            ]
+        })
+        self.validate_error_response(a_name)
+
 #    def test_unlock(self):
 #        self.api.validate_request('unlock', {'login': 'l', 'password': 'p',
 #            'client_id': 'id_one', 'product_id': 'super-light 555'})
@@ -412,56 +416,6 @@ class ValidatorTestCase(RootTestCase):
 #            ]
 #        })
 #
-#    def test_view_balance_locks(self):
-#        self.api.validate_request('view_balance_locks', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3})
-#        self.api.validate_request('view_balance_locks', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j'})
-#        self.api.validate_request('view_balance_locks', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
-#            'locked_start_date': datetime.datetime.now().isoformat()})
-#        self.api.validate_request('view_balance_locks', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
-#            'locked_start_date': datetime.datetime.now().isoformat(),
-#            'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
-#        })
-#        self.api.validate_response('view_balance_locks', {'status': 'ok', 'total': 0, 'balance_locks': []})
-#        self.api.validate_response('view_balance_locks', {'status': 'ok', 'total': 10,
-#            'balance_locks': [
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k9',
-#                    'real_amount': (2, 49),
-#                    'virtual_amount': (0, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                }
-#            ]
-#        })
-#        self.api.validate_response('view_balance_locks', {'status': 'ok', 'total': 10,
-#            'balance_locks': [
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k9',
-#                    'real_amount': (2, 49),
-#                    'virtual_amount': (0, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                },
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k9',
-#                    'real_amount': (0, 0),
-#                    'virtual_amount': (0, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                },
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k5',
-#                    'real_amount': (0, 0),
-#                    'virtual_amount': (60, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                },
-#            ]
-#        })
 
 
 if __name__ == '__main__':

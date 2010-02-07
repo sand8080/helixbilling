@@ -166,6 +166,9 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(locking_order, balance.locking_order)
 
     @transaction()
-    def get_balance_locks(self, operator, customer_id, product_id, curs=None):
-        f= BalanceLockFilter(operator, {'customer_id': customer_id, 'product_id': product_id}, {})
+    def get_balance_locks(self, operator, customer_ids, product_id=None, curs=None):
+        filter_params = {'customer_ids': customer_ids}
+        if product_id is not None:
+            filter_params['product_id'] = product_id
+        f= BalanceLockFilter(operator, filter_params, {})
         return f.filter_objs(curs)

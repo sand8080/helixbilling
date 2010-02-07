@@ -199,20 +199,59 @@ VIEW_BONUSES_RESPONSE = AnyOf(
 
 
 # --- lock ---
-LOCK_DATA = {
+BALANCE_LOCK_DATA = {
     'customer_id': Text(),
-    'product_id': Text(),
+    'order_id': Text(),
+    Optional('order_type'): Text(),
     'amount': DecimalText(),
 }
 
-LOCK = dict(LOCK_DATA, **AUTH_INFO)
+BALANCE_LOCK = dict(BALANCE_LOCK_DATA, **AUTH_INFO)
 
-LOCK_LIST = dict(
+BALANCE_LOCK_LIST = dict(
     {
-        'locks': [LOCK_DATA]
+        'locks': [BALANCE_LOCK_DATA]
     },
     **AUTH_INFO
 )
+
+VIEW_BALANCE_LOCKS = dict(
+    {
+        'filter_params': {
+            Optional('customer_id'): Text(),
+            Optional('customer_ids'): [Text()],
+            Optional('order_id'): Text(),
+            Optional('order_type'): NullableText,
+            Optional('from_locking_date'): IsoDatetime(),
+            Optional('to_locking_date'): IsoDatetime(),
+        },
+        'paging_params': {
+            Optional('limit'): NonNegative(int),
+            Optional('offset'): NonNegative(int),
+        }
+    },
+    **AUTH_INFO
+)
+
+VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'balance_locks': [{
+                'customer_id': Text(),
+                'order_id': Text(),
+                'order_type': NullableText,
+                'real_amount': DecimalText(),
+                'virtual_amount': DecimalText(),
+                'currency': Text(),
+                'locking_date': IsoDatetime(),
+            }],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+# --- unlock ---
 #
 #UNLOCK_INFO = {
 #    'client_id': Text(),
@@ -312,35 +351,6 @@ LOCK_LIST = dict(
 #    ),
 #    RESPONSE_STATUS_ERROR
 #)
-#
-#VIEW_BALANCE_LOCKS = dict(
-#    {
-#        'client_id': Text(),
-#        Optional('product_id'): Text(),
-#        Optional('locked_start_date'): IsoDatetime(),
-#        Optional('locked_end_date'): IsoDatetime(),
-#        'offset': NonNegative(int),
-#        'limit': Positive(int),
-#    },
-#    **AUTH_INFO
-#)
-#
-#
-#VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'total': NonNegative(int),
-#            'balance_locks': [{
-#                'client_id': Text(),
-#                'product_id': Text(),
-#                'real_amount': amount_validator,
-#                'virtual_amount': amount_validator,
-#                'locked_date': IsoDatetime(),
-#            }],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
 
 
 protocol = [
@@ -389,14 +399,14 @@ protocol = [
     ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
 
     # lock
-    ApiCall('lock_request', Scheme(LOCK)),
-    ApiCall('lock_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('balance_lock_request', Scheme(BALANCE_LOCK)),
+    ApiCall('balance_lock_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('lock_list_request', Scheme(LOCK_LIST)),
-    ApiCall('lock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('balance_lock_list_request', Scheme(BALANCE_LOCK_LIST)),
+    ApiCall('balance_lock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-#    ApiCall('view_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
-#    ApiCall('view_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
+    ApiCall('view_balance_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
+    ApiCall('view_balance_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
 
 #    # unlock
 #    ApiCall('unlock_request', Scheme(UNLOCK)),
