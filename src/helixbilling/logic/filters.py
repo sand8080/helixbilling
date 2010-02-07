@@ -4,7 +4,6 @@ import helixcore.mapping.actions as mapping
 
 from helixbilling.domain.objects import Balance, Receipt, Bonus, BalanceLock
 from helixbilling.error import ObjectNotFound, BalanceNotFound
-from helixbilling.logic.helper import decimal_texts_to_cents
 
 
 class ObjectsFilter(object):
@@ -98,6 +97,8 @@ class BalanceLockFilter(ObjectsFilter):
     cond_map = [
         ('customer_id', 'customer_id', Eq),
         ('customer_ids', 'customer_id', In),
+        ('order_id', 'order_id', Eq),
+        ('order_type', 'order_type', Eq),
         ('from_locking_date', 'locking_date', MoreEq),
         ('to_locking_date', 'locking_date', LessEq),
     ]

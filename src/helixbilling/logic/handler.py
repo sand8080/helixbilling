@@ -20,7 +20,8 @@ from action_log import logged, logged_bulk
 from decimal import Decimal
 import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
-from helixbilling.logic.filters import BalanceFilter, ReceiptFilter, BonusFilter
+from helixbilling.logic.filters import BalanceFilter, ReceiptFilter, BonusFilter,\
+    BalanceLockFilter
 
 
 def detalize_error(err_cls, category, f_name):
@@ -300,24 +301,33 @@ class Handler(object):
         self._balance_lock(curs, operator, data['locks'])
         return response_ok()
 
-#    @transaction()
-#    @authentificate
-#    def view_balance_locks(self, data, curs=None, billing_manager_id=None):
-#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=False)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#
-#        cond = Eq('customer_id', data['customer_id'])
-#        if 'product_id' in data:
-#            cond = And(cond, Eq('product_id', data['product_id']))
-#
-#        date_filters = (
-#            ('locked_start_date', 'locked_end_date', 'locked_date'),
-#        )
-#        cond = And(cond, selector.get_date_filters(date_filters, data))
-#
-#        balance_locks, total = selector.select_balance_locks(curs, currency, cond, data['limit'], data['offset'])
-#        return response_ok(balance_locks=balance_locks, total=total)
+    @transaction()
+    @authentificate
+    def view_balance_locks(self, data, operator, curs=None):
+        filter_params = data['filter_params']
+        paging_params = data['paging_params']
 
+        f = BalanceLockFilter(operator, filter_params, paging_params)
+        balance_locks, total = f.filter_counted(curs)
+
+        filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
+        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
+        currencies_idx = selector.get_currencies_indexed_by_id(curs)
+
+        def viewer(balance_lock):
+            balance = balances_c_id_idx[balance_lock.customer_id]
+            currency = currencies_idx[balance.currency_id]
+            return {
+                'customer_id': balance_lock.customer_id,
+                'order_id': balance_lock.order_id,
+                'order_type': balance_lock.order_type,
+                'real_amount': '%s' % cents_to_decimal(currency, balance_lock.real_amount),
+                'virtual_amount': '%s' % cents_to_decimal(currency, balance_lock.virtual_amount),
+                'currency': currency.code,
+                'locking_date': balance_lock.locking_date.isoformat(),
+            }
+        return response_ok(balance_locks=self.objects_info(balance_locks, viewer), total=total)
 #
 #    def _unlock(self, billing_manager_id, data_list, curs=None):
 #        balances = {}

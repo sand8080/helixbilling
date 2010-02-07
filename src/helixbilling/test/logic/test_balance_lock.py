@@ -4,7 +4,6 @@ import unittest
 from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.test.db_based_test import ServiceTestCase
-from helixbilling.logic.filters import BalanceLockFilter
 
 
 class BalanceLockTestCase(ServiceTestCase):
@@ -193,6 +192,78 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertEqual(1000, lock.virtual_amount)
         self.assertEqual('3', lock.order_id)
         self.assertEqual(None, lock.order_type)
+
+    def test_view_balance_locks(self):
+        c_id_0 = 'c0'
+        c_id_1 = 'c1'
+        self.add_balance(self.test_login, self.test_password, c_id_0, self.currency)
+        self.add_balance(self.test_login, self.test_password, c_id_1, self.currency,
+            locking_order=['available_virtual_amount'])
+        self.add_receipt(self.test_login, self.test_password, c_id_0, '100.0')
+        self.add_receipt(self.test_login, self.test_password, c_id_1, '200.0')
+        self.add_bonus(self.test_login, self.test_password, c_id_1, '300.0')
+
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'locks': [
+                {'customer_id': c_id_1, 'order_id': '1', 'amount': '80.00'},
+                {'customer_id': c_id_0, 'order_id': '1', 'order_type': 'type', 'amount': '90.00'},
+                {'customer_id': c_id_1, 'order_id': '3', 'amount': '100.00'},
+            ]
+        }
+        self.handle_action('balance_lock_list', data)
+
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'filter_params': {'customer_id': c_id_1},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_balance_locks', data)
+        b_locks = response['balance_locks']
+        self.assertEqual(2, len(b_locks))
+        for b_l in b_locks:
+            self.assertEqual(c_id_1, b_l['customer_id'])
+
+        ord_id = '1'
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'filter_params': {'order_id': ord_id},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_balance_locks', data)
+        b_locks = response['balance_locks']
+        self.assertEqual(2, len(b_locks))
+        for b_l in b_locks:
+            self.assertEqual(ord_id, b_l['order_id'])
+
+        ord_type = None
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'filter_params': {'order_type': ord_type},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_balance_locks', data)
+        b_locks = response['balance_locks']
+        self.assertEqual(2, len(b_locks))
+        for b_l in b_locks:
+            self.assertEqual(ord_type, b_l['order_type'])
+
+        ord_type = 'type'
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'filter_params': {'order_type': ord_type},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_balance_locks', data)
+        b_locks = response['balance_locks']
+        self.assertEqual(1, len(b_locks))
+        for b_l in b_locks:
+            self.assertEqual(ord_type, b_l['order_type'])
 
 
 if __name__ == '__main__':
