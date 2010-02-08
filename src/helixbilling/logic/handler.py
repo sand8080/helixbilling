@@ -13,7 +13,7 @@ from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, Operator
 import helixbilling.logic.product_status as product_status
 from helixbilling.domain import security
-from helixbilling.error import BalanceNotFound, CurrencyNotFound
+from helixbilling.error import BalanceNotFound, CurrencyNotFound, ObjectNotFound
 
 from helper import compute_locks, decimal_to_cents
 from action_log import logged, logged_bulk
@@ -289,7 +289,7 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'product_id')
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'order_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
     def balance_lock(self, data, operator, curs=None):
         self._balance_lock(curs, operator, [data])
@@ -328,66 +328,50 @@ class Handler(object):
                 'locking_date': balance_lock.locking_date.isoformat(),
             }
         return response_ok(balance_locks=self.objects_info(balance_locks, viewer), total=total)
-#
-#    def _unlock(self, billing_manager_id, data_list, curs=None):
-#        balances = {}
-#        # locking all balances
-#        for data in data_list:
-#            balance = selector.get_balance(curs, billing_manager_id, data['customer_id'],
-#                active_only=True, for_update=True)
-#            balances[balance.customer_id] = balance
-#
-#        for data in data_list:
-#            try:
-#                lock = selector.try_get_lock(curs, data['customer_id'], data['product_id'], for_update=True)
-#            except EmptyResultSetError:
-#                raise ActionNotAllowedError(
-#                    'Cannot unlock money for product %s: '
-#                    'amount was not locked for this product'
-#                    % data['product_id']
-#                )
-#
-#            mapping.delete(curs, lock)
-#
-#            balance = balances[lock.customer_id]
-#            balance.available_real_amount += lock.real_amount
-#            balance.available_virtual_amount += lock.virtual_amount
-#            balance.locked_amount -= lock.real_amount #IGNORE:E1101
-#            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
-#
-#            mapping.update(curs, balance)
-#
-#    @transaction()
-#    @logged
-#    @authentificate
-#    def unlock(self, data, curs=None, billing_manager_id=None):
-#        """
-#        data = {
-#            'login': Text(),
-#            'password': Text(),
-#            'customer_id': Text(),
-#            'product_id': Text(),
-#        }
-#        """
-#        self._unlock(billing_manager_id, [data], curs)
-#        return response_ok()
-#
-#    @transaction()
-#    @logged_bulk
-#    @authentificate
-#    def unlock_list(self, data, curs=None, billing_manager_id=None):
-#        """
-#        data = {
-#            'login': Text(),
-#            'password': Text(),
-#            'unlocks': [
-#                {'customer_id': Text(), 'product_id': Text(),}
-#                ...
-#            ]
-#        }
-#        """
-#        self._unlock(billing_manager_id, data['unlocks'], curs)
-#        return response_ok()
+
+    # --- unlock ---
+    def _balance_unlock(self, curs, operator, data_list):
+        c_ids = [d['customer_id'] for d in data_list]
+        f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
+        # ordering by id excepts deadlocks
+        balances = f.filter_objs(curs, for_update=True)
+        balances_idx = dict([(b.customer_id, b) for b in balances])
+        customers_no_balance = set(c_ids) - set(balances_idx.keys())
+        if customers_no_balance:
+            raise BalanceNotFound(', '.join(customers_no_balance))
+
+        for data in data_list:
+            c_id = data['customer_id']
+            ord_id = data['order_id']
+            try:
+                lock = selector.get_balance_lock(curs, operator, c_id, ord_id, for_update=True)
+            except ObjectNotFound:
+                raise ActionNotAllowedError(
+                    'Cannot unlock money for customer %s order %s: '
+                    'amount was not locked' % (c_id, ord_id)
+                )
+            mapping.delete(curs, lock)
+
+            balance = balances_idx[lock.customer_id]
+            balance.available_real_amount += lock.real_amount
+            balance.available_virtual_amount += lock.virtual_amount
+            balance.locked_amount -= lock.real_amount #IGNORE:E1101
+            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
+            mapping.update(curs, balance)
+
+    @transaction()
+    @authentificate
+    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'order_id')
+    def balance_unlock(self, data, operator, curs=None):
+        self._balance_unlock(curs, operator, [data])
+        return response_ok()
+
+    @transaction()
+    @authentificate
+    def balance_unlock_list(self, data, operator, curs=None):
+        self._balance_unlock(curs, operator, data['unlocks'])
+        return response_ok()
 #
 #    def _chargeoff(self, billing_manager_id, data_list, curs=None):
 #        balances = {}

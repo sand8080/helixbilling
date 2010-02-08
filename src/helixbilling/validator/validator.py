@@ -253,23 +253,20 @@ VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
 
 # --- unlock ---
 #
-#UNLOCK_INFO = {
-#    'client_id': Text(),
-#    'product_id': Text(),
-#}
-#
-#UNLOCK = dict(
-#    UNLOCK_INFO,
-#    **AUTH_INFO
-#)
-#
-#UNLOCK_LIST = dict(
-#    {
-#        'unlocks': [UNLOCK_INFO]
-#    },
-#    **AUTH_INFO
-#)
-#
+BALANCE_UNLOCK_DATA = {
+    'customer_id': Text(),
+    'order_id': Text(),
+}
+
+BALANCE_UNLOCK = dict(BALANCE_UNLOCK_DATA, **AUTH_INFO)
+
+BALANCE_UNLOCK_LIST = dict(
+    {
+        'unlocks': [BALANCE_UNLOCK_DATA]
+    },
+    **AUTH_INFO
+)
+
 #PRODUCT_STATUS = dict(
 #    {
 #        'client_id': Text(),
@@ -408,13 +405,13 @@ protocol = [
     ApiCall('view_balance_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
     ApiCall('view_balance_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
 
-#    # unlock
-#    ApiCall('unlock_request', Scheme(UNLOCK)),
-#    ApiCall('unlock_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('unlock_list_request', Scheme(UNLOCK_LIST)),
-#    ApiCall('unlock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
+    # unlock
+    ApiCall('balance_unlock_request', Scheme(BALANCE_UNLOCK)),
+    ApiCall('balance_unlock_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('balance_unlock_list_request', Scheme(BALANCE_UNLOCK_LIST)),
+    ApiCall('balance_unlock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
+
 #    # chargeoff
 #    ApiCall('chargeoff_request', Scheme(CHARGEOFF)),
 #    ApiCall('chargeoff_response', Scheme(RESPONSE_STATUS_ONLY)),

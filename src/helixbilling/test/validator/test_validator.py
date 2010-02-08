@@ -211,11 +211,21 @@ class ValidatorTestCase(RootTestCase):
         })
         self.validate_error_response(a_name)
 
-#    def test_unlock(self):
-#        self.api.validate_request('unlock', {'login': 'l', 'password': 'p',
-#            'client_id': 'id_one', 'product_id': 'super-light 555'})
-#        self.validate_status_response('unlock')
-#
+    def test_balance_unlock(self):
+        a_name = 'balance_unlock'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'customer_id': 'id', 'order_id': '1'})
+        self.validate_status_response(a_name)
+
+    def test_balance_unlock_list(self):
+        a_name = 'balance_unlock_list'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'unlocks': []})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'unlocks': [
+            {'customer_id': 'c0', 'order_id': '110'},
+            {'customer_id': 'c1', 'order_id': '10'},
+        ]})
+        self.validate_status_response(a_name)
+
 #    def test_unlock_list(self):
 #        self.api.validate_request(
 #            'unlock_list',

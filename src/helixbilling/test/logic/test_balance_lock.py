@@ -4,10 +4,11 @@ import unittest
 from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.test.db_based_test import ServiceTestCase
+from helixbilling.error import BalanceNotFound
 
 
 class BalanceLockTestCase(ServiceTestCase):
-    customer_id = 'B2B'
+    customer_id = 'locker'
 
     def setUp(self):
         super(BalanceLockTestCase, self).setUp()
@@ -26,9 +27,9 @@ class BalanceLockTestCase(ServiceTestCase):
             'amount': '115.00',
         }
         self.handle_action('balance_lock', data)
+
         operator = self.get_operator_by_login(self.test_login)
         balance = self.get_balance(operator, self.customer_id)
-
         self.assertEquals(balance.available_real_amount, -6000)
         self.assertEquals(balance.available_virtual_amount, 500)
         self.assertEquals(balance.locked_amount, 11500)
@@ -264,6 +265,15 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertEqual(1, len(b_locks))
         for b_l in b_locks:
             self.assertEqual(ord_type, b_l['order_type'])
+
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'locks': [
+                {'customer_id': 'fake', 'order_id': '5', 'amount': '1.00'},
+            ]
+        }
+        self.assertRaises(BalanceNotFound, self.handle_action, 'balance_lock_list', data)
 
 
 if __name__ == '__main__':

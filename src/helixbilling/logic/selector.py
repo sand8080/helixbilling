@@ -14,7 +14,7 @@ from helixbilling.logic import helper
 from helixbilling.domain import security
 from helixcore.db.sql import Eq, And, In, MoreEq, LessEq
 from helixbilling.error import BalanceNotFound
-from helixbilling.logic.filters import BalanceFilter
+from helixbilling.logic.filters import BalanceFilter, BalanceLockFilter
 
 
 def select_data(curs, MAPPED_CLASS, cond, limit, offset):
@@ -149,12 +149,9 @@ def get_balance(curs, operator, customer_id, for_update=False):
 #    return int(get_count(curs, Receipt.table, cond))
 
 
-def try_get_lock(curs, client_id, product_id, for_update=False):
-    '''
-    @return: BalanceLock on success, raises EmptyResultSetError if no such lock
-    '''
-    return mapping.get_obj_by_fields(curs, BalanceLock,
-        {'client_id': client_id, 'product_id': product_id}, for_update)
+def get_balance_lock(curs, operator, customer_id, order_id, for_update=False):
+    f = BalanceLockFilter(operator, {'customer_id': customer_id, 'order_id': order_id}, {})
+    return f.filter_one_obj(curs, for_update=for_update)
 
 
 def try_get_chargeoff(curs, client_id, product_id, for_update=False):
