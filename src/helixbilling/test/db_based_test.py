@@ -17,9 +17,9 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
 from helixbilling.validator.validator import protocol
 from helixbilling.logic.helper import decimal_to_cents, cents_to_decimal
-from helixbilling.domain.objects import Currency, BalanceLock
+from helixbilling.domain.objects import Currency, BalanceLock, ChargeOff
 from helixbilling.logic.filters import ReceiptFilter, BonusFilter,\
-    BalanceLockFilter
+    BalanceLockFilter, ChargeOffFilter
 from helixbilling.error import BalanceNotFound
 
 
@@ -166,9 +166,25 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(locking_order, balance.locking_order)
 
     @transaction()
-    def get_balance_locks(self, operator, customer_ids, product_id=None, curs=None):
+    def get_balance_locks(self, operator, customer_ids, order_id=None, curs=None):
         filter_params = {'customer_ids': customer_ids}
-        if product_id is not None:
-            filter_params['product_id'] = product_id
+        if order_id is not None:
+            filter_params['order_id'] = order_id
         f= BalanceLockFilter(operator, filter_params, {})
+        return f.filter_objs(curs)
+
+    @transaction()
+    def get_balance_lock(self, operator, customer_id, order_id, curs=None):
+        return selector.get_balance_lock(curs, operator, customer_id, order_id)
+
+    @transaction()
+    def get_chargeoff(self, operator, customer_id, order_id, curs=None):
+        return selector.get_chargeoff(curs, operator, customer_id, order_id)
+
+    @transaction()
+    def get_chargeoffs(self, operator, customer_ids, order_id=None, curs=None):
+        filter_params = {'customer_ids': customer_ids}
+        if order_id is not None:
+            filter_params['order_id'] = order_id
+        f = ChargeOffFilter(operator, filter_params, {})
         return f.filter_objs(curs)

@@ -59,7 +59,7 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertEquals(balance.available_virtual_amount, 100)
         self.assertEquals(balance.locked_amount, 11900)
 
-        locks = self.get_balance_locks(operator, [self.customer_id], order_id)
+        locks = self.get_balance_locks(operator, [self.customer_id])
         self.assertEqual(2, len(locks))
         lock = locks[-1]
         self.assertEquals(order_id, lock.order_id)

@@ -226,51 +226,21 @@ class ValidatorTestCase(RootTestCase):
         ]})
         self.validate_status_response(a_name)
 
-#    def test_unlock_list(self):
-#        self.api.validate_request(
-#            'unlock_list',
-#            {
-#                'login': 'l',
-#                'password': 'p',
-#                'unlocks': [
-#                    {
-#                        'client_id': 'id_one',
-#                        'product_id': 'super-light 555',
-#                    },
-#                    {
-#                        'client_id': 'id_two',
-#                        'product_id': 'brb',
-#                    }
-#                ]
-#            }
-#        )
-#        self.validate_status_response('unlock_list')
-#
-#    def test_unlock_list_invalid(self):
-#        self.assertRaises(ValidationError, self.api.validate_request,
-#            'unlock_list',
-#            {
-#                'login': 'l',
-#                'password': 'p',
-#                'unlocks': [
-#                    {
-#                        'client_id': 'id_one',
-#                        'product_id': 'super-light 555',
-#                    },
-#                    {
-#                        'client_id': 'id_two',
-#                        'product_id': 'brb',
-#                        'ERROR_HERE': 'bug',
-#                    }
-#                ]
-#            }
-#        )
-#
-#    def test_chargeoff(self):
-#        self.api.validate_request('chargeoff', {'login': 'l', 'password': 'p',
-#            'client_id': 'id_two', 'product_id': 'brb'})
-#        self.validate_status_response('chargeoff')
-#
+    def test_chargeoff(self):
+        a_name = 'chargeoff'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'customer_id': 'id', 'order_id': '1'})
+        self.validate_status_response(a_name)
+
+    def test_chargeoff_list(self):
+        a_name = 'chargeoff_list'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'chargeoffs': []})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'chargeoffs': [
+            {'customer_id': 'c0', 'order_id': '110'},
+            {'customer_id': 'c1', 'order_id': '10'},
+        ]})
+        self.validate_status_response(a_name)
+
 #    def test_chargeoff_list(self):
 #        self.api.validate_request(
 #            'chargeoff_list',

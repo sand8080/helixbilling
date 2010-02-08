@@ -39,37 +39,9 @@ class BalanceLock(Mapped):
 
 
 class ChargeOff(Mapped):
-    __slots__ = [
-        'id',
-        'client_id', 'product_id',
-        'locking_date', 'chargeoff_date',
-        'real_amount', 'virtual_amount'
-    ]
+    __slots__ = ['id', 'operator_id',  'customer_id', 'order_id', 'order_type',
+        'real_amount', 'virtual_amount', 'chargeoff_date']
     table = 'chargeoff'
-
-
-class MappedAmountView(Mapped):
-    __slots__ = [
-        'client_id',
-        'amount'
-    ]
-
-
-class ReceiptTotalView(MappedAmountView):
-    table = 'receipt_total_view'
-
-
-class BonusTotalView(MappedAmountView):
-    table = 'bonus_total_view'
-
-
-class ChargeoffTotalView(Mapped):
-    __slots__ = [
-        'client_id',
-        'real_amount',
-        'virtual_amount'
-    ]
-    table = 'chargeoff_total_view'
 
 
 class ActionLog(Mapped):

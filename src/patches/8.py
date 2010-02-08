@@ -8,26 +8,45 @@ def apply(curs):
             operator_id integer NOT NULL,
             FOREIGN KEY(operator_id) REFERENCES operator(id),
             customer_id varchar NOT NULL,
-            product_id varchar NOT NULL,
-            locked_date timestamp with time zone NOT NULL,
+            order_id varchar NOT NULL,
+            order_type varchar,
             chargeoff_date timestamp with time zone NOT NULL DEFAULT now(),
             real_amount int,
             virtual_amount int
         )
     ''')
 
-    print 'Creating index chargeoff_operator_id_customer_id_product_id_idx on chargeoff'
+    print 'Creating index chargeoff_operator_id_customer_id_idx on chargeoff'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX chargeoff_operator_id_customer_id_product_id_idx ON
-            chargeoff(operator_id, customer_id, product_id)
+        CREATE INDEX chargeoff_operator_id_customer_id_idx ON
+            chargeoff(operator_id, customer_id)
+    ''')
+
+    print 'Creating unique index chargeoff_operator_id_customer_id_order_id_idx on chargeoff'
+    curs.execute(
+    '''
+        CREATE UNIQUE INDEX chargeoff_operator_id_customer_id_order_id_idx ON
+            chargeoff(operator_id, customer_id, order_id)
+    ''')
+
+    print 'Creating index chargeoff_operator_id_customer_id_order_type_idx on chargeoff'
+    curs.execute(
+    '''
+        CREATE UNIQUE INDEX chargeoff_operator_id_customer_id_order_type_idx ON
+            chargeoff(operator_id, customer_id, order_type)
     ''')
 
 
 def revert(curs):
-    print 'Dropping index chargeoff_operator_id_customer_id_product_id_idx on chargeoff'
-    curs.execute('DROP INDEX chargeoff_operator_id_customer_id_product_id_idx')
+    print 'Dropping index chargeoff_operator_id_customer_id_order_type_idx on chargeoff'
+    curs.execute('DROP INDEX chargeoff_operator_id_customer_id_order_type_idx')
+
+    print 'Dropping unique index chargeoff_operator_id_customer_id_order_id_idx on chargeoff'
+    curs.execute('DROP INDEX chargeoff_operator_id_customer_id_order_id_idx')
+
+    print 'Dropping index chargeoff_operator_id_customer_id_idx on chargeoff'
+    curs.execute('DROP INDEX chargeoff_operator_id_customer_id_idx')
 
     print 'Dropping table chargeoff'
     curs.execute('DROP TABLE chargeoff')
-

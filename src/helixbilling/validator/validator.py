@@ -209,9 +209,7 @@ BALANCE_LOCK_DATA = {
 BALANCE_LOCK = dict(BALANCE_LOCK_DATA, **AUTH_INFO)
 
 BALANCE_LOCK_LIST = dict(
-    {
-        'locks': [BALANCE_LOCK_DATA]
-    },
+    {'locks': [BALANCE_LOCK_DATA]},
     **AUTH_INFO
 )
 
@@ -261,9 +259,20 @@ BALANCE_UNLOCK_DATA = {
 BALANCE_UNLOCK = dict(BALANCE_UNLOCK_DATA, **AUTH_INFO)
 
 BALANCE_UNLOCK_LIST = dict(
-    {
-        'unlocks': [BALANCE_UNLOCK_DATA]
-    },
+    {'unlocks': [BALANCE_UNLOCK_DATA]},
+    **AUTH_INFO
+)
+
+# --- chargeoff ---
+CHARGEOFF_DATA = {
+    'customer_id': Text(),
+    'order_id': Text(),
+}
+
+CHARGEOFF = dict(CHARGEOFF_DATA, **AUTH_INFO)
+
+CHARGEOFF_LIST = dict(
+    {'chargeoffs': [CHARGEOFF_DATA]},
     **AUTH_INFO
 )
 
@@ -271,23 +280,6 @@ BALANCE_UNLOCK_LIST = dict(
 #    {
 #        'client_id': Text(),
 #        'product_id': Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#CHARGEOFF_INFO = {
-#    'client_id': Text(),
-#    'product_id': Text(),
-#}
-#
-#CHARGEOFF = dict(
-#    CHARGEOFF_INFO,
-#    **AUTH_INFO
-#)
-#
-#CHARGEOFF_LIST = dict(
-#    {
-#        'chargeoffs': [CHARGEOFF_INFO]
 #    },
 #    **AUTH_INFO
 #)
@@ -412,13 +404,13 @@ protocol = [
     ApiCall('balance_unlock_list_request', Scheme(BALANCE_UNLOCK_LIST)),
     ApiCall('balance_unlock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-#    # chargeoff
-#    ApiCall('chargeoff_request', Scheme(CHARGEOFF)),
-#    ApiCall('chargeoff_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('chargeoff_list_request', Scheme(CHARGEOFF_LIST)),
-#    ApiCall('chargeoff_list_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
+    # chargeoff
+    ApiCall('chargeoff_request', Scheme(CHARGEOFF)),
+    ApiCall('chargeoff_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('chargeoff_list_request', Scheme(CHARGEOFF_LIST)),
+    ApiCall('chargeoff_list_response', Scheme(RESPONSE_STATUS_ONLY)),
+
 #    # product
 #    ApiCall('product_status_request', Scheme(PRODUCT_STATUS)),
 #    ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),

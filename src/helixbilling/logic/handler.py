@@ -1,8 +1,7 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
-from helixcore.db.sql import Eq, And
+from helixcore.db.wrapper import ObjectAlreadyExists
 from helixcore import utils
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
@@ -372,67 +371,60 @@ class Handler(object):
     def balance_unlock_list(self, data, operator, curs=None):
         self._balance_unlock(curs, operator, data['unlocks'])
         return response_ok()
-#
-#    def _chargeoff(self, billing_manager_id, data_list, curs=None):
-#        balances = {}
-#        for data in data_list:
-#            balance = selector.get_balance(curs, billing_manager_id,
-#                data['customer_id'], active_only=True, for_update=True)
-#            balances[balance.customer_id] = balance
-#
-#        for data in data_list:
-#            try:
-#                lock = selector.try_get_lock(curs, data['customer_id'], data['product_id'], for_update=True)
-#            except EmptyResultSetError:
-#                raise ActionNotAllowedError(
-#                    'Cannot charge off money for product %s: '
-#                    'amount was not locked for this product'
-#                    % data['product_id']
-#                )
-#
-#            chargeoff = ChargeOff(locked_date=lock.locked_date,
-#                real_amount=lock.real_amount, virtual_amount=lock.virtual_amount, **data)
-#
-#            mapping.delete(curs, lock)
-#            mapping.insert(curs, chargeoff)
-#
-#            balance.locked_amount -= lock.real_amount #IGNORE:E1101
-#            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
-#
-#            mapping.update(curs, balance)
-#
-#    @transaction()
-#    @logged
-#    @authentificate
-#    def chargeoff(self, data, curs=None, billing_manager_id=None):
-#        """
-#        data = {
-#            'login': Text(),
-#            'password': Text(),
-#            'customer_id': Text(),
-#            'product_id': Text(),
-#            'amount': (positive int, non negative int)
-#        }
-#        """
-#        self._chargeoff(billing_manager_id, [data], curs)
-#        return response_ok()
-#
-#    @transaction()
-#    @logged_bulk
-#    @authentificate
-#    def chargeoff_list(self, data, curs=None, billing_manager_id=None):
-#        """
-#        data = {
-#            'login': Text(),
-#            'password': Text(),
-#            'chargeoffs': [
-#                {'customer_id': Text(), 'product_id': Text(), 'amount': (positive int, non negative int)}
-#                ...
-#            ]
-#        }
-#        """
-#        self._chargeoff(billing_manager_id, data['chargeoffs'], curs)
-#        return response_ok()
+
+    def _chargeoff(self, curs, operator, data_list):
+        c_ids = [d['customer_id'] for d in data_list]
+        f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
+        # ordering by id excepts deadlocks
+        balances = f.filter_objs(curs, for_update=True)
+        balances_idx = dict([(b.customer_id, b) for b in balances])
+        customers_no_balance = set(c_ids) - set(balances_idx.keys())
+        if customers_no_balance:
+            raise BalanceNotFound(', '.join(customers_no_balance))
+
+        for data in data_list:
+            c_id = data['customer_id']
+            ord_id = data['order_id']
+            try:
+                lock = selector.get_balance_lock(curs, operator, c_id, ord_id, for_update=True)
+            except ObjectNotFound:
+                raise ActionNotAllowedError(
+                    'Cannot charge off money for customer %s order %s: '
+                    'amount was not locked'
+                    % (c_id, ord_id)
+                )
+
+            chargeoff = ChargeOff(**{
+                'operator_id': operator.id,
+                'customer_id': lock.customer_id,
+                'order_id': lock.order_id,
+                'order_type': lock.order_type,
+                'real_amount': lock.real_amount,
+                'virtual_amount': lock.virtual_amount,
+            })
+
+            mapping.delete(curs, lock)
+            mapping.insert(curs, chargeoff)
+
+            balance = balances_idx[chargeoff.customer_id] #IGNORE:E1101
+            balance.locked_amount -= chargeoff.real_amount #IGNORE:E1101
+            balance.locked_amount -= chargeoff.virtual_amount #IGNORE:E1101
+
+            mapping.update(curs, balance)
+
+    @transaction()
+    @authentificate
+    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'order_id')
+    def chargeoff(self, data, operator, curs=None):
+        self._chargeoff(curs, operator, [data])
+        return response_ok()
+
+    @transaction()
+    @authentificate
+    def chargeoff_list(self, data, operator, curs=None):
+        self._chargeoff(curs, operator, data['chargeoffs'])
+        return response_ok()
 #
 #    #view operations
 #

@@ -2,7 +2,8 @@ from helixcore.db.sql import And, Eq, In, Select, Columns, MoreEq, LessEq
 from helixcore.db.wrapper import SelectedMoreThanOneRow, fetchone_dict
 import helixcore.mapping.actions as mapping
 
-from helixbilling.domain.objects import Balance, Receipt, Bonus, BalanceLock
+from helixbilling.domain.objects import Balance, Receipt, Bonus, BalanceLock,\
+    ChargeOff
 from helixbilling.error import ObjectNotFound, BalanceNotFound
 
 
@@ -105,3 +106,17 @@ class BalanceLockFilter(ObjectsFilter):
 
     def __init__(self, operator, filter_params, paging_params):
         super(BalanceLockFilter, self).__init__(operator, filter_params, paging_params, BalanceLock)
+
+
+class ChargeOffFilter(ObjectsFilter):
+    cond_map = [
+        ('customer_id', 'customer_id', Eq),
+        ('customer_ids', 'customer_id', In),
+        ('order_id', 'order_id', Eq),
+        ('order_type', 'order_type', Eq),
+        ('from_charge_off_date', 'charge_off_date', MoreEq),
+        ('to_charge_off_date', 'charge_off_date', LessEq),
+    ]
+
+    def __init__(self, operator, filter_params, paging_params):
+        super(ChargeOffFilter, self).__init__(operator, filter_params, paging_params, ChargeOff)
