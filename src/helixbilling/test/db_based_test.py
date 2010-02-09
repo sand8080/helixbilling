@@ -17,9 +17,9 @@ from helixbilling.logic.actions import handle_action
 from helixbilling.logic import selector
 from helixbilling.validator.validator import protocol
 from helixbilling.logic.helper import decimal_to_cents, cents_to_decimal
-from helixbilling.domain.objects import Currency, BalanceLock, ChargeOff
-from helixbilling.logic.filters import ReceiptFilter, BonusFilter,\
-    BalanceLockFilter, ChargeOffFilter
+from helixbilling.domain.objects import Currency
+from helixbilling.logic.filters import (ReceiptFilter, BonusFilter,
+    BalanceLockFilter, ChargeOffFilter)
 from helixbilling.error import BalanceNotFound
 
 
