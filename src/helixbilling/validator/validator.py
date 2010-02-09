@@ -4,8 +4,6 @@ from helixcore.validol.validol import (Optional, AnyOf, NonNegative, Positive, S
 
 NullableText = AnyOf(Text(), None)
 
-#amount_validator = (NonNegative(int), NonNegative(int))
-#positive_amount_validator = (Positive(int), NonNegative(int))
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
 PING = {}
@@ -215,7 +213,6 @@ BALANCE_LOCK_LIST = dict(
 VIEW_BALANCE_LOCKS = dict(
     {
         'filter_params': {
-            Optional('customer_id'): Text(),
             Optional('customer_ids'): [Text()],
             Optional('order_id'): Text(),
             Optional('order_type'): NullableText,
@@ -259,6 +256,7 @@ BALANCE_UNLOCK_LIST = dict(
     **AUTH_INFO
 )
 
+
 # --- chargeoff ---
 CHARGEOFF_DATA = {
     'customer_id': Text(),
@@ -275,7 +273,6 @@ CHARGEOFF_LIST = dict(
 VIEW_CHARGEOFFS = dict(
     {
         'filter_params': {
-            Optional('customer_id'): Text(),
             Optional('customer_ids'): [Text()],
             Optional('order_id'): Text(),
             Optional('order_type'): NullableText,

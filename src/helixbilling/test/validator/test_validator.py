@@ -179,7 +179,7 @@ class ValidatorTestCase(RootTestCase):
             'filter_params': {'customer_ids': ['a', 'b']}, 'paging_params': {}})
         d = datetime.datetime.now(pytz.utc)
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'filter_params':
-            {'customer_id': 'u', 'customer_ids': [], 'from_locking_date': d.isoformat()},
+            {'customer_ids': [], 'from_locking_date': d.isoformat()},
             'paging_params': {}})
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {'customer_ids': [], 'from_locking_date': d.isoformat(),
@@ -249,7 +249,7 @@ class ValidatorTestCase(RootTestCase):
             'filter_params': {'customer_ids': ['a', 'b']}, 'paging_params': {}})
         d = datetime.datetime.now(pytz.utc)
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'filter_params':
-            {'customer_id': 'u', 'customer_ids': [], 'from_chargeoff_date': d.isoformat()},
+            {'customer_ids': [], 'from_chargeoff_date': d.isoformat()},
             'paging_params': {}})
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {'customer_ids': [], 'from_chargeoff_date': d.isoformat(),

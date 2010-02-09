@@ -218,7 +218,7 @@ class BalanceLockTestCase(ServiceTestCase):
         data = {
             'login': self.test_login,
             'password': self.test_password,
-            'filter_params': {'customer_id': c_id_1},
+            'filter_params': {'customer_ids': [c_id_1]},
             'paging_params': {},
         }
         response = self.handle_action('view_balance_locks', data)
