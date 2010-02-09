@@ -114,8 +114,8 @@ class ChargeOffFilter(ObjectsFilter):
         ('customer_ids', 'customer_id', In),
         ('order_id', 'order_id', Eq),
         ('order_type', 'order_type', Eq),
-        ('from_charge_off_date', 'charge_off_date', MoreEq),
-        ('to_charge_off_date', 'charge_off_date', LessEq),
+        ('from_chargeoff_date', 'chargeoff_date', MoreEq),
+        ('to_chargeoff_date', 'chargeoff_date', LessEq),
     ]
 
     def __init__(self, operator, filter_params, paging_params):

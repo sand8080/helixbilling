@@ -201,7 +201,7 @@ class ValidatorTestCase(RootTestCase):
             'to_locking_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 0, 'balance_locks': []})
-        self.api.validate_response('view_balance_locks', {'status': 'ok', 'total': 10,
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
             'balance_locks': [
                 {'customer_id': 'U2', 'order_id': 'k9', 'order_type': 'mia', 'real_amount': '2.49',
                     'virtual_amount': '0.0', 'locking_date': d.isoformat(), 'currency': 'YYY'},
@@ -241,161 +241,45 @@ class ValidatorTestCase(RootTestCase):
         ]})
         self.validate_status_response(a_name)
 
-#    def test_chargeoff_list(self):
-#        self.api.validate_request(
-#            'chargeoff_list',
-#            {
-#                'password': 'p',
-#                'login': 'l',
-#                'chargeoffs': [
-#                    {
-#                        'client_id': 'id_one',
-#                        'product_id': 'super-light 555',
-#                    },
-#                    {
-#                        'client_id': 'id_two',
-#                        'product_id': 'brb',
-#                    }
-#                ]
-#            }
-#        )
-#        self.validate_status_response('chargeoff_list')
-#
-#    def test_chargeoff_list_invalid(self):
-#        self.assertRaises(ValidationError, self.api.validate_request,
-#            'chargeoff_list',
-#            {
-#                'password': 'p',
-#                'login': 'l',
-#                'chargeoff': [
-#                    {
-#                        'client_id': 'id_one',
-#                        'product_id': 'super-light 555',
-#                    },
-#                    {
-#                        'client_id': 'id_two',
-#                        'product_id': 'brb',
-#                        'amount': 'BUG',
-#                    }
-#                ]
-#            }
-#        )
-#
-#    def test_product_status(self):
-#        self.api.validate_request('product_status', {'login': 'l', 'password': 'p',
-#            'client_id': 'id_two', 'product_id': 'brb'})
-#        self.api.validate_response('product_status', {'status': 'ok', 'product_status': 'unknown'})
-#        self.api.validate_response('product_status', {'status': 'ok', 'product_status': 'locked',
-#            'real_amount': (0, 0), 'virtual_amount': (1, 9),
-#            'locked_date': datetime.datetime(year=2009, month=10, day=29, tzinfo=pytz.utc).isoformat(),
-#        })
-#        self.api.validate_response('product_status', {'status': 'ok', 'product_status': 'charged_off',
-#            'real_amount': (0, 0), 'virtual_amount': (1, 9),
-#            'locked_date': datetime.datetime(year=2009, month=10, day=29, tzinfo=pytz.utc).isoformat(),
-#            'chargeoff_date': datetime.datetime.now().isoformat(),
-#        })
-#
-#    def test_view_bonuses(self):
-#        self.api.validate_request('view_bonuses', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3})
-#        self.api.validate_request('view_bonuses', {'login': 'l', 'password': 'p', 'client_id': 'U',
-#            'start_date': datetime.datetime.now().isoformat(), 'offset': 2, 'limit': 3})
-#        self.api.validate_request('view_bonuses', {'login': 'l', 'password': 'p', 'client_id': 'U',
-#            'start_date': datetime.datetime.now().isoformat(),
-#            'end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(), 'offset': 2, 'limit': 3})
-#        self.api.validate_response('view_bonuses', {'status': 'ok', 'total': 0, 'bonuses': []})
-#        self.api.validate_response('view_bonuses', {'status': 'ok', 'total': 10,
-#            'bonuses': [
-#                {
-#                    'client_id': 'U2',
-#                    'amount': (2, 49),
-#                    'created_date': datetime.datetime.now().isoformat(),
-#                }
-#            ]
-#        })
-#        self.api.validate_response('view_bonuses', {'status': 'ok', 'total': 10,
-#            'bonuses': [
-#                {
-#                    'client_id': 'U2',
-#                    'amount': (2, 49),
-#                    'created_date': datetime.datetime.now().isoformat(),
-#                },
-#                {
-#                    'client_id': 'U3',
-#                    'amount': (3, 77),
-#                    'created_date': datetime.datetime.now().isoformat(),
-#                }
-#            ]
-#        })
-#
-#    def test_view_chargeoffs(self):
-#        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3})
-#        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j'})
-#        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
-#            'locked_start_date': datetime.datetime.now().isoformat()})
-#        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
-#            'locked_start_date': datetime.datetime.now().isoformat(),
-#            'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
-#        })
-#        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
-#            'locked_start_date': datetime.datetime.now().isoformat(),
-#            'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
-#            'chargeoff_start_date': datetime.datetime.now().isoformat(),
-#        })
-#        self.api.validate_request('view_chargeoffs', {'login': 'l', 'password': 'p',
-#            'client_id': 'U', 'offset': 2, 'limit': 3, 'product_id': 'j',
-#            'locked_start_date': datetime.datetime.now().isoformat(),
-#            'locked_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
-#            'chargeoff_start_date': datetime.datetime.now().isoformat(),
-#            'chargeoff_end_date': (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat(),
-#        })
-#        self.api.validate_response('view_chargeoffs', {'status': 'ok', 'total': 0, 'chargeoffs': []})
-#        self.api.validate_response('view_chargeoffs', {'status': 'ok', 'total': 10,
-#            'chargeoffs': [
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k9',
-#                    'real_amount': (2, 49),
-#                    'virtual_amount': (0, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                    'chargeoff_date': datetime.datetime.now().isoformat(),
-#                }
-#            ]
-#        })
-#        self.api.validate_response('view_chargeoffs', {'status': 'ok', 'total': 10,
-#            'chargeoffs': [
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k9',
-#                    'real_amount': (2, 49),
-#                    'virtual_amount': (0, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                    'chargeoff_date': datetime.datetime.now().isoformat(),
-#                },
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k9',
-#                    'real_amount': (0, 0),
-#                    'virtual_amount': (0, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                    'chargeoff_date': datetime.datetime.now().isoformat(),
-#                },
-#                {
-#                    'client_id': 'U2',
-#                    'product_id': 'k5',
-#                    'real_amount': (0, 0),
-#                    'virtual_amount': (60, 0),
-#                    'locked_date': datetime.datetime.now().isoformat(),
-#                    'chargeoff_date': datetime.datetime.now().isoformat(),
-#                },
-#            ]
-#        })
-#
+    def test_view_chargeoffs(self):
+        a_name = 'view_chargeoffs'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a', 'b']}, 'paging_params': {}})
+        d = datetime.datetime.now(pytz.utc)
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'filter_params':
+            {'customer_id': 'u', 'customer_ids': [], 'from_chargeoff_date': d.isoformat()},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': [], 'from_chargeoff_date': d.isoformat(),
+            'to_chargeoff_date': d.isoformat()}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_chargeoff_date': d.isoformat(),
+            'to_chargeoff_date': d.isoformat()}, 'paging_params': {'limit': 5}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_chargeoff_date': d.isoformat(),
+            'to_chargeoff_date': d.isoformat()}, 'paging_params': {'limit': 5, 'offset': 10}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_chargeoff_date': d.isoformat(),
+            'to_chargeoff_date': d.isoformat(), 'order_id': '77H'}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_chargeoff_date': d.isoformat(),
+            'to_chargeoff_date': d.isoformat(), 'order_type': 'moon'}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_chargeoff_date': d.isoformat(),
+            'to_chargeoff_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 0, 'chargeoffs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
+            'chargeoffs': [
+                {'customer_id': 'U2', 'order_id': 'k9', 'order_type': 'mia', 'real_amount': '2.49',
+                    'virtual_amount': '0.0', 'chargeoff_date': d.isoformat(), 'currency': 'YYY'},
+                {'customer_id': 'U3', 'order_id': 'k9', 'order_type': None, 'real_amount': '2.49',
+                    'virtual_amount': '0.0', 'chargeoff_date': d.isoformat(), 'currency': 'YES'},
+            ]
+        })
+        self.validate_error_response(a_name)
 
 
 if __name__ == '__main__':

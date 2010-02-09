@@ -20,7 +20,7 @@ from decimal import Decimal
 import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
 from helixbilling.logic.filters import BalanceFilter, ReceiptFilter, BonusFilter,\
-    BalanceLockFilter
+    BalanceLockFilter, ChargeOffFilter
 
 
 def detalize_error(err_cls, category, f_name):
@@ -425,9 +425,35 @@ class Handler(object):
     def chargeoff_list(self, data, operator, curs=None):
         self._chargeoff(curs, operator, data['chargeoffs'])
         return response_ok()
-#
-#    #view operations
-#
+
+    @transaction()
+    @authentificate
+    def view_chargeoffs(self, data, operator, curs=None):
+        filter_params = data['filter_params']
+        paging_params = data['paging_params']
+
+        f = ChargeOffFilter(operator, filter_params, paging_params)
+        chargeoffs, total = f.filter_counted(curs)
+
+        filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
+        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
+        currencies_idx = selector.get_currencies_indexed_by_id(curs)
+
+        def viewer(chargeoff):
+            balance = balances_c_id_idx[chargeoff.customer_id]
+            currency = currencies_idx[balance.currency_id]
+            return {
+                'customer_id': chargeoff.customer_id,
+                'order_id': chargeoff.order_id,
+                'order_type': chargeoff.order_type,
+                'real_amount': '%s' % cents_to_decimal(currency, chargeoff.real_amount),
+                'virtual_amount': '%s' % cents_to_decimal(currency, chargeoff.virtual_amount),
+                'currency': currency.code,
+                'chargeoff_date': chargeoff.chargeoff_date.isoformat(),
+            }
+        return response_ok(chargeoffs=self.objects_info(chargeoffs, viewer), total=total)
+
 #    @transaction()
 #    @authentificate
 #    def product_status(self, data, curs=None, billing_manager_id=None):
@@ -455,23 +481,3 @@ class Handler(object):
 #        except EmptyResultSetError: #IGNORE:W0704
 #            pass
 #        return response_ok(**response)
-#
-#    @transaction()
-#    @authentificate
-#    def view_chargeoffs(self, data, curs=None, billing_manager_id=None):
-#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'], active_only=False)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#
-#        cond = Eq('customer_id', data['customer_id'])
-#        if 'product_id' in data:
-#            cond = And(cond, Eq('product_id', data['product_id']))
-#
-#        date_filters = (
-#            ('locked_start_date', 'locked_end_date', 'locked_date'),
-#            ('chargeoff_start_date', 'chargeoff_end_date', 'chargeoff_date'),
-#        )
-#        cond = And(cond, selector.get_date_filters(date_filters, data))
-#
-#        chargeoffs, total = selector.select_chargeoffs(curs, currency, cond, data['limit'], data['offset'])
-#        return response_ok(chargeoffs=chargeoffs, total=total)
-#

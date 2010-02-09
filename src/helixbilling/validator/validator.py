@@ -12,6 +12,11 @@ PING = {}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
+PAGING_PARAMS = {
+    Optional('limit'): NonNegative(int),
+    Optional('offset'): NonNegative(int),
+}
+
 RESPONSE_STATUS_ERROR = {
     'status': 'error',
     'category': Text(),
@@ -113,10 +118,7 @@ VIEW_BALANCES = dict(
         'filter_params': {
             Optional('customer_ids'): [Text()],
         },
-        'paging_params': {
-            Optional('limit'): NonNegative(int),
-            Optional('offset'): NonNegative(int),
-        }
+        'paging_params': PAGING_PARAMS,
     },
     **AUTH_INFO
 )
@@ -149,10 +151,7 @@ VIEW_INCOMES = dict(
             Optional('from_creation_date'): IsoDatetime(),
             Optional('to_creation_date'): IsoDatetime(),
         },
-        'paging_params': {
-            Optional('limit'): NonNegative(int),
-            Optional('offset'): NonNegative(int),
-        }
+        'paging_params': PAGING_PARAMS,
     },
     **AUTH_INFO
 )
@@ -223,10 +222,7 @@ VIEW_BALANCE_LOCKS = dict(
             Optional('from_locking_date'): IsoDatetime(),
             Optional('to_locking_date'): IsoDatetime(),
         },
-        'paging_params': {
-            Optional('limit'): NonNegative(int),
-            Optional('offset'): NonNegative(int),
-        }
+        'paging_params': PAGING_PARAMS,
     },
     **AUTH_INFO
 )
@@ -276,6 +272,39 @@ CHARGEOFF_LIST = dict(
     **AUTH_INFO
 )
 
+VIEW_CHARGEOFFS = dict(
+    {
+        'filter_params': {
+            Optional('customer_id'): Text(),
+            Optional('customer_ids'): [Text()],
+            Optional('order_id'): Text(),
+            Optional('order_type'): NullableText,
+            Optional('from_chargeoff_date'): IsoDatetime(),
+            Optional('to_chargeoff_date'): IsoDatetime(),
+        },
+        'paging_params': PAGING_PARAMS,
+    },
+    **AUTH_INFO
+)
+
+VIEW_CHARGEOFFS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'chargeoffs': [{
+                'customer_id': Text(),
+                'order_id': Text(),
+                'order_type': NullableText,
+                'real_amount': DecimalText(),
+                'virtual_amount': DecimalText(),
+                'currency': Text(),
+                'chargeoff_date': IsoDatetime(),
+            }],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 #PRODUCT_STATUS = dict(
 #    {
 #        'client_id': Text(),
@@ -310,37 +339,6 @@ CHARGEOFF_LIST = dict(
 #    RESPONSE_STATUS_ERROR
 #)
 #
-#VIEW_CHARGEOFFS = dict(
-#    {
-#        'client_id': Text(),
-#        Optional('product_id'): Text(),
-#        Optional('locked_start_date'): IsoDatetime(),
-#        Optional('locked_end_date'): IsoDatetime(),
-#        Optional('chargeoff_start_date'): IsoDatetime(),
-#        Optional('chargeoff_end_date'): IsoDatetime(),
-#        'offset': NonNegative(int),
-#        'limit': Positive(int),
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_CHARGEOFFS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'total': NonNegative(int),
-#            'chargeoffs': [{
-#                'client_id': Text(),
-#                'product_id': Text(),
-#                'real_amount': amount_validator,
-#                'virtual_amount': amount_validator,
-#                'locked_date': IsoDatetime(),
-#                'chargeoff_date': IsoDatetime(),
-#            }],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-
 
 protocol = [
     ApiCall('ping_request', Scheme(PING)),
@@ -411,12 +409,11 @@ protocol = [
     ApiCall('chargeoff_list_request', Scheme(CHARGEOFF_LIST)),
     ApiCall('chargeoff_list_response', Scheme(RESPONSE_STATUS_ONLY)),
 
+    ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
+    ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
+
 #    # product
 #    ApiCall('product_status_request', Scheme(PRODUCT_STATUS)),
 #    ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),
-#
-#    # list view operations
-#    ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
-#    ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
-#
+
 ]
