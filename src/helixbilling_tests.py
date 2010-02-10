@@ -13,9 +13,8 @@ from helixbilling.test.logic.test_bonus import BonusTestCase #IGNORE:W0611 @Unus
 from helixbilling.test.logic.test_balance_lock import BalanceLockTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_balance_unlock import BalanceUnlockTestCase #IGNORE:W0611 @UnusedImport
 from helixbilling.test.logic.test_chargeoff import ChargeOffTestCase #IGNORE:W0611 @UnusedImport
+from helixbilling.test.logic.test_order_status import OrderStatusTestCase #IGNORE:W0611 @UnusedImport
 
-#from helixbilling.test.logic.test_product_status import ProductStatusTestCase #IGNORE:W0611 @UnusedImport
-#
 #from helixbilling.test.logic.test_action_log import ActionLogTestCase #IGNORE:W0611 @UnusedImport
 
 

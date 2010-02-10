@@ -1,7 +1,8 @@
+from decimal import Decimal
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.wrapper import ObjectAlreadyExists
+from helixcore.db.wrapper import ObjectAlreadyExists, SelectedMoreThanOneRow
 from helixcore import utils
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
@@ -9,18 +10,20 @@ from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
 from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import Currency, Balance, Receipt, BalanceLock, Bonus, ChargeOff, Operator
-import helixbilling.logic.product_status as product_status
+from helixbilling.domain.objects import (Currency, Balance, Receipt, BalanceLock,
+    Bonus, ChargeOff, Operator)
 from helixbilling.domain import security
 from helixbilling.error import BalanceNotFound, CurrencyNotFound, ObjectNotFound
 
-from helper import compute_locks, decimal_to_cents
-from action_log import logged, logged_bulk
-from decimal import Decimal
-import selector
+from helixbilling.logic.helper import compute_locks, decimal_to_cents
+from helixbilling.logic.action_log import logged, logged_bulk
+from helixbilling.logic import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
-from helixbilling.logic.filters import BalanceFilter, ReceiptFilter, BonusFilter,\
-    BalanceLockFilter, ChargeOffFilter
+from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
+    BalanceLockFilter, ChargeOffFilter)
+from helixbilling.validator.validator import (ORDER_STATUS_UNKNOWN,
+    ORDER_STATUS_LOCKED, ORDER_STATUS_CHARGED_OFF)
+from helixcore.utils import filter_dict
 
 
 def detalize_error(err_cls, category, f_name):
@@ -454,30 +457,70 @@ class Handler(object):
             }
         return response_ok(chargeoffs=self.objects_info(chargeoffs, viewer), total=total)
 
-#    @transaction()
-#    @authentificate
-#    def product_status(self, data, curs=None, billing_manager_id=None):
-#        balance = selector.get_balance(curs, billing_manager_id, data['customer_id'],
-#            active_only=False, for_update=False)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#
-#        response = {'product_status': product_status.unknown}
-#        try:
-#            lock = selector.try_get_lock(curs, data['customer_id'], data['product_id'], for_update=False)
-#            response['product_status'] = product_status.locked
-#            response['locked_date'] = lock.locked_date
-#            response['real_amount'] = decompose_amount(currency, lock.real_amount)
-#            response['virtual_amount'] = decompose_amount(currency, lock.virtual_amount)
-#        except EmptyResultSetError: #IGNORE:W0704
-#            pass
-#
-#        try:
-#            chargeoff = selector.try_get_chargeoff(curs, data['customer_id'], data['product_id'], for_update=False)
-#            response['product_status'] = product_status.charged_off
-#            response['locked_date'] = chargeoff.locked_date
-#            response['chargeoff_date'] = chargeoff.chargeoff_date
-#            response['real_amount'] = decompose_amount(currency, chargeoff.real_amount)
-#            response['virtual_amount'] = decompose_amount(currency, chargeoff.virtual_amount)
-#        except EmptyResultSetError: #IGNORE:W0704
-#            pass
-#        return response_ok(**response)
+    @transaction()
+    @authentificate
+    def view_status(self, data, operator, curs=None):
+        pass
+
+    def order_statuses(self, curs, operator, filter_params, paging_params):
+        bl_filter = BalanceLockFilter(operator, filter_params, paging_params)
+        balance_locks = bl_filter.filter_objs(curs)
+        bl_idx = dict([((bl.customer_id, bl.order_id), bl) for bl in balance_locks])
+
+        ch_filter = ChargeOffFilter(operator, filter_params, paging_params)
+        chargeoffs = ch_filter.filter_objs(curs)
+        ch_idx = dict([((ch.customer_id, ch.order_id), ch) for ch in chargeoffs])
+
+        c_ids = filter_params.get('customer_ids', [])
+        if 'customer_id' in filter_params:
+            c_ids.append(filter_params['customer_id'])
+        order_ids = filter_params.get('order_ids', [])
+        if 'order_id' in filter_params:
+            order_ids.append(filter_params['order_id'])
+
+        filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
+        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
+        currencies_idx = selector.get_currencies_indexed_by_id(curs)
+
+        statuses = []
+        for c_id in c_ids:
+            for order_id in order_ids:
+                order_status = {
+                    'customer_id': c_id,
+                    'order_id': order_id,
+                    'order_status': ORDER_STATUS_UNKNOWN,
+                    'real_amount': None,
+                    'virtual_amount': None,
+                    'locking_date': None,
+                    'chargeoff_date': None
+                }
+                k = (c_id, order_id)
+                if k in bl_idx:
+                    balance = balances_c_id_idx[c_id]
+                    currency = currencies_idx[balance.currency_id]
+                    balance_lock = bl_idx[k]
+                    order_status['order_status'] = ORDER_STATUS_LOCKED
+                    order_status['real_amount'] = '%s' % cents_to_decimal(currency, balance_lock.real_amount)
+                    order_status['virtual_amount'] = '%s' % cents_to_decimal(currency, balance_lock.virtual_amount)
+                    order_status['locking_date'] = balance_lock.locking_date.isoformat()
+                if k in ch_idx:
+                    balance = balances_c_id_idx[c_id]
+                    currency = currencies_idx[balance.currency_id]
+                    chargeoff = ch_idx[k]
+                    order_status['order_status'] = ORDER_STATUS_CHARGED_OFF
+                    order_status['real_amount'] = '%s' % cents_to_decimal(currency, chargeoff.real_amount)
+                    order_status['virtual_amount'] = '%s' % cents_to_decimal(currency, chargeoff.virtual_amount)
+                    order_status['chargeoff_date'] = chargeoff.chargeoff_date.isoformat()
+                statuses.append(order_status)
+        return statuses
+
+    @transaction()
+    @authentificate
+    def order_status(self, data, operator, curs=None):
+        filter_params = filter_dict(('customer_id', 'order_id'), data)
+        statuses = self.order_statuses(curs, operator, filter_params, {})
+        if len(statuses) > 1:
+            raise SelectedMoreThanOneRow
+        status = statuses[0]
+        return response_ok(**status)

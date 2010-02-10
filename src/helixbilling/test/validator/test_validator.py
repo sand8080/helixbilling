@@ -6,7 +6,8 @@ from helixcore.server.api import Api
 from helixcore.server.exceptions import ValidationError
 
 from helixbilling.test.root_test import RootTestCase
-from helixbilling.validator.validator import protocol
+from helixbilling.validator.validator import (protocol, ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED,
+    ORDER_STATUS_CHARGED_OFF)
 
 
 class ValidatorTestCase(RootTestCase):
@@ -279,6 +280,24 @@ class ValidatorTestCase(RootTestCase):
                     'virtual_amount': '0.0', 'chargeoff_date': d.isoformat(), 'currency': 'YES'},
             ]
         })
+        self.validate_error_response(a_name)
+
+    def test_order_status(self):
+        a_name = 'order_status'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'customer_id': 'c',
+            'order_id': 'r'})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'customer_id': 'c', 'order_id': '1',
+            'order_status': ORDER_STATUS_UNKNOWN, 'real_amount': None, 'virtual_amount': None,
+            'locking_date': None, 'chargeoff_date': None})
+        self.validate_error_response(a_name)
+        d = datetime.datetime.now(pytz.utc)
+        self.api.validate_response(a_name, {'status': 'ok', 'customer_id': 'c', 'order_id': '1',
+            'order_status': ORDER_STATUS_LOCKED, 'real_amount': '1.09', 'virtual_amount': '0',
+            'locking_date': d.isoformat(), 'chargeoff_date': None})
+        self.api.validate_response(a_name, {'status': 'ok', 'customer_id': 'c', 'order_id': '1',
+            'order_status': ORDER_STATUS_CHARGED_OFF, 'real_amount': '1.09', 'virtual_amount': '0',
+            'locking_date': d.isoformat(), 'chargeoff_date': d.isoformat()})
         self.validate_error_response(a_name)
 
 

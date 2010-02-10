@@ -302,40 +302,36 @@ VIEW_CHARGEOFFS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-#PRODUCT_STATUS = dict(
-#    {
-#        'client_id': Text(),
-#        'product_id': Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#PRODUCT_STATUS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'product_status': 'unknown',
-#        }
-#    ),
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'product_status': 'locked',
-#            'real_amount': amount_validator,
-#            'virtual_amount': amount_validator,
-#            'locked_date': IsoDatetime(),
-#        }
-#    ),
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'product_status': 'charged_off',
-#            'real_amount': amount_validator,
-#            'virtual_amount': amount_validator,
-#            'locked_date': IsoDatetime(),
-#            'chargeoff_date': IsoDatetime(),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
+
+# --- order ---
+ORDER_STATUS = dict(
+    {
+        'customer_id': Text(),
+        'order_id': Text(),
+    },
+    **AUTH_INFO
+)
+
+ORDER_STATUS_UNKNOWN = 'unknown'
+ORDER_STATUS_LOCKED = 'locked'
+ORDER_STATUS_CHARGED_OFF = 'charged_off'
+ORDER_STATUSES = AnyOf(ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED, ORDER_STATUS_CHARGED_OFF)
+
+ORDER_STATUS_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{
+            'customer_id': Text(),
+            'order_id': Text(),
+            'order_status': ORDER_STATUSES,
+            'real_amount': AnyOf(None, DecimalText()),
+            'virtual_amount': AnyOf(None, DecimalText()),
+            'locking_date': AnyOf(None, IsoDatetime()),
+            'chargeoff_date': AnyOf(None, IsoDatetime()),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 
 protocol = [
     ApiCall('ping_request', Scheme(PING)),
@@ -409,8 +405,8 @@ protocol = [
     ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
     ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
 
-#    # product
-#    ApiCall('product_status_request', Scheme(PRODUCT_STATUS)),
-#    ApiCall('product_status_response', Scheme(PRODUCT_STATUS_RESPONSE)),
+    # order
+    ApiCall('order_status_request', Scheme(ORDER_STATUS)),
+    ApiCall('order_status_response', Scheme(ORDER_STATUS_RESPONSE)),
 
 ]
