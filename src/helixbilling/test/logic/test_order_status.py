@@ -47,7 +47,7 @@ class OrderStatusTestCase(ServiceTestCase):
         self.assertEqual(ORDER_STATUS_CHARGED_OFF, response['order_status'])
         self.assertEqual(Decimal('5.00'), Decimal(response['real_amount']))
         self.assertEqual(Decimal('6.00'), Decimal(response['virtual_amount']))
-        self.assertEqual(None, response['locking_date'])
+        self.assertNotEqual(None, response['locking_date'])
         self.assertNotEqual(None, response['chargeoff_date'])
 
         data = {

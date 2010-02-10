@@ -40,7 +40,7 @@ class BalanceLock(Mapped):
 
 class ChargeOff(Mapped):
     __slots__ = ['id', 'operator_id',  'customer_id', 'order_id', 'order_type',
-        'real_amount', 'virtual_amount', 'chargeoff_date']
+        'real_amount', 'virtual_amount', 'locking_date', 'chargeoff_date']
     table = 'chargeoff'
 
 

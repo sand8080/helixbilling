@@ -270,14 +270,19 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {'customer_ids': ['a'], 'from_chargeoff_date': d.isoformat(),
             'to_chargeoff_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
+            'to_locking_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 0, 'chargeoffs': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
             'chargeoffs': [
                 {'customer_id': 'U2', 'order_id': 'k9', 'order_type': 'mia', 'real_amount': '2.49',
-                    'virtual_amount': '0.0', 'chargeoff_date': d.isoformat(), 'currency': 'YYY'},
+                    'virtual_amount': '0.0','chargeoff_date': d.isoformat(),
+                    'locking_date': d.isoformat(), 'currency': 'YYY'},
                 {'customer_id': 'U3', 'order_id': 'k9', 'order_type': None, 'real_amount': '2.49',
-                    'virtual_amount': '0.0', 'chargeoff_date': d.isoformat(), 'currency': 'YES'},
+                    'virtual_amount': '0.0', 'chargeoff_date': d.isoformat(),
+                    'locking_date': d.isoformat(), 'currency': 'YES'},
             ]
         })
         self.validate_error_response(a_name)

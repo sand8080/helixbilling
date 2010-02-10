@@ -404,6 +404,7 @@ class Handler(object):
                 'order_type': lock.order_type,
                 'real_amount': lock.real_amount,
                 'virtual_amount': lock.virtual_amount,
+                'locking_date': lock.locking_date,
             })
 
             mapping.delete(curs, lock)
@@ -453,6 +454,7 @@ class Handler(object):
                 'real_amount': '%s' % cents_to_decimal(currency, chargeoff.real_amount),
                 'virtual_amount': '%s' % cents_to_decimal(currency, chargeoff.virtual_amount),
                 'currency': currency.code,
+                'locking_date': chargeoff.locking_date.isoformat(),
                 'chargeoff_date': chargeoff.chargeoff_date.isoformat(),
             }
         return response_ok(chargeoffs=self.objects_info(chargeoffs, viewer), total=total)
@@ -511,6 +513,7 @@ class Handler(object):
                     order_status['order_status'] = ORDER_STATUS_CHARGED_OFF
                     order_status['real_amount'] = '%s' % cents_to_decimal(currency, chargeoff.real_amount)
                     order_status['virtual_amount'] = '%s' % cents_to_decimal(currency, chargeoff.virtual_amount)
+                    order_status['locking_date'] = chargeoff.locking_date.isoformat()
                     order_status['chargeoff_date'] = chargeoff.chargeoff_date.isoformat()
                 statuses.append(order_status)
         return statuses

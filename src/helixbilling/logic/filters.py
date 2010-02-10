@@ -116,6 +116,8 @@ class ChargeOffFilter(ObjectsFilter):
         ('order_id', 'order_id', Eq),
         ('order_ids', 'order_id', In),
         ('order_type', 'order_type', Eq),
+        ('from_locking_date', 'locking_date', MoreEq),
+        ('to_locking_date', 'locking_date', LessEq),
         ('from_chargeoff_date', 'chargeoff_date', MoreEq),
         ('to_chargeoff_date', 'chargeoff_date', LessEq),
     ]

@@ -10,6 +10,7 @@ def apply(curs):
             customer_id varchar NOT NULL,
             order_id varchar NOT NULL,
             order_type varchar,
+            locking_date timestamp with time zone NOT NULL,
             chargeoff_date timestamp with time zone NOT NULL DEFAULT now(),
             real_amount int,
             virtual_amount int
