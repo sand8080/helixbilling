@@ -80,7 +80,7 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.handle_action, 'balance_lock', data)
 
         # zero amount locking
-        order_id = 'another %s' % order_id
+        order_id = 'zero amount %s' % order_id
         data = {
             'login': self.test_login,
             'password': self.test_password,
@@ -90,9 +90,18 @@ class BalanceLockTestCase(ServiceTestCase):
             'amount': '0',
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'balance_lock', data)
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'customer_id': self.customer_id,
+            'order_id': order_id,
+            'order_type': 'type',
+            'amount': '0.001',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'balance_lock', data)
 
         # unknown customer
-        order_id = 'another %s' % order_id
+        order_id = 'unknown customer %s' % order_id
         data = {
             'login': self.test_login,
             'password': self.test_password,

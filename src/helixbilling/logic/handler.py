@@ -270,10 +270,9 @@ class Handler(object):
             c_id = data['customer_id']
             balance = balances_idx[c_id]
             currency = currencies_idx[balance.currency_id]
-            self.check_amount_is_positive(data)
-
-            cents_amount = decimal_to_cents(currency, Decimal(data['amount']))
-            locks = compute_locks(currency, balance, cents_amount)
+            prep_data = decimal_texts_to_cents(data, currency, 'amount')
+            self.check_amount_is_positive(prep_data)
+            locks = compute_locks(currency, balance, prep_data['amount'])
             lock = BalanceLock(**{'operator_id': operator.id, 'customer_id': c_id,
                 'order_id': data['order_id'],
                 'order_type': data.get('order_type'),
