@@ -7,7 +7,7 @@ def apply(curs):
             operator_id integer NOT NULL,
             FOREIGN KEY(operator_id) REFERENCES operator(id),
             customer_id varchar NOT NULL,
-            amount int,
+            amount NUMERIC,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
             PRIMARY KEY(id)
         )

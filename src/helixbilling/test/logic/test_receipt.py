@@ -17,6 +17,7 @@ class ReceiptTestCase(ServiceTestCase):
             self.test_password, c_id, '0.0')
         self.assertRaises(RequestProcessingError, self.add_receipt, self.test_login,
             self.test_password, c_id, '0.001')
+        self.add_receipt(self.test_login, self.test_password, c_id, '92233720368547758079999')
 
     def test_view_receipts(self):
         c_ids = {'U0': 5, 'U1': 1, 'U2': 3, 'U3': 0}

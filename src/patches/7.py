@@ -9,7 +9,7 @@ def apply(curs): #IGNORE:W0622
             FOREIGN KEY(operator_id) REFERENCES operator(id),
             customer_id varchar NOT NULL,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
-            amount int
+            amount NUMERIC
         )
     ''')
 
