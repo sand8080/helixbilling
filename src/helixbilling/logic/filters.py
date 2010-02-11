@@ -101,6 +101,7 @@ class BalanceLockFilter(ObjectsFilter):
         ('order_id', 'order_id', Eq),
         ('order_ids', 'order_id', In),
         ('order_type', 'order_type', Eq),
+        ('order_types', 'order_type', In),
         ('from_locking_date', 'locking_date', MoreEq),
         ('to_locking_date', 'locking_date', LessEq),
     ]
@@ -116,6 +117,7 @@ class ChargeOffFilter(ObjectsFilter):
         ('order_id', 'order_id', Eq),
         ('order_ids', 'order_id', In),
         ('order_type', 'order_type', Eq),
+        ('order_types', 'order_type', In),
         ('from_locking_date', 'locking_date', MoreEq),
         ('to_locking_date', 'locking_date', LessEq),
         ('from_chargeoff_date', 'chargeoff_date', MoreEq),

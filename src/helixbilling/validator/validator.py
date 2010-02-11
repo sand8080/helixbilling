@@ -320,17 +320,41 @@ ORDER_STATUS_LOCKED = 'locked'
 ORDER_STATUS_CHARGED_OFF = 'charged_off'
 ORDER_STATUSES = AnyOf(ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED, ORDER_STATUS_CHARGED_OFF)
 
+ORDER_STATUS_DATA = {
+    'customer_id': Text(),
+    'order_id': Text(),
+    'order_status': ORDER_STATUSES,
+    'real_amount': AnyOf(None, DecimalText()),
+    'virtual_amount': AnyOf(None, DecimalText()),
+    'locking_date': AnyOf(None, IsoDatetime()),
+    'chargeoff_date': AnyOf(None, IsoDatetime()),
+}
+
 ORDER_STATUS_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK,
-        **{
-            'customer_id': Text(),
-            'order_id': Text(),
-            'order_status': ORDER_STATUSES,
-            'real_amount': AnyOf(None, DecimalText()),
-            'virtual_amount': AnyOf(None, DecimalText()),
-            'locking_date': AnyOf(None, IsoDatetime()),
-            'chargeoff_date': AnyOf(None, IsoDatetime()),
-        }
+        **ORDER_STATUS_DATA
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_ORDER_STATUSES = dict(
+    {
+        'filter_params': {
+            Optional('customer_ids'): [Text()],
+            Optional('order_ids'): [Text()],
+            Optional('order_types'): [NullableText],
+            Optional('from_locking_date'): IsoDatetime(),
+            Optional('to_locking_date'): IsoDatetime(),
+            Optional('from_chargeoff_date'): IsoDatetime(),
+            Optional('to_chargeoff_date'): IsoDatetime(),
+        },
+    },
+    **AUTH_INFO
+)
+
+VIEW_ORDER_STATUSES_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK,
+        **{'order_statuses': [ORDER_STATUS_DATA],}
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -411,5 +435,8 @@ protocol = [
     # order
     ApiCall('order_status_request', Scheme(ORDER_STATUS)),
     ApiCall('order_status_response', Scheme(ORDER_STATUS_RESPONSE)),
+
+    ApiCall('view_order_statuses_request', Scheme(VIEW_ORDER_STATUSES)),
+    ApiCall('view_order_statuses_response', Scheme(VIEW_ORDER_STATUSES_RESPONSE)),
 
 ]

@@ -305,6 +305,44 @@ class ValidatorTestCase(RootTestCase):
             'locking_date': d.isoformat(), 'chargeoff_date': d.isoformat()})
         self.validate_error_response(a_name)
 
+    def test_view_order_statuses(self):
+        a_name = 'view_order_statuses'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'filter_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a']}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'order_types': ['t']}})
+        d = datetime.datetime.now(pytz.utc)
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'order_types': ['t'],
+            'from_locking_date': d.isoformat()}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'order_types': ['t'],
+            'from_locking_date': d.isoformat(), 'to_locking_date': d.isoformat()}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'order_types': ['t'],
+            'from_locking_date': d.isoformat(), 'to_locking_date': d.isoformat(),
+            'from_chargeoff_date': d.isoformat()}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'customer_ids': ['a'], 'order_types': ['t'],
+            'from_locking_date': d.isoformat(), 'to_locking_date': d.isoformat(),
+            'from_chargeoff_date': d.isoformat(), 'to_chargeoff_date': d.isoformat()}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'order_statuses': [
+            {'customer_id': 'c', 'order_id': '1', 'order_status': ORDER_STATUS_UNKNOWN,
+                'real_amount': None, 'virtual_amount': None, 'locking_date': None,
+                'chargeoff_date': None},
+            ]})
+        self.api.validate_response(a_name, {'status': 'ok', 'order_statuses': [
+            {'customer_id': 'c', 'order_id': '1', 'order_status': ORDER_STATUS_LOCKED,
+                'real_amount': '1.0', 'virtual_amount': '0', 'locking_date': d.isoformat(),
+                'chargeoff_date': None},
+            {'customer_id': 'c', 'order_id': '1', 'order_status': ORDER_STATUS_CHARGED_OFF,
+                'real_amount': '1.0', 'virtual_amount': '0', 'locking_date': d.isoformat(),
+                'chargeoff_date': d.isoformat()},
+            ]})
+        self.validate_error_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()

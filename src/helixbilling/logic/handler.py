@@ -526,3 +526,10 @@ class Handler(object):
             raise SelectedMoreThanOneRow
         status = statuses[0]
         return response_ok(**status)
+
+    @transaction()
+    @authentificate
+    def view_order_statuses(self, data, operator, curs=None):
+        filter_params = data['filter_params']
+        statuses = self.order_statuses(curs, operator, filter_params, {})
+        return response_ok(order_statuses=statuses)
