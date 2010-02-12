@@ -3,7 +3,7 @@ from helixcore.db.wrapper import SelectedMoreThanOneRow, fetchone_dict
 import helixcore.mapping.actions as mapping
 
 from helixbilling.domain.objects import Balance, Receipt, Bonus, BalanceLock,\
-    ChargeOff
+    ChargeOff, ActionLog
 from helixbilling.error import ObjectNotFound, BalanceNotFound
 
 
@@ -126,3 +126,17 @@ class ChargeOffFilter(ObjectsFilter):
 
     def __init__(self, operator, filter_params, paging_params):
         super(ChargeOffFilter, self).__init__(operator, filter_params, paging_params, ChargeOff)
+
+
+class ActionLogFilter(ObjectsFilter):
+    cond_map = [
+        ('customer_id', 'customer_id', Eq),
+        ('customer_ids', 'customer_id', In),
+        ('action', 'action', Eq),
+        ('from_request_date', 'locking_date', MoreEq),
+        ('to_request_date', 'locking_date', LessEq),
+        ('remote_addr', 'remote_addr', Eq),
+    ]
+
+    def __init__(self, operator, filter_params, paging_params):
+        super(ActionLogFilter, self).__init__(operator, filter_params, paging_params, ActionLog)

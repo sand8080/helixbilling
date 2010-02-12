@@ -45,12 +45,6 @@ class ChargeOff(Mapped):
 
 
 class ActionLog(Mapped):
-    __slots__ = [
-        'id',
-        'operator_id',
-        'custom_operator_info'
-        'customer_ids', 'action',
-        'request_date',
-        'request', 'response',
-    ]
+    __slots__ = ['id', 'operator_id', 'custom_operator_info', 'customer_ids', 'action',
+        'request_date', 'remote_addr', 'request', 'response']
     table = 'action_log'

@@ -360,6 +360,43 @@ VIEW_ORDER_STATUSES_RESPONSE = AnyOf(
 )
 
 
+# --- action log ---
+VIEW_ACTION_LOGS = dict(
+    {
+        'filter_params': {
+            Optional('customer_ids'): [Text()],
+            Optional('action'): Text(),
+            Optional('from_request_date'): IsoDatetime(),
+            Optional('to_request_date'): IsoDatetime(),
+            Optional('remote_addr'): Text(),
+        },
+        'paging_params': PAGING_PARAMS,
+    },
+    **AUTH_INFO
+)
+
+ACTION_LOG_INFO = {
+    'custom_client_info': NullableText,
+    'action': Text(),
+    'request_date': IsoDatetime(),
+    'remote_addr': NullableText,
+    'request': Text(),
+    'response': Text(),
+}
+
+
+VIEW_ACTION_LOGS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'total': NonNegative(int),
+            'action_logs': [ACTION_LOG_INFO],
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
 protocol = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -438,5 +475,9 @@ protocol = [
 
     ApiCall('view_order_statuses_request', Scheme(VIEW_ORDER_STATUSES)),
     ApiCall('view_order_statuses_response', Scheme(VIEW_ORDER_STATUSES_RESPONSE)),
+
+    # action log
+    ApiCall('view_action_logs_request', Scheme(VIEW_ACTION_LOGS)),
+    ApiCall('view_action_logs_response', Scheme(VIEW_ACTION_LOGS_RESPONSE)),
 
 ]

@@ -1,9 +1,9 @@
+from functools import partial
+
 import psycopg2.extensions
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 
-from eventlet.green import socket #@UnusedImport IGNORE:W0611
-from functools import partial
-
+import helixtariff.conf.lock_order #@UnusedImport IGNORE:W0611
 import helixcore.db.wrapper as wrapper
 from settings import DSN
 

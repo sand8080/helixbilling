@@ -11,6 +11,7 @@ def apply(curs):
             customer_ids varchar[],
             action varchar NOT NULL,
             request_date timestamp with time zone NOT NULL DEFAULT now(),
+            remote_addr text NOT NULL,
             request text NOT NULL,
             response text NOT NULL
         )

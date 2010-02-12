@@ -19,7 +19,7 @@ from helixbilling.validator.validator import protocol
 from helixbilling.logic.helper import decimal_to_cents, cents_to_decimal
 from helixbilling.domain.objects import Currency
 from helixbilling.logic.filters import (ReceiptFilter, BonusFilter,
-    BalanceLockFilter, ChargeOffFilter)
+    BalanceLockFilter, ChargeOffFilter, ActionLogFilter)
 from helixbilling.error import BalanceNotFound
 
 
@@ -188,3 +188,7 @@ class ServiceTestCase(DbBasedTestCase):
             filter_params['order_id'] = order_id
         f = ChargeOffFilter(operator, filter_params, {})
         return f.filter_objs(curs)
+
+    @transaction()
+    def get_action_logs(self, operator, filter_params, curs=None):
+        return ActionLogFilter(operator, filter_params, {}).filter_objs(curs)
