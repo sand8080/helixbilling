@@ -10,7 +10,8 @@ class ViewCurrencyTestCase(ServiceTestCase):
         self.assertEqual('ok', response['status'])
         currencies_data = response['currencies']
         self.assertTrue(len(currencies_data) > 0)
-        Currency(**currencies_data[0])
+        for d in currencies_data:
+            Currency(**d)
 
 
 if __name__ == '__main__':

@@ -89,7 +89,15 @@ class Handler(object):
     # --- currencies ---
     @transaction()
     def view_currencies(self, data, curs=None): #IGNORE:W0613
-        return response_ok(currencies=selector.select_data(curs, Currency, None, None, 0))
+        currencies = selector.get_currencies(curs)
+        def viewer(currency):
+            return {
+                'code': currency.code,
+                'cent_factor': currency.cent_factor,
+                'name': currency.name,
+                'location': currency.location,
+            }
+        return response_ok(currencies=self.objects_info(currencies, viewer))
 
     # --- operator ---
     @transaction()
