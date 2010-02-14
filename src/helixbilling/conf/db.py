@@ -3,7 +3,7 @@ from functools import partial
 import psycopg2.extensions
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 
-import helixtariff.conf.lock_order #@UnusedImport IGNORE:W0611
+import helixbilling.conf.lock_order #@UnusedImport IGNORE:W0611
 import helixcore.db.wrapper as wrapper
 from settings import DSN
 
