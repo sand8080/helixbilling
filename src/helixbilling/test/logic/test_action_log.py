@@ -4,7 +4,6 @@ import datetime
 import pytz
 
 from helixbilling.test.db_based_test import ServiceTestCase
-from helixbilling.conf import settings
 from helixbilling.test.wsgi.client import Client
 
 
@@ -50,120 +49,119 @@ class ActionLogTestCase(ServiceTestCase):
         self.cli.add_operator(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
         operator = self.get_operator_by_login(self.cli.login)
 
-        self._make_trackable_action(operator, 'modify_operator', {'custom_client_info': 'jah'})
+        self._make_trackable_action(operator, 'modify_operator', {'custom_operator_info': 'jah',
+            'new_password': self.cli.password})
 
-#        old_st_name = 'service type'
-#        self._make_trackable_action(operator, 'add_service_type', {'name': old_st_name})
-#        st_name = 'new %s' % old_st_name
-#        self._make_trackable_action(operator, 'modify_service_type', {'name': old_st_name,
-#            'new_name': st_name})
-#
-#        old_ss_name = 'service set'
-#        self._make_trackable_action(operator, 'add_service_set', {'name': old_ss_name,
-#            'service_types': [st_name]})
-#        ss_name = 'new %s' % old_ss_name
-#        self._make_trackable_action(operator, 'modify_service_set', {'name': old_ss_name,
-#            'new_name': ss_name})
-#
-#        old_t_name = 'tariff'
-#        self._make_trackable_action(operator, 'add_tariff', {'name': old_t_name,
-#            'parent_tariff': None, 'service_set': ss_name, 'in_archive': False})
-#        t_name = 'new %s' % old_t_name
-#        self._make_trackable_action(operator, 'modify_tariff', {'name': old_t_name,
-#            'new_name': t_name, 'new_in_archive': True})
-#
-#        r_text = 'price = 1.0'
-#        self._make_trackable_action(operator, 'save_draft_rule', {'tariff': t_name,
-#            'service_type': st_name, 'rule': r_text, 'enabled': True})
-#        self._make_trackable_action(operator, 'make_draft_rules_actual', {'tariff': t_name})
-#        self._make_trackable_action(operator, 'modify_actual_rule', {'tariff': t_name,
-#            'service_type': st_name, 'new_enabled': False})
-#
-#        self._make_trackable_action(operator, 'delete_tariff', {'name': t_name})
-#        self.cli.modify_service_set(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
-#            name=ss_name, new_service_types=[])
-#        self._make_trackable_action(operator, 'delete_service_set', {'name': ss_name})
-#        self._make_trackable_action(operator, 'delete_service_type', {'name': st_name})
-#
-#    def test_view_action_logs(self):
-#        self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
-#
-#        st_names = ['st 0', 'st 1', 'st 2']
-#        date_0 = datetime.datetime.now(pytz.utc)
-#        for st_name in st_names:
-#            self._make_action('add_service_type', {'name': st_name})
-#
-#        ss_names = ['ss 0', 'ss 1']
-#        date_1 = datetime.datetime.now(pytz.utc)
-#        for ss_name in ss_names:
-#            self._make_action('add_service_set', {'name': ss_name,
-#                'service_types': st_names})
-#
-#        data = {
-#            'login': self.cli.login,
-#            'password': self.cli.password,
-#            'filter_params': {},
-#        }
-#        response = self.handle_action('view_action_logs', data)
-#        al_info = response['action_logs']
-#        total = len(st_names) + len(ss_names) + 1
-#        self.assertEqual(total, len(al_info))
-#        self.assertEqual(total, response['total'])
-#
-#        data = {
-#            'login': self.cli.login,
-#            'password': self.cli.password,
-#            'filter_params': {'action': 'add_service_type'},
-#        }
-#        response = self.handle_action('view_action_logs', data)
-#        al_info = response['action_logs']
-#        self.assertEqual(len(st_names), len(al_info))
-#        self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
-#        self.assertEqual(len(st_names), response['total'])
-#
-#        data = {
-#            'login': self.cli.login,
-#            'password': self.cli.password,
-#            'filter_params': {'action': 'add_service_type', 'limit': 2},
-#        }
-#        response = self.handle_action('view_action_logs', data)
-#        al_info = response['action_logs']
-#        self.assertEqual(2, len(al_info))
-#        self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
-#        self.assertEqual(len(st_names), response['total'])
-#
-#        data = {
-#            'login': self.cli.login,
-#            'password': self.cli.password,
-#            'filter_params': {'action': 'add_service_type', 'offset': 2},
-#        }
-#        response = self.handle_action('view_action_logs', data)
-#        al_info = response['action_logs']
-#        self.assertEqual(1, len(al_info))
-#        self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
-#        self.assertEqual(len(st_names), response['total'])
-#
-#        data = {
-#            'login': self.cli.login,
-#            'password': self.cli.password,
-#            'filter_params': {'from_date': date_1.isoformat()},
-#        }
-#        response = self.handle_action('view_action_logs', data)
-#        al_info = response['action_logs']
-#        self.assertEqual(len(ss_names), len(al_info))
-#        self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_set', al_info)))
-#        self.assertEqual(len(ss_names), response['total'])
-#
-#        data = {
-#            'login': self.cli.login,
-#            'password': self.cli.password,
-#            'filter_params': {'from_date': date_0.isoformat(), 'to_date': date_1.isoformat()},
-#        }
-#        response = self.handle_action('view_action_logs', data)
-#        al_info = response['action_logs']
-#        self.assertEqual(len(st_names), len(al_info))
-#        self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
-#        self.assertEqual(len(st_names), response['total'])
+        c_id = 'tracked customer'
+        self._make_trackable_action(operator, 'add_balance', {'customer_id': c_id, 'active': True,
+            'currency': self.currency.code})
+        self._make_trackable_action(operator, 'modify_balance', {'customer_id': c_id, 'new_active': True})
+        self._make_trackable_action(operator, 'delete_balance', {'customer_id': c_id})
+        self._make_action('add_balance', {'customer_id': c_id, 'active': True,
+            'currency': self.currency.code})
+
+        self._make_trackable_action(operator, 'enroll_receipt', {'customer_id': c_id, 'amount': '15.00'})
+        self._make_trackable_action(operator, 'enroll_bonus', {'customer_id': c_id, 'amount': '25.00'})
+
+        order_id = 'lock_unlock'
+        self._make_trackable_action(operator, 'balance_lock', {'customer_id': c_id, 'order_id': order_id,
+            'amount': '20.00'})
+
+        self._make_trackable_action(operator, 'balance_unlock', {'customer_id': c_id, 'order_id': order_id})
+
+        order_id = 'lock_chargeoff'
+        self._make_action('balance_lock', {'customer_id': c_id, 'order_id': order_id, 'amount': '22.00'})
+        self._make_trackable_action(operator, 'chargeoff', {'customer_id': c_id, 'order_id': order_id})
+
+        c_id_1 = 'customer for list operations'
+        self._make_action('add_balance', {'customer_id': c_id_1, 'active': True,
+            'currency': self.currency.code})
+        self._make_action('enroll_receipt', {'customer_id': c_id_1, 'amount': '16.00'})
+        self._make_action('enroll_bonus', {'customer_id': c_id_1, 'amount': '26.00'})
+
+        order_id = 'lock_list_unlock_list'
+        self._make_trackable_action(operator, 'balance_lock_list', {'locks': [
+            {'customer_id': c_id, 'order_id': order_id, 'amount': '0.01'},
+            {'customer_id': c_id_1, 'order_id': order_id, 'order_type': 'ot', 'amount': '0.01'},
+        ]})
+        self._make_trackable_action(operator, 'balance_unlock_list', {'unlocks': [
+            {'customer_id': c_id, 'order_id': order_id},
+            {'customer_id': c_id_1, 'order_id': order_id},
+        ]})
+
+        order_id = 'lock_list_chargeoff_list'
+        self._make_action('balance_lock_list', {'locks': [
+            {'customer_id': c_id, 'order_id': order_id, 'amount': '0.01'},
+            {'customer_id': c_id_1, 'order_id': order_id, 'order_type': 'ot', 'amount': '0.01'},
+        ]})
+        self._make_action('chargeoff_list', {'chargeoffs': [
+            {'customer_id': c_id, 'order_id': order_id},
+            {'customer_id': c_id_1, 'order_id': order_id},
+        ]})
+
+    def test_view_action_logs(self):
+        self.cli.add_operator(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
+        c_id_0 = 'view_action_logs_0'
+        c_id_1 = 'view_action_logs_1'
+        self._make_action('add_balance', {'customer_id': c_id_0, 'active': True, 'currency': self.currency.code})
+        self._make_action('add_balance', {'customer_id': c_id_1, 'active': True, 'currency': self.currency.code})
+        self._make_action('enroll_receipt', {'customer_id': c_id_0, 'amount': '15.00'})
+        self._make_action('enroll_bonus', {'customer_id': c_id_1, 'amount': '25.00'})
+        order_id_0 = '1'
+        self._make_action('balance_lock', {'customer_id': c_id_0, 'order_id': order_id_0, 'amount': '5.00'})
+        self._make_action('balance_lock', {'customer_id': c_id_1, 'order_id': order_id_0, 'amount': '6.00'})
+        order_id_1 = '2'
+        d_0 = datetime.datetime.now(pytz.utc)
+        self._make_action('balance_lock_list', {'locks': [
+            {'customer_id': c_id_0, 'order_id': order_id_1, 'amount': '7.00'},
+            {'customer_id': c_id_1, 'order_id': order_id_1, 'amount': '8.00'},
+        ]})
+        self._make_action('balance_unlock', {'customer_id': c_id_0, 'order_id': order_id_0})
+        self._make_action('balance_unlock_list', {'unlocks': [{'customer_id': c_id_1, 'order_id': order_id_0}]})
+
+        d_1 = datetime.datetime.now(pytz.utc)
+        self._make_action('chargeoff_list', {'chargeoffs': [{'customer_id': c_id_0, 'order_id': order_id_1},
+            {'customer_id': c_id_1, 'order_id': order_id_1},]})
+
+        data = {
+            'login': self.cli.login,
+            'password': self.cli.password,
+            'filter_params': {},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_action_logs', data)
+        self.assertEqual(11, response['total'])
+        self.assertEqual(11, len(response['action_logs']))
+
+        data = {
+            'login': self.cli.login,
+            'password': self.cli.password,
+            'filter_params': {'from_request_date': d_0.isoformat(), 'to_request_date': d_1.isoformat()},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_action_logs', data)
+        self.assertEqual(3, len(response['action_logs']))
+
+        data = {
+            'login': self.cli.login,
+            'password': self.cli.password,
+            'filter_params': {'action': 'balance_lock'},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_action_logs', data)
+        self.assertEqual(2, len(response['action_logs']))
+
+        data = {
+            'login': self.cli.login,
+            'password': self.cli.password,
+            'filter_params': {'customer_id': c_id_0},
+            'paging_params': {},
+        }
+        response = self.handle_action('view_action_logs', data)
+        al_info = response['action_logs']
+        self.assertEqual(6, len(al_info))
+        for al in al_info:
+            self.assertTrue(c_id_0 in al['customer_ids'])
 
 
 if __name__ == '__main__':

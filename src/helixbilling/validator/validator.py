@@ -110,7 +110,6 @@ GET_BALANCE_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-
 VIEW_BALANCES = dict(
     {
         'filter_params': {
@@ -160,6 +159,7 @@ INCOME_INFO = {
     'currency': Text(),
     'creation_date': IsoDatetime(),
 }
+
 
 # --- receipt ---
 ENROLL_RECEIPT = ENROLL_INCOME
@@ -243,7 +243,6 @@ VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
 )
 
 # --- unlock ---
-#
 BALANCE_UNLOCK_DATA = {
     'customer_id': Text(),
     'order_id': Text(),
@@ -364,7 +363,7 @@ VIEW_ORDER_STATUSES_RESPONSE = AnyOf(
 VIEW_ACTION_LOGS = dict(
     {
         'filter_params': {
-            Optional('customer_ids'): [Text()],
+            Optional('customer_id'): Text(),
             Optional('action'): Text(),
             Optional('from_request_date'): IsoDatetime(),
             Optional('to_request_date'): IsoDatetime(),
@@ -376,8 +375,9 @@ VIEW_ACTION_LOGS = dict(
 )
 
 ACTION_LOG_INFO = {
-    'custom_client_info': NullableText,
+    'custom_operator_info': NullableText,
     'action': Text(),
+    'customer_ids': [Text()],
     'request_date': IsoDatetime(),
     'remote_addr': NullableText,
     'request': Text(),

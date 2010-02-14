@@ -355,27 +355,23 @@ class ValidatorTestCase(RootTestCase):
             'filter_params': {'action': 'a'}, 'paging_params': {}})
         s_d1 = datetime.datetime(year=2009, month=10, day=29, tzinfo=pytz.utc).isoformat()
         s_d2 = datetime.datetime.now(pytz.utc).isoformat()
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'action': 'a', 'from_request_date': s_d1},
-            'paging_params': {}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'to_request_date': s_d2},
-            'paging_params': {}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'to_request_date': s_d2,
-            'remote_addr': 'a'},
-            'paging_params': {'limit': 1}})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'to_request_date': s_d2,
-            'remote_addr': 'a'},
-            'paging_params': {'limit': 0, 'offset': 3}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'paging_params': {},
+            'filter_params': {'action': 'a', 'from_request_date': s_d1}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'paging_params': {},
+            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'customer_id': '1'}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'paging_params': {},
+            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'to_request_date': s_d2}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'paging_params': {'limit': 1},
+            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'to_request_date': s_d2, 'remote_addr': 'a'}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'paging_params': {'limit': 0, 'offset': 3},
+            'filter_params': {'action': 'a', 'from_request_date': s_d1, 'to_request_date': s_d2, 'remote_addr': 'a'}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'action_logs': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'action_logs': [
-            {'custom_client_info': None, 'action': 'a', 'request_date': s_d2,
-                'remote_addr': 'a', 'request': 't', 'response': 't'},
-            {'custom_client_info': 'i', 'action': 'a', 'request_date': s_d2,
-                'remote_addr': 'b', 'request': 't', 'response': 't'},
+            {'custom_operator_info': None, 'action': 'a', 'request_date': s_d2,
+                'customer_ids': [], 'remote_addr': 'a', 'request': 't', 'response': 't'},
+            {'custom_operator_info': 'i', 'action': 'a', 'request_date': s_d2,
+                'customer_ids': ['a', 'b'], 'remote_addr': 'b', 'request': 't', 'response': 't'},
         ]})
         self.validate_error_response(a_name)
 

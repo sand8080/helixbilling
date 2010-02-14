@@ -20,7 +20,7 @@ from helixbilling.logic.helper import compute_locks
 from helixbilling.logic import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
 from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
-    BalanceLockFilter, ChargeOffFilter)
+    BalanceLockFilter, ChargeOffFilter, ActionLogFilter)
 from helixbilling.validator.validator import (ORDER_STATUS_UNKNOWN,
     ORDER_STATUS_LOCKED, ORDER_STATUS_CHARGED_OFF)
 from helixcore.utils import filter_dict
@@ -548,3 +548,23 @@ class Handler(object):
         filter_params = data['filter_params']
         statuses = self.order_statuses(curs, operator, filter_params, {})
         return response_ok(order_statuses=statuses)
+
+    @transaction()
+    @authentificate
+    def view_action_logs(self, data, operator, curs=None):
+        filter_params = data['filter_params']
+        paging_params = data['paging_params']
+        f = ActionLogFilter(operator, filter_params, paging_params)
+        action_logs, total = f.filter_counted(curs)
+
+        def viewer(action_log):
+            return {
+                'custom_operator_info': action_log.custom_operator_info,
+                'action': action_log.action,
+                'customer_ids': action_log.customer_ids,
+                'request_date': action_log.request_date.isoformat(),
+                'remote_addr': action_log.remote_addr,
+                'request': action_log.request,
+                'response': action_log.response,
+            }
+        return response_ok(action_logs=self.objects_info(action_logs, viewer), total=total)

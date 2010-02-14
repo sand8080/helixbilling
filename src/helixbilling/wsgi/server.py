@@ -4,7 +4,7 @@ from eventlet.green import socket
 
 from helixcore.server.wsgi_application import Application
 import helixcore.mapping.actions as mapping
-from helixcore.utils import filter_dict
+from helixcore.utils import filter_all_field_values
 
 from helixbilling.conf import settings
 from helixbilling.conf.log import logger
@@ -41,7 +41,7 @@ class HelixbillingApplication(Application):
                     'Unable to track action for not existed operator. Request: %s. Response: %s', (s_req, s_resp))
         else:
             op_id = authorized_data['operator_id']
-        c_ids = filter_dict(('customer_id', 'customer_ids'), authorized_data).values()
+        c_ids = list(filter_all_field_values('customer_id', authorized_data))
         data = {
             'operator_id': op_id,
             'custom_operator_info': authorized_data.get('custom_operator_info', None),

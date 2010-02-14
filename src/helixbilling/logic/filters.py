@@ -1,4 +1,4 @@
-from helixcore.db.sql import And, Eq, In, Select, Columns, MoreEq, LessEq
+from helixcore.db.sql import And, Eq, In, Select, Columns, MoreEq, LessEq, Any
 from helixcore.db.wrapper import SelectedMoreThanOneRow, fetchone_dict
 import helixcore.mapping.actions as mapping
 
@@ -20,7 +20,10 @@ class ObjectsFilter(object):
         cond = Eq('operator_id', self.operator.id)
         for p_name, db_f_name, c in self.cond_map:
             if p_name in self.filter_params:
-                cond = And(cond, c(db_f_name, self.filter_params[p_name]))
+                if c == Any:
+                    cond = And(cond, c(self.filter_params[p_name], db_f_name))
+                else:
+                    cond = And(cond, c(db_f_name, self.filter_params[p_name]))
         return cond
 
     def _get_paging_params(self):
@@ -130,11 +133,10 @@ class ChargeOffFilter(ObjectsFilter):
 
 class ActionLogFilter(ObjectsFilter):
     cond_map = [
-        ('customer_id', 'customer_id', Eq),
-        ('customer_ids', 'customer_id', In),
+        ('customer_id', 'customer_ids', Any),
         ('action', 'action', Eq),
-        ('from_request_date', 'locking_date', MoreEq),
-        ('to_request_date', 'locking_date', LessEq),
+        ('from_request_date', 'request_date', MoreEq),
+        ('to_request_date', 'request_date', LessEq),
         ('remote_addr', 'remote_addr', Eq),
     ]
 
