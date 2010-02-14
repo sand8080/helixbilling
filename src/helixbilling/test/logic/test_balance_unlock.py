@@ -4,7 +4,7 @@ from helixcore.server.exceptions import ActionNotAllowedError
 
 from helixbilling.test.db_based_test import ServiceTestCase
 from helixcore.server.errors import RequestProcessingError
-from helixbilling.error import BalanceNotFound
+from helixbilling.error import BalanceNotFound, BalanceDisabled
 
 
 class BalanceUnlockTestCase(ServiceTestCase):
@@ -49,6 +49,7 @@ class BalanceUnlockTestCase(ServiceTestCase):
         balance_locks = self.get_balance_locks(operator, [self.customer_id], order_id)
         self.assertEqual(0, len(balance_locks))
 
+        # unknown customer
         data = {
             'login': self.test_login,
             'password': self.test_password,
@@ -57,11 +58,32 @@ class BalanceUnlockTestCase(ServiceTestCase):
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'balance_unlock', data)
 
+        # unknown order
         data = {
             'login': self.test_login,
             'password': self.test_password,
             'customer_id': self.customer_id,
             'order_id': 'fake',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'balance_unlock', data)
+
+        # disabled balance
+        order_id = '10'
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'customer_id': self.customer_id,
+            'order_id': order_id,
+            'amount': '0.01',
+        }
+        self.handle_action('balance_lock', data)
+        self.modify_balance(self.test_login, self.test_password, self.customer_id, None, active=False)
+
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'customer_id': self.customer_id,
+            'order_id': order_id,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'balance_unlock', data)
 
@@ -112,6 +134,7 @@ class BalanceUnlockTestCase(ServiceTestCase):
         balance_locks = self.get_balance_locks(operator, [self.customer_id])
         self.assertEqual(0, len(balance_locks))
 
+        # unknown order
         data = {
             'login': self.test_login,
             'password': self.test_password,
@@ -121,6 +144,7 @@ class BalanceUnlockTestCase(ServiceTestCase):
         }
         self.assertRaises(ActionNotAllowedError, self.handle_action, 'balance_unlock_list', data)
 
+        # unknown customer
         data = {
             'login': self.test_login,
             'password': self.test_password,
@@ -129,6 +153,29 @@ class BalanceUnlockTestCase(ServiceTestCase):
             ]
         }
         self.assertRaises(BalanceNotFound, self.handle_action, 'balance_unlock_list', data)
+
+        # disabled balances
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'locks': [
+                {'customer_id': c_id_1, 'order_id': '10', 'amount': '0.01'},
+                {'customer_id': c_id_0, 'order_id': '20', 'order_type': 'type', 'amount': '0.01'},
+            ]
+        }
+        self.handle_action('balance_lock_list', data)
+        self.modify_balance(self.test_login, self.test_password, c_id_0, None, active=False)
+        self.modify_balance(self.test_login, self.test_password, c_id_1, None, active=False)
+
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'unlocks': [
+                {'customer_id': c_id_1, 'order_id': '10'},
+                {'customer_id': c_id_0, 'order_id': '20'},
+            ]
+        }
+        self.assertRaises(BalanceDisabled, self.handle_action, 'balance_unlock_list', data)
 
 
 if __name__ == '__main__':

@@ -57,7 +57,7 @@ class BalanceFilter(ObjectsFilter):
     cond_map = [
         ('customer_id', 'customer_id', Eq),
         ('customer_ids', 'customer_id', In),
-        ('active', 'active', True),
+        ('active', 'active', Eq),
     ]
 
     def __init__(self, operator, filter_params, paging_params):

@@ -18,6 +18,10 @@ class BonusTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.add_receipt, self.test_login,
             self.test_password, c_id, '0.001')
 
+        c_id = 'disabled balance'
+        self.add_balance(self.test_login, self.test_password, c_id, self.currency, active=False)
+        self.assertRaises(RequestProcessingError, self.add_bonus, self.test_login, self.test_password, c_id, '9')
+
     def test_view_receipts(self):
         c_ids = {'U0': 5, 'U1': 1, 'U2': 3, 'U3': 0}
         for c_id, rec_num in c_ids.items():

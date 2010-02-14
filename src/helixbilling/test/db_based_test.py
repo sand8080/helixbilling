@@ -153,13 +153,15 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEquals(locking_order, balance.locking_order)
         return balance
 
-    def modify_balance(self, login, password, customer_id, locking_order):
+    def modify_balance(self, login, password, customer_id, locking_order, active=None):
         data = {
             'login': login,
             'password': password,
             'customer_id': customer_id,
             'new_locking_order': locking_order,
         }
+        if active is not None:
+            data['new_active'] = active
         self.handle_action('modify_balance', data)
         operator = self.get_operator_by_login(login)
         balance = self.get_balance(operator, customer_id)

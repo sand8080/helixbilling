@@ -2,7 +2,7 @@ from decimal import Decimal
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.wrapper import ObjectAlreadyExists, SelectedMoreThanOneRow
+from helixcore.db.wrapper import ObjectCreationError, SelectedMoreThanOneRow
 from helixcore import utils
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
@@ -13,10 +13,10 @@ from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import (Currency, Balance, Receipt, BalanceLock,
     Bonus, ChargeOff, Operator)
 from helixbilling.domain import security
-from helixbilling.error import BalanceNotFound, CurrencyNotFound, ObjectNotFound
+from helixbilling.error import (BalanceNotFound, CurrencyNotFound, ObjectNotFound,
+    BalanceDisabled)
 
-from helixbilling.logic.helper import compute_locks, decimal_to_cents
-from helixbilling.logic.action_log import logged, logged_bulk
+from helixbilling.logic.helper import compute_locks
 from helixbilling.logic import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
 from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
@@ -93,7 +93,7 @@ class Handler(object):
 
     # --- operator ---
     @transaction()
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'login')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'login')
     def add_operator(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
         data.pop('custom_operator_info', None)
@@ -114,7 +114,7 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(CurrencyNotFound, RequestProcessingError.Category.data_integrity, 'currency')
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'customer_id')
     def add_balance(self, data, operator, curs=None): #IGNORE:W0613
         currency = selector.get_currency_by_code(curs, data['currency'])
         data['currency_id'] = currency.id
@@ -208,10 +208,11 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
     def enroll_receipt(self, data, operator, curs=None):
         c_id = data['customer_id']
-        balance = selector.get_balance(curs, operator, c_id, for_update=True)
+        balance = selector.get_active_balance(curs, operator, c_id, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
 
         amount_fields = ['amount']
@@ -233,9 +234,12 @@ class Handler(object):
     # --- bonus ---
     @transaction()
     @authentificate
+    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
     def enroll_bonus(self, data, operator, curs=None):
         c_id = data['customer_id']
-        balance = selector.get_balance(curs, operator, c_id, for_update=True)
+        balance = selector.get_active_balance(curs, operator, c_id, for_update=True)
         currency = selector.get_currency_by_balance(curs, balance)
 
         amount_fields = ['amount']
@@ -254,6 +258,11 @@ class Handler(object):
         bonuses, total = self.view_income_money(curs, data, operator, BonusFilter)
         return response_ok(bonuses=bonuses, total=total)
 
+    def _check_balances_are_active(self, balances):
+        disabled_bss = filter(lambda x: x.active is False, balances)
+        if disabled_bss:
+            raise BalanceDisabled(', '.join([b.customer_id for b in disabled_bss]))
+
     # --- lock ---
     def _balance_lock(self, curs, operator, data_list):
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
@@ -261,6 +270,7 @@ class Handler(object):
         f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
         # ordering by id excepts deadlocks
         balances = f.filter_objs(curs, for_update=True)
+        self._check_balances_are_active(balances)
         balances_idx = dict([(b.customer_id, b) for b in balances])
         customers_no_balance = set(c_ids) - set(balances_idx.keys())
         if customers_no_balance:
@@ -290,7 +300,8 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'order_id')
+    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'order_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
     def balance_lock(self, data, operator, curs=None):
         self._balance_lock(curs, operator, [data])
@@ -336,6 +347,7 @@ class Handler(object):
         f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
         # ordering by id excepts deadlocks
         balances = f.filter_objs(curs, for_update=True)
+        self._check_balances_are_active(balances)
         balances_idx = dict([(b.customer_id, b) for b in balances])
         customers_no_balance = set(c_ids) - set(balances_idx.keys())
         if customers_no_balance:
@@ -362,6 +374,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'order_id')
     def balance_unlock(self, data, operator, curs=None):
@@ -379,6 +392,7 @@ class Handler(object):
         f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
         # ordering by id excepts deadlocks
         balances = f.filter_objs(curs, for_update=True)
+        self._check_balances_are_active(balances)
         balances_idx = dict([(b.customer_id, b) for b in balances])
         customers_no_balance = set(c_ids) - set(balances_idx.keys())
         if customers_no_balance:
@@ -417,6 +431,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'order_id')
     def chargeoff(self, data, operator, curs=None):

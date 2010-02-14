@@ -13,7 +13,7 @@ from helixbilling.domain.objects import (Receipt, Bonus, ChargeOff, BalanceLock,
 from helixbilling.logic import helper
 from helixbilling.domain import security
 from helixcore.db.sql import Eq, And, In, MoreEq, LessEq
-from helixbilling.error import BalanceNotFound
+from helixbilling.error import BalanceNotFound, BalanceDisabled
 from helixbilling.logic.filters import BalanceFilter, BalanceLockFilter,\
     ChargeOffFilter
 
@@ -79,6 +79,13 @@ def get_currencies_indexed_by_id(curs):
 
 def get_balance(curs, operator, customer_id, for_update=False):
     return BalanceFilter(operator, {'customer_id': customer_id}, {}).filter_one_obj(curs, for_update=for_update)
+
+
+def get_active_balance(curs, operator, customer_id, for_update=False):
+    balance = get_balance(curs, operator, customer_id, for_update)
+    if balance.active is False:
+        raise BalanceDisabled(customer_id)
+    return balance
 
 
 def get_balance_lock(curs, operator, customer_id, order_id, for_update=False):

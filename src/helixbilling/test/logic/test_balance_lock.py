@@ -4,7 +4,7 @@ import unittest
 from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.test.db_based_test import ServiceTestCase
-from helixbilling.error import BalanceNotFound
+from helixbilling.error import BalanceNotFound, BalanceDisabled
 
 
 class BalanceLockTestCase(ServiceTestCase):
@@ -111,6 +111,16 @@ class BalanceLockTestCase(ServiceTestCase):
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'balance_lock', data)
 
+        # disabled balance
+        self.modify_balance(self.test_login, self.test_password, self.customer_id, None, active=False)
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'customer_id': self.customer_id,
+            'order_id': order_id,
+            'amount': '1.0',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'balance_lock', data)
     def test_lock_overdraft_violation(self):
         order_id = 'car wash'
         data = {
@@ -202,6 +212,19 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertEqual(1000, lock.virtual_amount)
         self.assertEqual('3', lock.order_id)
         self.assertEqual(None, lock.order_type)
+
+        self.modify_balance(self.test_login, self.test_password, c_id_0, None, active=False)
+        self.modify_balance(self.test_login, self.test_password, c_id_1, None, active=False)
+
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'locks': [
+                {'customer_id': c_id_1, 'order_id': '10', 'amount': '0.01'},
+                {'customer_id': c_id_0, 'order_id': '20', 'order_type': 'type', 'amount': '0.01'},
+            ]
+        }
+        self.assertRaises(BalanceDisabled, self.handle_action, 'balance_lock_list', data)
 
     def test_view_balance_locks(self):
         c_id_0 = 'c0'

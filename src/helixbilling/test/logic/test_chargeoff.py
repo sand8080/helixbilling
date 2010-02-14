@@ -4,7 +4,7 @@ from helixcore.server.exceptions import ActionNotAllowedError
 
 from helixbilling.test.db_based_test import ServiceTestCase
 from helixcore.server.errors import RequestProcessingError
-from helixbilling.error import BalanceNotFound, ObjectNotFound
+from helixbilling.error import BalanceNotFound, ObjectNotFound, BalanceDisabled
 
 
 class ChargeOffTestCase(ServiceTestCase):
@@ -45,7 +45,6 @@ class ChargeOffTestCase(ServiceTestCase):
         self.assertEquals(-6000, balance.available_real_amount)
         self.assertEquals(500, balance.available_virtual_amount)
         self.assertEquals(0, balance.locked_amount)
-
         self.assertRaises(ObjectNotFound, self.get_balance_lock, operator, self.customer_id, order_id)
 
         chargeoff = self.get_chargeoff(operator, self.customer_id, order_id)
@@ -54,21 +53,42 @@ class ChargeOffTestCase(ServiceTestCase):
         self.assertEqual(11000, chargeoff.real_amount)
         self.assertEqual(500, chargeoff.virtual_amount)
 
+        # unknown order
         data = {
             'login': self.test_login,
             'password': self.test_password,
             'customer_id': self.customer_id,
-            'order_id': '1',
+            'order_id': 'fake',
         }
-        self.assertRaises(RequestProcessingError, self.handle_action, 'balance_unlock', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'chargeoff', data)
 
+        # unknown customer
         data = {
             'login': self.test_login,
             'password': self.test_password,
             'customer_id': 'fake',
             'order_id': '1',
         }
-        self.assertRaises(RequestProcessingError, self.handle_action, 'balance_unlock', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'chargeoff', data)
+
+        # disabled balance
+        order_id = '10'
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'customer_id': self.customer_id,
+            'order_id': order_id,
+            'amount': '0.01',
+        }
+        self.handle_action('balance_lock', data)
+        self.modify_balance(self.test_login, self.test_password, self.customer_id, None, active=False)
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'customer_id': self.customer_id,
+            'order_id': order_id,
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'chargeoff', data)
 
     def test_chargeoff_list(self):
         c_id_0 = 'c0'
@@ -133,6 +153,7 @@ class ChargeOffTestCase(ServiceTestCase):
         self.assertEqual(900, chargeoff_1.real_amount)
         self.assertEqual(0, chargeoff_1.virtual_amount)
 
+        # unknown order
         data = {
             'login': self.test_login,
             'password': self.test_password,
@@ -142,6 +163,7 @@ class ChargeOffTestCase(ServiceTestCase):
         }
         self.assertRaises(ActionNotAllowedError, self.handle_action, 'chargeoff_list', data)
 
+        # unknown customer
         data = {
             'login': self.test_login,
             'password': self.test_password,
@@ -150,6 +172,28 @@ class ChargeOffTestCase(ServiceTestCase):
             ]
         }
         self.assertRaises(BalanceNotFound, self.handle_action, 'chargeoff_list', data)
+
+        # disabled balance
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'locks': [
+                {'customer_id': c_id_1, 'order_id': '10', 'amount': '0.01'},
+                {'customer_id': c_id_0, 'order_id': '20', 'order_type': 'type', 'amount': '0.01'},
+            ]
+        }
+        self.handle_action('balance_lock_list', data)
+        self.modify_balance(self.test_login, self.test_password, c_id_0, None, active=False)
+        self.modify_balance(self.test_login, self.test_password, c_id_1, None, active=False)
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'chargeoffs': [
+                {'customer_id': c_id_1, 'order_id': '10'},
+                {'customer_id': c_id_0, 'order_id': '20'},
+            ]
+        }
+        self.assertRaises(BalanceDisabled, self.handle_action, 'chargeoff_list', data)
 
     def test_view_chargeoffs(self):
         c_id_0 = 'c0'
