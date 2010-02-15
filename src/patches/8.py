@@ -34,7 +34,7 @@ def apply(curs):
     print 'Creating index chargeoff_operator_id_customer_id_order_type_idx on chargeoff'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX chargeoff_operator_id_customer_id_order_type_idx ON
+        CREATE INDEX chargeoff_operator_id_customer_id_order_type_idx ON
             chargeoff(operator_id, customer_id, order_type)
     ''')
 
