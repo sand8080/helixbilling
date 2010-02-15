@@ -13,6 +13,21 @@ class ViewCurrencyTestCase(ServiceTestCase):
         for d in currencies_data:
             Currency(**d)
 
+        response = self.handle_action('view_currencies', {'ordering_params': []})
+        self.assertEqual('ok', response['status'])
+
+        response = self.handle_action('view_currencies', {'ordering_params': ['code']})
+        self.assertEqual('ok', response['status'])
+        currencies_data = response['currencies']
+        codes = [d['code'] for d in currencies_data]
+        self.assertEqual(sorted(codes), codes)
+
+        response = self.handle_action('view_currencies', {'ordering_params': ['-code']})
+        self.assertEqual('ok', response['status'])
+        currencies_data = response['currencies']
+        codes = [d['code'] for d in currencies_data]
+        self.assertEqual(sorted(codes, reverse=True), codes)
+
 
 if __name__ == '__main__':
     unittest.main()

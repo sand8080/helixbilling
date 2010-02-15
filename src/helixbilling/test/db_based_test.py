@@ -76,12 +76,12 @@ class ServiceTestCase(DbBasedTestCase):
         return response
 
     @transaction()
-    def get_reciepits(self, operator, customer_id, curs=None):
-        return ReceiptFilter(operator, {'customer_id': customer_id}, {}).filter_objs(curs)
+    def get_reciepits(self, operator, customer_id, order_by, curs=None):
+        return ReceiptFilter(operator, {'customer_id': customer_id}, {}, order_by).filter_objs(curs)
 
     @transaction()
-    def get_bonuses(self, operator, customer_id, curs=None):
-        return BonusFilter(operator, {'customer_id': customer_id}, {}).filter_objs(curs)
+    def get_bonuses(self, operator, customer_id, order_by, curs=None):
+        return BonusFilter(operator, {'customer_id': customer_id}, {}, order_by).filter_objs(curs)
 
     def add_receipt(self, login, password, customer_id, amount):
         d = datetime.datetime.now(pytz.utc)
@@ -94,7 +94,7 @@ class ServiceTestCase(DbBasedTestCase):
             'customer_id': customer_id, 'amount': amount})
         balance = self.get_balance(operator, customer_id)
         currency = self.get_currency_by_balance(balance)
-        receipt = self.get_reciepits(operator, customer_id)[-1]
+        receipt = self.get_reciepits(operator, customer_id, 'id')[-1]
         self.assertEqual(balance_before.available_real_amount + receipt.amount, balance.available_real_amount)
         self.assertTrue(d < receipt.creation_date)
         self.assertEqual(operator.id, receipt.operator_id)
@@ -112,7 +112,7 @@ class ServiceTestCase(DbBasedTestCase):
             'customer_id': customer_id, 'amount': amount})
         balance = self.get_balance(operator, customer_id)
         currency = self.get_currency_by_balance(balance)
-        bonus = self.get_bonuses(operator, customer_id)[-1]
+        bonus = self.get_bonuses(operator, customer_id, 'id')[-1]
         self.assertEqual(balance_before.available_virtual_amount + bonus.amount, balance.available_virtual_amount)
         self.assertTrue(d < bonus.creation_date)
         self.assertEqual(operator.id, bonus.operator_id)
@@ -168,11 +168,11 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(locking_order, balance.locking_order)
 
     @transaction()
-    def get_balance_locks(self, operator, customer_ids, order_id=None, curs=None):
+    def get_balance_locks(self, operator, customer_ids, order_by=None, order_id=None, curs=None):
         filter_params = {'customer_ids': customer_ids}
         if order_id is not None:
             filter_params['order_id'] = order_id
-        f= BalanceLockFilter(operator, filter_params, {})
+        f= BalanceLockFilter(operator, filter_params, {}, order_by)
         return f.filter_objs(curs)
 
     @transaction()
@@ -181,16 +181,16 @@ class ServiceTestCase(DbBasedTestCase):
 
     @transaction()
     def get_chargeoff(self, operator, customer_id, order_id, curs=None):
-        return selector.get_chargeoff(curs, operator, customer_id, order_id)
+        return selector.get_chargeoff(curs, operator, customer_id, order_id=order_id)
 
     @transaction()
-    def get_chargeoffs(self, operator, customer_ids, order_id=None, curs=None):
+    def get_chargeoffs(self, operator, customer_ids, order_by=None, order_id=None, curs=None):
         filter_params = {'customer_ids': customer_ids}
         if order_id is not None:
             filter_params['order_id'] = order_id
-        f = ChargeOffFilter(operator, filter_params, {})
+        f = ChargeOffFilter(operator, filter_params, {}, order_by)
         return f.filter_objs(curs)
 
     @transaction()
     def get_action_logs(self, operator, filter_params, curs=None):
-        return ActionLogFilter(operator, filter_params, {}).filter_objs(curs)
+        return ActionLogFilter(operator, filter_params, {}, None).filter_objs(curs)

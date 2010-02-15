@@ -31,7 +31,10 @@ AUTH_INFO = {
 }
 
 # --- currencies ---
-VIEW_CURRENCIES = {Optional('custom_operator_info'): NullableText,}
+VIEW_CURRENCIES = {
+    Optional('custom_operator_info'): NullableText,
+    Optional('ordering_params'): [AnyOf('code', '-code')],
+}
 
 VIEW_CURRENCIES_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK, currencies=[
@@ -149,6 +152,7 @@ VIEW_INCOMES = dict(
             Optional('to_creation_date'): IsoDatetime(),
         },
         'paging_params': PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('creation_date', '-creation_date')]
     },
     **AUTH_INFO
 )
@@ -220,6 +224,7 @@ VIEW_BALANCE_LOCKS = dict(
             Optional('to_locking_date'): IsoDatetime(),
         },
         'paging_params': PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('locking_date', '-locking_date')]
     },
     **AUTH_INFO
 )
@@ -281,6 +286,7 @@ VIEW_CHARGEOFFS = dict(
             Optional('to_chargeoff_date'): IsoDatetime(),
         },
         'paging_params': PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('chargeoff_date', '-chargeoff_date')]
     },
     **AUTH_INFO
 )

@@ -288,6 +288,24 @@ class ChargeOffTestCase(ServiceTestCase):
         response = self.handle_action('view_chargeoffs', data)
         self.assertEqual(0, len(response['chargeoffs']))
 
+        # checking ordering
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'filter_params': {},
+            'paging_params': {},
+            'ordering_params': [],
+        }
+        response = self.handle_action('view_chargeoffs', data)
+        self.assertEqual('ok', response['status'])
+        ch_infos = response['chargeoffs']
+        d = None
+        for ch_info in ch_infos:
+            cur_d = ch_info['chargeoff_date']
+            if d:
+                self.assertTrue(d >= cur_d)
+            d = cur_d
+
 
 if __name__ == '__main__':
     unittest.main()

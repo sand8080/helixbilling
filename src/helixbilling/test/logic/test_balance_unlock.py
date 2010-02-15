@@ -46,7 +46,7 @@ class BalanceUnlockTestCase(ServiceTestCase):
         self.assertEquals(balance.available_virtual_amount, 1000)
         self.assertEquals(balance.locked_amount, 0)
 
-        balance_locks = self.get_balance_locks(operator, [self.customer_id], order_id)
+        balance_locks = self.get_balance_locks(operator, [self.customer_id], order_id=order_id)
         self.assertEqual(0, len(balance_locks))
 
         # unknown customer

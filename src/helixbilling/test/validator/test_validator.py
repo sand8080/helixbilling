@@ -34,6 +34,8 @@ class ValidatorTestCase(RootTestCase):
     def test_view_currencies(self):
         a_name = 'view_currencies'
         self.api.validate_request(a_name, {})
+        self.api.validate_request(a_name, {'ordering_params': ['code']})
+        self.api.validate_request(a_name, {'ordering_params': ['-code']})
         self.api.validate_response(a_name, {'status': 'ok', 'currencies': []})
         self.api.validate_response(a_name, {'status': 'ok', 'currencies': [
             {'code': 'YYY', 'name': 'y', 'location': 'y', 'cent_factor': 100}
@@ -132,6 +134,12 @@ class ValidatorTestCase(RootTestCase):
             'filter_params': {'customer_ids': ['a', 'b'], 'from_creation_date': d.isoformat(),
             'to_creation_date': d.isoformat()},
             'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {},
+            'ordering_params': ['creation_date']})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {},
+            'ordering_params': ['-creation_date']})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
             res_name: []})
@@ -200,6 +208,15 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
             'to_locking_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {},
+            'ordering_params': []})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {},
+            'ordering_params': ['locking_date']})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {},
+            'ordering_params': ['-locking_date']})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 0, 'balance_locks': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10,
@@ -273,6 +290,12 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {'customer_ids': ['a'], 'from_locking_date': d.isoformat(),
             'to_locking_date': d.isoformat(), 'order_type': None}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {}, 'ordering_params': []})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {}, 'ordering_params': ['chargeoff_date']})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {}, 'paging_params': {}, 'ordering_params': ['-chargeoff_date']})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 0, 'chargeoffs': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10,

@@ -34,7 +34,7 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertEquals(balance.available_virtual_amount, 500)
         self.assertEquals(balance.locked_amount, 11500)
 
-        locks = self.get_balance_locks(operator, [self.customer_id], order_id)
+        locks = self.get_balance_locks(operator, [self.customer_id], order_id=order_id, order_by='id')
         self.assertEqual(1, len(locks))
         lock = locks[-1]
         self.assertEquals(order_id, lock.order_id)
@@ -59,7 +59,7 @@ class BalanceLockTestCase(ServiceTestCase):
         self.assertEquals(balance.available_virtual_amount, 100)
         self.assertEquals(balance.locked_amount, 11900)
 
-        locks = self.get_balance_locks(operator, [self.customer_id])
+        locks = self.get_balance_locks(operator, [self.customer_id], order_by='id')
         self.assertEqual(2, len(locks))
         lock = locks[-1]
         self.assertEquals(order_id, lock.order_id)
@@ -306,6 +306,25 @@ class BalanceLockTestCase(ServiceTestCase):
             ]
         }
         self.assertRaises(BalanceNotFound, self.handle_action, 'balance_lock_list', data)
+
+        # ordering test
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'filter_params': {'customer_ids': [c_id_1]},
+            'paging_params': {},
+            'ordering_params': []
+        }
+        response = self.handle_action('view_balance_locks', data)
+        self.assertEqual('ok', response['status'])
+        bl_infos = response['balance_locks']
+        d = None
+        for bl_info in bl_infos:
+            cur_d = bl_info['locking_date']
+            if d:
+                self.assertTrue(d >= cur_d)
+            d = cur_d
+
 
 
 if __name__ == '__main__':

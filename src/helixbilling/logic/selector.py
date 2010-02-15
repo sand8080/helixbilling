@@ -36,8 +36,10 @@ def get_currency_by_balance(curs, balance, for_update=False):
     return mapping.get_obj_by_field(curs, Currency, 'id', balance.id, for_update)
 
 
-def get_currencies(curs, for_update=False):
-    return mapping.get_list(curs, Currency, None, for_update=for_update)
+def get_currencies(curs, ordering_params=None, for_update=False):
+    if not ordering_params:
+        ordering_params = 'id'
+    return mapping.get_list(curs, Currency, None, order_by=ordering_params, for_update=for_update)
 
 
 def get_currencies_indexed_by_id(curs):
@@ -46,7 +48,8 @@ def get_currencies_indexed_by_id(curs):
 
 
 def get_balance(curs, operator, customer_id, for_update=False):
-    return BalanceFilter(operator, {'customer_id': customer_id}, {}).filter_one_obj(curs, for_update=for_update)
+    f = BalanceFilter(operator, {'customer_id': customer_id}, {}, None)
+    return f.filter_one_obj(curs, for_update=for_update)
 
 
 def get_active_balance(curs, operator, customer_id, for_update=False):
@@ -57,10 +60,10 @@ def get_active_balance(curs, operator, customer_id, for_update=False):
 
 
 def get_balance_lock(curs, operator, customer_id, order_id, for_update=False):
-    f = BalanceLockFilter(operator, {'customer_id': customer_id, 'order_id': order_id}, {})
+    f = BalanceLockFilter(operator, {'customer_id': customer_id, 'order_id': order_id}, {}, None)
     return f.filter_one_obj(curs, for_update=for_update)
 
 
 def get_chargeoff(curs, operator, customer_id, order_id, for_update=False):
-    f = ChargeOffFilter(operator, {'customer_id': customer_id, 'order_id': order_id}, {})
+    f = ChargeOffFilter(operator, {'customer_id': customer_id, 'order_id': order_id}, {}, None)
     return f.filter_one_obj(curs, for_update=for_update)

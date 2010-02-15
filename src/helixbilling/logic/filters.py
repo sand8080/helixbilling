@@ -2,18 +2,19 @@ from helixcore.db.sql import And, Eq, In, Select, Columns, MoreEq, LessEq, Any
 from helixcore.db.wrapper import SelectedMoreThanOneRow, fetchone_dict
 import helixcore.mapping.actions as mapping
 
-from helixbilling.domain.objects import Balance, Receipt, Bonus, BalanceLock,\
-    ChargeOff, ActionLog
+from helixbilling.domain.objects import (Balance, Receipt, Bonus, BalanceLock,
+    ChargeOff, ActionLog)
 from helixbilling.error import ObjectNotFound, BalanceNotFound
 
 
 class ObjectsFilter(object):
     cond_map = []
 
-    def __init__(self, operator, filter_params, paging_params, obj_class):
+    def __init__(self, operator, filter_params, paging_params, ordering_params, obj_class):
         self.operator = operator
         self.filter_params = filter_params
         self.paging_params = paging_params
+        self.ordering_params = ordering_params if ordering_params else 'id'
         self.obj_class = obj_class
 
     def _cond_by_filter_params(self):
@@ -32,8 +33,8 @@ class ObjectsFilter(object):
     def filter_objs(self, curs, for_update=False):
         cond = self._cond_by_filter_params()
         limit, offset = self._get_paging_params()
-        return mapping.get_list(curs, self.obj_class, cond=cond, limit=limit,
-            offset=offset, for_update=for_update)
+        return mapping.get_list(curs, self.obj_class, cond=cond, order_by=self.ordering_params,
+            limit=limit, offset=offset, for_update=for_update)
 
     def filter_objs_count(self, curs):
         cond = self._cond_by_filter_params()
@@ -63,8 +64,9 @@ class BalanceFilter(ObjectsFilter):
         ('active', 'active', Eq),
     ]
 
-    def __init__(self, operator, filter_params, paging_params):
-        super(BalanceFilter, self).__init__(operator, filter_params, paging_params, Balance)
+    def __init__(self, operator, filter_params, paging_params, ordering_params):
+        super(BalanceFilter, self).__init__(operator, filter_params, paging_params,
+            ordering_params, Balance)
 
     def filter_one_obj(self, curs, for_update=False):
         try:
@@ -81,8 +83,11 @@ class ReceiptFilter(ObjectsFilter):
         ('to_creation_date', 'creation_date', LessEq),
     ]
 
-    def __init__(self, operator, filter_params, paging_params):
-        super(ReceiptFilter, self).__init__(operator, filter_params, paging_params, Receipt)
+    def __init__(self, operator, filter_params, paging_params, ordering_params):
+        if ordering_params is None:
+            ordering_params = '-creation_date'
+        super(ReceiptFilter, self).__init__(operator, filter_params, paging_params,
+            ordering_params, Receipt)
 
 
 class BonusFilter(ObjectsFilter):
@@ -93,8 +98,11 @@ class BonusFilter(ObjectsFilter):
         ('to_creation_date', 'creation_date', LessEq),
     ]
 
-    def __init__(self, operator, filter_params, paging_params):
-        super(BonusFilter, self).__init__(operator, filter_params, paging_params, Bonus)
+    def __init__(self, operator, filter_params, paging_params, ordering_params):
+        if ordering_params is None:
+            ordering_params = '-creation_date'
+        super(BonusFilter, self).__init__(operator, filter_params, paging_params,
+            ordering_params, Bonus)
 
 
 class BalanceLockFilter(ObjectsFilter):
@@ -109,8 +117,11 @@ class BalanceLockFilter(ObjectsFilter):
         ('to_locking_date', 'locking_date', LessEq),
     ]
 
-    def __init__(self, operator, filter_params, paging_params):
-        super(BalanceLockFilter, self).__init__(operator, filter_params, paging_params, BalanceLock)
+    def __init__(self, operator, filter_params, paging_params, ordering_params):
+        if ordering_params is None:
+            ordering_params = '-locking_date'
+        super(BalanceLockFilter, self).__init__(operator, filter_params, paging_params,
+            ordering_params, BalanceLock)
 
 
 class ChargeOffFilter(ObjectsFilter):
@@ -127,8 +138,11 @@ class ChargeOffFilter(ObjectsFilter):
         ('to_chargeoff_date', 'chargeoff_date', LessEq),
     ]
 
-    def __init__(self, operator, filter_params, paging_params):
-        super(ChargeOffFilter, self).__init__(operator, filter_params, paging_params, ChargeOff)
+    def __init__(self, operator, filter_params, paging_params, ordering_params):
+        if ordering_params is None:
+            ordering_params = '-chargeoff_date'
+        super(ChargeOffFilter, self).__init__(operator, filter_params, paging_params,
+            ordering_params, ChargeOff)
 
 
 class ActionLogFilter(ObjectsFilter):
@@ -140,5 +154,6 @@ class ActionLogFilter(ObjectsFilter):
         ('remote_addr', 'remote_addr', Eq),
     ]
 
-    def __init__(self, operator, filter_params, paging_params):
-        super(ActionLogFilter, self).__init__(operator, filter_params, paging_params, ActionLog)
+    def __init__(self, operator, filter_params, paging_params, ordering_params):
+        super(ActionLogFilter, self).__init__(operator, filter_params, paging_params,
+            ordering_params, ActionLog)

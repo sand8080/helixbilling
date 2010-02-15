@@ -10,7 +10,7 @@ from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
 from helixcore.server.errors import RequestProcessingError
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import (Currency, Balance, Receipt, BalanceLock,
+from helixbilling.domain.objects import (Balance, Receipt, BalanceLock,
     Bonus, ChargeOff, Operator)
 from helixbilling.domain import security
 from helixbilling.error import (BalanceNotFound, CurrencyNotFound, ObjectNotFound,
@@ -89,7 +89,8 @@ class Handler(object):
     # --- currencies ---
     @transaction()
     def view_currencies(self, data, curs=None): #IGNORE:W0613
-        currencies = selector.get_currencies(curs)
+        ordering_params = data.get('ordering_params')
+        currencies = selector.get_currencies(curs, ordering_params=ordering_params)
         def viewer(currency):
             return {
                 'code': currency.code,
@@ -179,7 +180,8 @@ class Handler(object):
     @authentificate
     @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
     def view_balances(self, data, operator, curs=None):
-        f = BalanceFilter(operator, data['filter_params'], data['paging_params'])
+        f = BalanceFilter(operator, data['filter_params'], data['paging_params'],
+            data.get('ordering_params'))
         balances, total = f.filter_counted(curs)
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
         viewer = partial(self.balance_viewer, currencies_idx)
@@ -193,11 +195,12 @@ class Handler(object):
     def view_income_money(self, curs, data, operator, filter_cls):
         filter_params = data['filter_params']
         paging_params = data['paging_params']
-        f = filter_cls(operator, filter_params, paging_params)
+        ordering_params = data.get('ordering_params')
+        f = filter_cls(operator, filter_params, paging_params, ordering_params)
         objects, total = f.filter_counted(curs)
 
         filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
-        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances = BalanceFilter(operator, filter_params, {}, None).filter_objs(curs)
         balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
 
@@ -275,7 +278,7 @@ class Handler(object):
     def _balance_lock(self, curs, operator, data_list):
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
         c_ids = [d['customer_id'] for d in data_list]
-        f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
+        f = BalanceFilter(operator, {'customer_ids': c_ids}, {}, None)
         # ordering by id excepts deadlocks
         balances = f.filter_objs(curs, for_update=True)
         self._check_balances_are_active(balances)
@@ -326,12 +329,13 @@ class Handler(object):
     def view_balance_locks(self, data, operator, curs=None):
         filter_params = data['filter_params']
         paging_params = data['paging_params']
+        ordering_params = data.get('ordering_params')
 
-        f = BalanceLockFilter(operator, filter_params, paging_params)
+        f = BalanceLockFilter(operator, filter_params, paging_params, None)
         balance_locks, total = f.filter_counted(curs)
 
         filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
-        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances = BalanceFilter(operator, filter_params, {}, ordering_params).filter_objs(curs)
         balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
 
@@ -352,7 +356,7 @@ class Handler(object):
     # --- unlock ---
     def _balance_unlock(self, curs, operator, data_list):
         c_ids = [d['customer_id'] for d in data_list]
-        f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
+        f = BalanceFilter(operator, {'customer_ids': c_ids}, {}, None)
         # ordering by id excepts deadlocks
         balances = f.filter_objs(curs, for_update=True)
         self._check_balances_are_active(balances)
@@ -397,7 +401,7 @@ class Handler(object):
 
     def _chargeoff(self, curs, operator, data_list):
         c_ids = [d['customer_id'] for d in data_list]
-        f = BalanceFilter(operator, {'customer_ids': c_ids}, {})
+        f = BalanceFilter(operator, {'customer_ids': c_ids}, {}, None)
         # ordering by id excepts deadlocks
         balances = f.filter_objs(curs, for_update=True)
         self._check_balances_are_active(balances)
@@ -457,12 +461,13 @@ class Handler(object):
     def view_chargeoffs(self, data, operator, curs=None):
         filter_params = data['filter_params']
         paging_params = data['paging_params']
+        ordering_params = data.get('ordering_params')
 
-        f = ChargeOffFilter(operator, filter_params, paging_params)
+        f = ChargeOffFilter(operator, filter_params, paging_params, ordering_params)
         chargeoffs, total = f.filter_counted(curs)
 
         filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
-        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances = BalanceFilter(operator, filter_params, {}, None).filter_objs(curs)
         balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
 
@@ -487,11 +492,11 @@ class Handler(object):
         pass
 
     def order_statuses(self, curs, operator, filter_params, paging_params):
-        bl_filter = BalanceLockFilter(operator, filter_params, paging_params)
+        bl_filter = BalanceLockFilter(operator, filter_params, paging_params, None)
         balance_locks = bl_filter.filter_objs(curs)
         bl_idx = dict([((bl.customer_id, bl.order_id), bl) for bl in balance_locks])
 
-        ch_filter = ChargeOffFilter(operator, filter_params, paging_params)
+        ch_filter = ChargeOffFilter(operator, filter_params, paging_params, None)
         chargeoffs = ch_filter.filter_objs(curs)
         ch_idx = dict([((ch.customer_id, ch.order_id), ch) for ch in chargeoffs])
 
@@ -503,7 +508,7 @@ class Handler(object):
             order_ids.append(filter_params['order_id'])
 
         filter_params = utils.filter_dict(('customer_ids', 'customer_id'), filter_params)
-        balances = BalanceFilter(operator, filter_params, {}).filter_objs(curs)
+        balances = BalanceFilter(operator, filter_params, {}, None).filter_objs(curs)
         balances_c_id_idx = dict([(b.customer_id, b) for b in balances])
         currencies_idx = selector.get_currencies_indexed_by_id(curs)
 
@@ -562,7 +567,9 @@ class Handler(object):
     def view_action_logs(self, data, operator, curs=None):
         filter_params = data['filter_params']
         paging_params = data['paging_params']
-        f = ActionLogFilter(operator, filter_params, paging_params)
+        ordering_params = data.get('ordering_params')
+
+        f = ActionLogFilter(operator, filter_params, paging_params, ordering_params)
         action_logs, total = f.filter_counted(curs)
 
         def viewer(action_log):
