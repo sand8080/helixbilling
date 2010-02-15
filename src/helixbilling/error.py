@@ -5,6 +5,10 @@ class HelixbillingError(Exception):
     pass
 
 
+class OperatorAlreadyExists(ActionNotAllowedError, HelixbillingError):
+    pass
+
+
 class ObjectNotFound(HelixbillingError):
     pass
 
@@ -22,3 +26,8 @@ class BalanceDisabled(ActionNotAllowedError):
 class CurrencyNotFound(ObjectNotFound):
     def __init__(self, currency):
         super(CurrencyNotFound, self).__init__('Currency %s not found' % currency)
+
+
+class OperatorNotFound(ObjectNotFound):
+    def __init__(self, client_id):
+        super(OperatorNotFound, self).__init__("Operator '%s' not found" % client_id)

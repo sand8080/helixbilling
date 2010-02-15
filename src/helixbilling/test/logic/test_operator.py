@@ -1,10 +1,10 @@
 import unittest
 
 from helixcore.server.errors import RequestProcessingError
-from helixcore.db.wrapper import EmptyResultSetError
 
 from helixbilling.test.db_based_test import ServiceTestCase
 from helixbilling.domain.security import encrypt_password
+from helixbilling.error import OperatorNotFound
 
 
 class OperatorTestCase(ServiceTestCase):
@@ -25,7 +25,7 @@ class OperatorTestCase(ServiceTestCase):
             'new_login': login,
         }
         self.handle_action('modify_operator', data)
-        self.assertRaises(EmptyResultSetError, self.get_operator_by_login, l_old)
+        self.assertRaises(OperatorNotFound, self.get_operator_by_login, l_old)
         operator = self.get_operator_by_login(login)
         self.assertEqual(operator_old.id, operator.id)
         self.assertEqual(login, operator.login)

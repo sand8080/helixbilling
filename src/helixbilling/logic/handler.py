@@ -14,7 +14,7 @@ from helixbilling.domain.objects import (Balance, Receipt, BalanceLock,
     Bonus, ChargeOff, Operator)
 from helixbilling.domain import security
 from helixbilling.error import (BalanceNotFound, CurrencyNotFound, ObjectNotFound,
-    BalanceDisabled)
+    BalanceDisabled, OperatorAlreadyExists)
 
 from helixbilling.logic.helper import compute_locks
 from helixbilling.logic import selector
@@ -106,7 +106,10 @@ class Handler(object):
     def add_operator(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
         data.pop('custom_operator_info', None)
-        mapping.insert(curs, Operator(**data))
+        try:
+            mapping.insert(curs, Operator(**data))
+        except ObjectCreationError:
+            raise OperatorAlreadyExists(data['login'])
         return response_ok()
 
     @transaction()

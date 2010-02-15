@@ -4,7 +4,7 @@ from helixcore.server.exceptions import DataIntegrityError, AuthError
 
 from helixbilling.domain.objects import Operator, Currency
 from helixbilling.domain import security
-from helixbilling.error import BalanceDisabled
+from helixbilling.error import BalanceDisabled, OperatorNotFound
 from helixbilling.logic.filters import (BalanceFilter, BalanceLockFilter,
     ChargeOffFilter)
 
@@ -14,7 +14,10 @@ def get_operator(curs, o_id, for_update=False): #IGNORE:W0622
 
 
 def get_operator_by_login(curs, login, for_update=False):
-    return mapping.get_obj_by_field(curs, Operator, 'login', login, for_update)
+    try:
+        return mapping.get_obj_by_field(curs, Operator, 'login', login, for_update)
+    except EmptyResultSetError:
+        raise OperatorNotFound(login)
 
 
 def get_auth_opertator(curs, login, password, for_update=False):
