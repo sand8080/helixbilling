@@ -55,6 +55,16 @@ class ReceiptTestCase(ServiceTestCase):
         self.assertEqual(currency.code, r['currency'])
         self.assertEqual(Decimal(amount), Decimal(r['amount']))
 
+    # testing fix of wrong selecting currency by balance
+    def test_lot_of_customers(self):
+        operator = self.get_operator_by_login(self.test_login)
+        for i in xrange(len(self.get_currencies())):
+            c_id = '%s' % i
+            self.add_balance(self.test_login, self.test_password, c_id, self.currency)
+            self.add_receipt(self.test_login, self.test_password, c_id, '1')
+            balance = self.get_balance(operator, c_id)
+            self.assertEqual(100, balance.available_real_amount)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -36,7 +36,7 @@ def get_currency_by_code(curs, code, for_update=False):
 
 
 def get_currency_by_balance(curs, balance, for_update=False):
-    return mapping.get_obj_by_field(curs, Currency, 'id', balance.id, for_update)
+    return mapping.get_obj_by_field(curs, Currency, 'id', balance.currency_id, for_update)
 
 
 def get_currencies(curs, ordering_params=None, for_update=False):
