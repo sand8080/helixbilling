@@ -10,11 +10,18 @@ from helixbilling.error import BalanceNotFound
 
 class BalanceTestCase(ServiceTestCase):
     def test_add_balance(self):
-        self.add_balance(self.test_login, self.test_password, 'U-23-52', self.currency, active=True)
-        self.add_balance(self.test_login, self.test_password, 'U-23-53', self.currency, active=True,
+        c_id_0 = 'U-23-52'
+        c_id_1 = 'U-23-53'
+        self.add_balance(self.test_login, self.test_password, c_id_0, self.currency, active=True)
+        self.add_balance(self.test_login, self.test_password, c_id_1, self.currency, active=True,
             overdraft_limit='500.60')
         self.assertRaises(RequestProcessingError, self.add_balance, self.test_login, self.test_password,
-            'U-23-53', self.currency, active=True)
+            c_id_1, self.currency, active=True)
+
+        login = 'another'
+        password = 'qazwsx'
+        self.add_operator(login, password)
+        self.add_balance(login, password, c_id_0, self.currency)
 
     def test_modify_balance(self):
         c_id='U-23-52'
