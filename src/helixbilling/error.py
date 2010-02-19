@@ -6,7 +6,8 @@ class HelixbillingError(Exception):
 
 
 class OperatorAlreadyExists(ActionNotAllowedError, HelixbillingError):
-    pass
+    def __init__(self, login):
+        super(OperatorAlreadyExists, self).__init__("Operator '%s' already exists" % login)
 
 
 class ObjectNotFound(HelixbillingError):
@@ -29,5 +30,5 @@ class CurrencyNotFound(ObjectNotFound):
 
 
 class OperatorNotFound(ObjectNotFound):
-    def __init__(self, client_id):
-        super(OperatorNotFound, self).__init__("Operator '%s' not found" % client_id)
+    def __init__(self, operator_id):
+        super(OperatorNotFound, self).__init__("Operator '%s' not found" % operator_id)
