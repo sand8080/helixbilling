@@ -10,7 +10,7 @@ from helixcore.server.api import Api
 import helixcore.mapping.actions as mapping
 
 from helixbilling.test.root_test import RootTestCase
-from helixbilling.conf.db import get_connection, transaction
+from helixbilling.conf.db import get_connection, put_connection, transaction
 from helixbilling.conf.settings import patch_table_name
 from helixbilling.test.test_environment import patches_path
 from helixbilling.logic.actions import handle_action
@@ -25,7 +25,7 @@ from helixbilling.error import BalanceNotFound
 
 class DbBasedTestCase(RootTestCase):
     def setUp(self):
-        install.execute('reinit', get_connection, patch_table_name, patches_path)
+        install.execute('reinit', get_connection, put_connection, patch_table_name, patches_path)
 
 
 class ServiceTestCase(DbBasedTestCase):
