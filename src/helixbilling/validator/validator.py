@@ -6,7 +6,7 @@ NullableText = AnyOf(Text(), None)
 
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
-PING = {}
+PING = {Optional('custom_operator_info'): NullableText}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
