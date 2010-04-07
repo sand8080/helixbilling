@@ -1,10 +1,11 @@
 import unittest
 
 from helixcore.server.exceptions import ActionNotAllowedError
+from helixcore.server.errors import RequestProcessingError
+from helixcore.db.wrapper import ObjectNotFound
 
 from helixbilling.test.db_based_test import ServiceTestCase
-from helixcore.server.errors import RequestProcessingError
-from helixbilling.error import BalanceNotFound, ObjectNotFound, BalanceDisabled
+from helixbilling.error import BalanceNotFound, BalanceDisabled
 
 
 class ChargeOffTestCase(ServiceTestCase):

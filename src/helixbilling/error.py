@@ -1,4 +1,5 @@
 from helixcore.server.exceptions import ActionNotAllowedError
+from helixcore.db.wrapper import ObjectNotFound
 
 
 class HelixbillingError(Exception):
@@ -8,10 +9,6 @@ class HelixbillingError(Exception):
 class OperatorAlreadyExists(ActionNotAllowedError, HelixbillingError):
     def __init__(self, login):
         super(OperatorAlreadyExists, self).__init__("Operator '%s' already exists" % login)
-
-
-class ObjectNotFound(HelixbillingError):
-    pass
 
 
 class BalanceNotFound(ObjectNotFound):
