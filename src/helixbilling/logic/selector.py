@@ -1,4 +1,4 @@
-import helixcore.mapping.actions as mapping
+from helixcore import mapping
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.exceptions import DataIntegrityError, AuthError
 

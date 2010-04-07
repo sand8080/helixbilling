@@ -1,7 +1,7 @@
 from decimal import Decimal
 from functools import partial
 
-import helixcore.mapping.actions as mapping
+from helixcore import mapping
 from helixcore.db.wrapper import ObjectCreationError, SelectedMoreThanOneRow
 from helixcore import utils
 from helixcore.server.response import response_ok

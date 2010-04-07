@@ -7,7 +7,7 @@ import helixbilling.test.test_environment #IGNORE:W0611 @UnusedImport
 
 from helixcore.install import install
 from helixcore.server.api import Api
-import helixcore.mapping.actions as mapping
+from helixcore import mapping
 
 from helixbilling.test.root_test import RootTestCase
 from helixbilling.conf.db import get_connection, put_connection, transaction
