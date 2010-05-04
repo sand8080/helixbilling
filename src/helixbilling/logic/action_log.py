@@ -1,5 +1,5 @@
 import cjson
-from helixcore.mapping.actions import insert
+from helixcore.mapping import insert
 from helixbilling.domain.objects import ActionLog
 
 def logged(func):
