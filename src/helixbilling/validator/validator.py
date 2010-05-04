@@ -1,12 +1,10 @@
 from helixcore.server.api import ApiCall
-from helixcore.validol.validol import (Optional, AnyOf, NonNegative, Positive, Scheme,
-    Text, IsoDatetime, DecimalText, FlatDict)
-
-NullableText = AnyOf(Text(), None)
+from helixcore.valik.valik import (Optional, AnyOf, NonNegative, Positive, Scheme,
+    Text, NullableText, IsoDatetime, DecimalText, ArbitraryDict)
 
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
-PING = {Optional('custom_operator_info'): NullableText}
+PING = {Optional('custom_operator_info'): NullableText()}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
@@ -19,7 +17,7 @@ RESPONSE_STATUS_ERROR = {
     'status': 'error',
     'category': Text(),
     'message': Text(),
-    'details': [FlatDict()],
+    'details': [ArbitraryDict()],
 }
 
 RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
@@ -27,12 +25,12 @@ RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 AUTH_INFO = {
     'login': Text(),
     'password': Text(),
-    Optional('custom_operator_info'): NullableText,
+    Optional('custom_operator_info'): NullableText(),
 }
 
 # --- currencies ---
 VIEW_CURRENCIES = {
-    Optional('custom_operator_info'): NullableText,
+    Optional('custom_operator_info'): NullableText(),
     Optional('ordering_params'): [AnyOf('code', '-code')],
 }
 
@@ -219,7 +217,7 @@ VIEW_BALANCE_LOCKS = dict(
         'filter_params': {
             Optional('customer_ids'): [Text()],
             Optional('order_id'): Text(),
-            Optional('order_type'): NullableText,
+            Optional('order_type'): NullableText(),
             Optional('from_locking_date'): IsoDatetime(),
             Optional('to_locking_date'): IsoDatetime(),
         },
@@ -235,7 +233,7 @@ VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
             'balance_locks': [{
                 'customer_id': Text(),
                 'order_id': Text(),
-                'order_type': NullableText,
+                'order_type': NullableText(),
                 'real_amount': DecimalText(),
                 'virtual_amount': DecimalText(),
                 'currency': Text(),
@@ -279,7 +277,7 @@ VIEW_CHARGEOFFS = dict(
         'filter_params': {
             Optional('customer_ids'): [Text()],
             Optional('order_id'): Text(),
-            Optional('order_type'): NullableText,
+            Optional('order_type'): NullableText(),
             Optional('from_locking_date'): IsoDatetime(),
             Optional('to_locking_date'): IsoDatetime(),
             Optional('from_chargeoff_date'): IsoDatetime(),
@@ -297,7 +295,7 @@ VIEW_CHARGEOFFS_RESPONSE = AnyOf(
             'chargeoffs': [{
                 'customer_id': Text(),
                 'order_id': Text(),
-                'order_type': NullableText,
+                'order_type': NullableText(),
                 'real_amount': DecimalText(),
                 'virtual_amount': DecimalText(),
                 'currency': Text(),
@@ -347,7 +345,7 @@ VIEW_ORDER_STATUSES = dict(
         'filter_params': {
             Optional('customer_ids'): [Text()],
             Optional('order_ids'): [Text()],
-            Optional('order_types'): [NullableText],
+            Optional('order_types'): [NullableText()],
             Optional('from_locking_date'): IsoDatetime(),
             Optional('to_locking_date'): IsoDatetime(),
             Optional('from_chargeoff_date'): IsoDatetime(),
@@ -381,11 +379,11 @@ VIEW_ACTION_LOGS = dict(
 )
 
 ACTION_LOG_INFO = {
-    'custom_operator_info': NullableText,
+    'custom_operator_info': NullableText(),
     'action': Text(),
     'customer_ids': [Text()],
     'request_date': IsoDatetime(),
-    'remote_addr': NullableText,
+    'remote_addr': NullableText(),
     'request': Text(),
     'response': Text(),
 }

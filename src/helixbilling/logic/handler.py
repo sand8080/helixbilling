@@ -24,18 +24,7 @@ from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilte
 from helixbilling.validator.validator import (ORDER_STATUS_UNKNOWN,
     ORDER_STATUS_LOCKED, ORDER_STATUS_CHARGED_OFF)
 from helixcore.utils import filter_dict
-
-
-def detalize_error(err_cls, category, f_name):
-    def decorator(func):
-        def decorated(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except err_cls, e:
-                raise RequestProcessingError(category, e.message,
-                    details=[{'field': f_name, 'message': e.message}])
-        return decorated
-    return decorator
+from helixcore.actions.handler import detalize_error, AbstractHandler
 
 
 def authentificate(method):
@@ -50,7 +39,7 @@ def authentificate(method):
     return decroated
 
 
-class Handler(object):
+class Handler(AbstractHandler):
     '''
     Handles all API actions. Method names are called like actions.
     '''
@@ -59,32 +48,6 @@ class Handler(object):
 
     def get_operator(self, curs, data):
         return selector.get_auth_opertator(curs, data['login'], data['password'])
-
-    def get_fields_for_update(self, data, prefix_of_new='new_'):
-        '''
-        If data contains fields with previx == prefix_of_new,
-        such fields will be added into result dict:
-            {'field': 'new_field'}
-        '''
-        result = {}
-        for f in data.keys():
-            if f.startswith(prefix_of_new):
-                result[f[len(prefix_of_new):]] = f
-        return result
-
-    def update_obj(self, curs, data, load_obj_func):
-        to_update = self.get_fields_for_update(data)
-        if len(to_update):
-            obj = load_obj_func()
-            for f, new_f in to_update.items():
-                setattr(obj, f, data[new_f])
-            mapping.update(curs, obj)
-
-    def objects_info(self, objects, viewer):
-        result = []
-        for o in objects:
-            result.append(viewer(o))
-        return result
 
     # --- currencies ---
     @transaction()
