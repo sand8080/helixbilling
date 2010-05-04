@@ -1,9 +1,9 @@
 from helixcore import mapping
 from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.misc import security
 from helixcore.server.exceptions import DataIntegrityError, AuthError
 
 from helixbilling.domain.objects import Operator, Currency
-from helixbilling.domain import security
 from helixbilling.error import BalanceDisabled, OperatorNotFound
 from helixbilling.logic.filters import (BalanceFilter, BalanceLockFilter,
     ChargeOffFilter)

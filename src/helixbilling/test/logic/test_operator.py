@@ -1,9 +1,9 @@
 import unittest
 
 from helixcore.server.errors import RequestProcessingError
+from helixcore.misc.security import encrypt_password
 
 from helixbilling.test.db_based_test import ServiceTestCase
-from helixbilling.domain.security import encrypt_password
 from helixbilling.error import OperatorNotFound
 
 

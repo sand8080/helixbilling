@@ -8,11 +8,11 @@ from helixcore.server.response import response_ok
 from helixcore.server.exceptions import ActionNotAllowedError, AuthError,\
     DataIntegrityError
 from helixcore.server.errors import RequestProcessingError
+from helixcore.misc import security
 
 from helixbilling.conf.db import transaction
 from helixbilling.domain.objects import (Balance, Receipt, BalanceLock,
     Bonus, ChargeOff, Operator)
-from helixbilling.domain import security
 from helixbilling.error import (BalanceNotFound, CurrencyNotFound, ObjectNotFound,
     BalanceDisabled, OperatorAlreadyExists)
 
