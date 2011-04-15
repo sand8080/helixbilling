@@ -1,21 +1,17 @@
 def apply(curs):
-    print 'Creating table currency'
+    print 'Creating table used_currency'
     curs.execute(
     '''
-        CREATE TABLE currency (
+        CREATE TABLE used_currency (
             id serial,
-            code varchar NOT NULL,
-            cent_factor int NOT NULL,
-            name varchar,
-            location varchar,
-            PRIMARY KEY(id),
-            UNIQUE(code),
-            CHECK(cent_factor > 0)
+            environment_id int NOT NULL,
+            currencies_ids integer[] DEFAULT ARRAY[]::integer[],
+            UNIQUE(environment_id)
         )
     ''')
 
 
 def revert(curs):
-    print 'Dropping table currency'
-    curs.execute('DROP TABLE currency')
+    print 'Dropping table used_currency'
+    curs.execute('DROP TABLE used_currency')
 

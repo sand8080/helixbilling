@@ -1,17 +1,21 @@
 def apply(curs):
-    print 'Creating table operator'
+    print 'Creating table currency'
     curs.execute(
     '''
-        CREATE TABLE operator (
+        CREATE TABLE currency (
             id serial,
-            login varchar NOT NULL,
-            password varchar NOT NULL,
+            code varchar NOT NULL,
+            cent_factor int NOT NULL,
+            name varchar,
+            location varchar,
             PRIMARY KEY(id),
-            UNIQUE(login)
+            UNIQUE(code),
+            CHECK(cent_factor > 0)
         )
     ''')
 
 
 def revert(curs):
-    print 'Dropping table operator'
-    curs.execute('DROP TABLE operator')
+    print 'Dropping table currency'
+    curs.execute('DROP TABLE currency')
+

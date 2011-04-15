@@ -10,7 +10,7 @@ from helixbilling.test.root_test import RootTestCase
 from helixbilling.wsgi.protocol import protocol
 
 
-class ValidatorTestCase(RootTestCase):
+class ProtocolTestCase(RootTestCase):
     api = Api(protocol)
 
     def validate_error_response(self, action_name):
