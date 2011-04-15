@@ -1,9 +1,8 @@
-
 import helixcore.db.deadlock_detector as deadlock_detector
-import helixbilling.domain.objects as objects
+
+from helixbilling.db.dataobject import Balance, BalanceLock
+
 
 deadlock_detector.ALLOWED_TRANSITIONS = [
-    (objects.Balance.table, objects.BalanceLock.table), #unlock, chargeoff
-    (objects.Balance.table, objects.Balance.table), #lock list
-    (objects.BalanceLock.table, objects.BalanceLock.table), #unlock list
+    (Balance.table, BalanceLock.table), #unlock, chargeoff
 ]

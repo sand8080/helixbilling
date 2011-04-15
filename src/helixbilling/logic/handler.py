@@ -13,8 +13,8 @@ from helixcore.error import (ActionNotAllowedError, AuthError,
 from helixcore.utils import filter_dict
 
 from helixbilling.conf.db import transaction
-from helixbilling.domain.objects import (Balance, Receipt, BalanceLock,
-    Bonus, ChargeOff, Operator)
+from helixbilling.db.dataobject import (Balance, Receipt, BalanceLock,
+    Bonus, ChargeOff)
 from helixbilling.error import (BalanceNotFound, CurrencyNotFound, ObjectNotFound,
     BalanceDisabled, OperatorAlreadyExists)
 
@@ -23,6 +23,7 @@ from helixbilling.logic import selector
 from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
 from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
     BalanceLockFilter, ChargeOffFilter, ActionLogFilter)
+from helixcore.server.api import Session
 #from helixbilling.wsgi.protocol import (ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED,
 #    ORDER_STATUS_CHARGED_OFF)
 
@@ -31,12 +32,13 @@ def authentificate(method):
     @wraps(method)
 #    @detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
     def decroated(self, data, curs):
-        operator = self.get_operator(curs, data)
-        data['operator_id'] = operator.id
-        del data['login']
-        del data['password']
-        data.pop('custom_operator_info', None)
-        return method(self, data, operator, curs)
+        auth = Authentifier()
+        session_id = data['session_id']
+        resp = auth.check_access('billing', method, session_id)
+        session = Session.from_dict(resp)
+
+        return method(self, data, session, curs)
+
     return decroated
 
 
