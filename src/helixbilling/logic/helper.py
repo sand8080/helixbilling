@@ -1,6 +1,7 @@
 from math import log10
 from decimal import Decimal
-from helixcore.server.exceptions import ActionNotAllowedError
+
+from helixcore.error import ActionNotAllowedError
 from helixcore.utils import filter_dict
 
 

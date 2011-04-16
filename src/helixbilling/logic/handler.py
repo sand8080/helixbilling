@@ -1,29 +1,17 @@
-from decimal import Decimal
-from functools import partial, wraps
+from functools import wraps
 
-from helixcore.actions.handler import detalize_error, AbstractHandler
-from helixcore import mapping
-from helixcore.db.wrapper import ObjectCreationError, SelectedMoreThanOneRow
-from helixcore import utils
+from helixcore.actions.handler import AbstractHandler
 from helixcore.server.response import response_ok
-from helixcore.error import (ActionNotAllowedError, AuthError,
-    DataIntegrityError)
-#from helixcore.server.errors import RequestProcessingError
-#from helixcore.misc import security
-from helixcore.utils import filter_dict
-
-from helixbilling.conf.db import transaction
-from helixbilling.db.dataobject import (Balance, Receipt, BalanceLock,
-    Bonus, ChargeOff)
-from helixbilling.error import (BalanceNotFound, CurrencyNotFound, ObjectNotFound,
-    BalanceDisabled, OperatorAlreadyExists)
-
-from helixbilling.logic.helper import compute_locks
-from helixbilling.logic import selector
-from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
-from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
-    BalanceLockFilter, ChargeOffFilter, ActionLogFilter)
 from helixcore.server.api import Session
+from helixcore.security.auth import Authentifier
+
+from helixbilling.conf import settings
+
+#from helixbilling.logic.helper import compute_locks
+#from helixbilling.logic import selector
+#from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
+#from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
+#    BalanceLockFilter, ChargeOffFilter, ActionLogFilter)
 #from helixbilling.wsgi.protocol import (ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED,
 #    ORDER_STATUS_CHARGED_OFF)
 
@@ -32,13 +20,11 @@ def authentificate(method):
     @wraps(method)
 #    @detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
     def decroated(self, data, curs):
-        auth = Authentifier()
+        auth = Authentifier(settings.auth_server_url)
         session_id = data['session_id']
-        resp = auth.check_access('billing', method, session_id)
+        resp = auth.check_access(session_id, 'billing', method)
         session = Session.from_dict(resp)
-
         return method(self, data, session, curs)
-
     return decroated
 
 
@@ -51,49 +37,24 @@ class Handler(AbstractHandler):
         return response_ok()
 
     def login(self, data, curs=None):
-        f = EnvironmentFilter(data, {}, {})
-        env = f.filter_one_obj(curs)
+        auth = Authentifier(settings.auth_server_url)
+        resp = auth.login(data)
+        return resp
 
-        # Required for proper logging action
-        data['environment_id'] = env.id
-
-        f_params = {'environment_id': env.id, 'login': data.get('login')}
-        f = SubjectUserFilter(env.id, f_params, {}, {})
-        try:
-            user = f.filter_one_obj(curs)
-        except UserNotFound:
-            raise UserAuthError
-        if not user.is_active:
-            raise UserInactive()
-
-        # checking password
-        auth = Authentifier()
-        enc_p = auth.encrypt_password(data.get('password'), user.salt)
-        if enc_p != user.password:
-            raise UserAuthError
-
-        # creating session
-        session = auth.create_session(curs, env, user)
-
-        _add_log_info(data, session)
-
-        return response_ok(session_id=session.session_id)
-
-    @transaction()
-    @detalize_error(HelixauthError, 'session_id')
-    def logout(self, data, curs=None):
-
-        session_id = data.get('session_id')
-        f = SessionFilter({'session_id': session_id}, {}, {})
-        try:
-            session = f.filter_one_obj(curs, for_update=True)
-            mapping.delete(curs, session)
-            _add_log_info(data, session)
-        except SessionNotFound:
-            pass
-        return response_ok()
-
-
+#    @transaction()
+#    @detalize_error(HelixauthError, 'session_id')
+#    def logout(self, data, curs=None):
+#
+#        session_id = data.get('session_id')
+#        f = SessionFilter({'session_id': session_id}, {}, {})
+#        try:
+#            session = f.filter_one_obj(curs, for_update=True)
+#            mapping.delete(curs, session)
+#            _add_log_info(data, session)
+#        except SessionNotFound:
+#            pass
+#        return response_ok()
+#
 #    @transaction()
 #    def get_currencies(self, data, curs=None): #IGNORE:W0613
 #        ordering_params = data.get('ordering_params')

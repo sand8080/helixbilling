@@ -22,5 +22,4 @@ log_console = False
 log_max_bytes = 2048000
 log_backup_count = 20
 
-auth_server_host = 'localhost'
-auth_server_port = 9999
+auth_server_url = 'http://localhost:9999'

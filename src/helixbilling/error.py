@@ -1,5 +1,5 @@
-from helixcore.server.exceptions import ActionNotAllowedError
 from helixcore.db.wrapper import ObjectNotFound
+from helixcore.error import ActionNotAllowedError
 
 
 class HelixbillingError(Exception):

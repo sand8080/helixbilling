@@ -18,5 +18,6 @@ settings.log_filename = os.path.join(os.path.realpath(os.path.dirname(__file__))
     'helixbilling.log')
 settings.log_level = logging.DEBUG
 settings.log_console = True
+settings.auth_server_url = 'http://localhost:10999'
 
 patches_path = os.path.join(os.path.realpath(os.path.dirname(__file__)), '..', '..', 'patches')

@@ -1,7 +1,7 @@
 import cjson
 
 from helixcore.server.api import Api
-from helixcore.test.utils_for_testing import get_api_calls, make_api_call
+from helixcore.test.utils_for_testing import get_api_calls
 
 # must be imported first in helixauth set
 from helixbilling.test.db_based_test import DbBasedTestCase
@@ -17,6 +17,13 @@ class LogicTestCase(DbBasedTestCase):
         response = actions.handle_action(action_name, dict(data))
         api.handle_response(action_name, dict(response))
         return response
+
+
+def make_api_call(f_name):
+    def m(self, **kwargs):
+        return self.handle_action(f_name, kwargs)
+    m.__name__ = f_name
+    return m
 
 
 methods = get_api_calls(protocol)

@@ -4,7 +4,7 @@ from helixcore.json_validator import (Optional, AnyOf, NonNegative, Positive,
 from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
     RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR, RESPONSE_STATUS_ONLY,
     AUTHORIZED_RESPONSE_STATUS_OK, AUTHORIZED_RESPONSE_STATUS_ERROR,
-    AUTHORIZED_RESPONSE_STATUS_ONLY, AUTHORIZED_REQUEST_AUTH_INFO,
+    AUTHORIZED_REQUEST_AUTH_INFO,
     ADDING_OBJECT_RESPONSE,
     PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE,
@@ -12,20 +12,6 @@ from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
 
 
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
-
-LOGIN_REQUEST = {
-    'login': Text(),
-    'password': Text(),
-    'environment_name': Text(),
-    Optional('custom_actor_info'): NullableText(),
-}
-
-LOGIN_RESPONSE = AUTHORIZED_RESPONSE_STATUS_ONLY
-
-LOGOUT_REQUEST = AUTHORIZED_REQUEST_AUTH_INFO
-
-LOGOUT_RESPONSE = RESPONSE_STATUS_ONLY
-
 
 GET_CURRENCIES_REQUEST = {
     Optional('ordering_params'): [AnyOf('code', '-code')],
