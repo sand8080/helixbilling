@@ -18,6 +18,9 @@ class LogicTestCase(DbBasedTestCase):
         api.handle_response(action_name, dict(response))
         return response
 
+    def check_response_ok(self, resp):
+        self.assertEqual('ok', resp['status'])
+
 
 def make_api_call(f_name):
     def m(self, **kwargs):

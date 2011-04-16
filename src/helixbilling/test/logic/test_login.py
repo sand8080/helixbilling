@@ -3,6 +3,7 @@ import unittest
 from helixcore.error import RequestProcessingError
 
 from helixbilling.test.logic.logic_test import LogicTestCase
+from helixbilling.test.logic import access_granted #@UnusedImport
 
 
 class LoginTestCase(LogicTestCase):
@@ -17,8 +18,7 @@ class LoginTestCase(LogicTestCase):
         req = {'environment_name': self.env_name,
             'login': self.su_login, 'password': self.su_password}
         resp = self.login(**req)
-        return resp
-#        self.check_response_ok(resp)
+        self.check_response_ok(resp)
 #        self.get_session(resp['session_id'])
 
 #    def test_login_failed(self):
