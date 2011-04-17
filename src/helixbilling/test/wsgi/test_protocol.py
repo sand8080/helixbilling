@@ -4,64 +4,14 @@ import pytz
 import unittest
 
 from helixcore.server.api import Api
-from helixcore.error import ValidationError
+from helixcore.test.utils_for_testing import ProtocolTester
 
 from helixbilling.test.root_test import RootTestCase
 from helixbilling.wsgi.protocol import protocol
 
 
-class ProtocolTestCase(RootTestCase):
+class ProtocolTestCase(RootTestCase, ProtocolTester):
     api = Api(protocol)
-
-    def validate_error_response(self, action_name):
-        self.api.validate_response(action_name, {'status': 'error', 'category': 't',
-            'code': 'c', 'message': 'h', 'details': [{'f': 'v'}]})
-        self.api.validate_response(action_name, {'status': 'error', 'category': 't',
-            'code': 'c', 'message': 'h', 'details': [{}]})
-        self.assertRaises(ValidationError, self.api.validate_response, action_name,
-            {'status': 'error', 'code': 'c', 'category': 'test'})
-        self.assertRaises(ValidationError, self.api.validate_response, action_name,
-            {'status': 'error', 'code': 'c', 'category': 'test', 'message': 'm'})
-
-    def validate_authorized_error_response(self, action_name):
-        self.api.validate_response(action_name, {'session_id': 'i',
-            'status': 'error', 'category': 't', 'code': 'c',
-            'message': 'h', 'details': [{'f': 'v'}]})
-        self.api.validate_response(action_name, {'session_id': 'i',
-            'status': 'error', 'category': 't', 'code': 'c',
-            'message': 'h', 'details': [{}]})
-        self.assertRaises(ValidationError, self.api.validate_response, action_name,
-            {'status': 'error', 'category': 't', 'code': 'c',
-            'message': 'h', 'details': [{'f': 'v'}]})
-        self.assertRaises(ValidationError, self.api.validate_response, action_name,
-            {'status': 'error', 'category': 'test', 'code': 'c'})
-        self.assertRaises(ValidationError, self.api.validate_response, action_name,
-            {'status': 'error', 'category': 'test', 'code': 'c', 'message': 'm'})
-
-    def validate_status_response(self, action_name):
-        self.api.validate_response(action_name, {'status': 'ok'})
-        self.validate_error_response(action_name)
-
-    def validate_authorized_status_response(self, action_name):
-        self.api.validate_response(action_name, {'status': 'ok', 'session_id': 'i'})
-        self.validate_authorized_error_response(action_name)
-
-    def test_ping(self):
-        self.api.validate_request('ping', {})
-        self.validate_status_response('ping')
-
-    def test_login(self):
-        a_name = 'login'
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'environment_name': 'e', 'custom_actor_info': 'i'})
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
-            'environment_name': 'n'})
-        self.validate_authorized_status_response(a_name)
-
-    def test_logout(self):
-        a_name = 'logout'
-        self.api.validate_request(a_name, {'session_id': 'i'})
-        self.validate_status_response(a_name)
 
     def test_get_currencies(self):
         a_name = 'get_currencies'
@@ -74,89 +24,89 @@ class ProtocolTestCase(RootTestCase):
         ]})
         self.validate_error_response(a_name)
 
-    def test_add_balance(self):
-        a_name = 'add_balance'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U-23-52', 'active': True, 'currency': 'YYY'})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U', 'active': True,
-            'currency': 'YYY', 'overdraft_limit': '500.50'})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U', 'active': True, 'currency': 'YYY',
-            'overdraft_limit': '500.50', 'locking_order': [
-                'available_real_amount', 'available_virtual_amount'
-            ]})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U', 'active': True, 'currency': 'YYY',
-            'overdraft_limit': '500.50', 'locking_order': [
-                'available_real_amount'
-            ]})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U', 'active': True, 'currency': 'YYY',
-            'overdraft_limit': '500.50', 'locking_order': None})
-
-        self.api.validate_response(a_name,
-            {'status': 'ok', 'id': 1})
-        self.validate_error_response(a_name)
-
-    def test_modify_balance(self):
-        a_name = 'modify_balance'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U2', 'new_active': True,
-            'new_overdraft_limit': '500.50', 'new_locking_order': None})
-
-        self.validate_status_response(a_name)
-
-    def test_delete_balance(self):
-        a_name = 'delete_balance'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U2'})
-        self.validate_status_response(a_name)
-
-    def test_get_balance(self):
-        a_name = 'get_balance'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'customer_id': 'U2'})
-
-        self.api.validate_response(a_name, {'status': 'ok', 'customer_id': 'c',
-            'active': True, 'currency_code': 'RU',
-            'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
-            'locked_amount': '14.09', 'overdraft_limit': '0.14',
-            'locking_order': ['available_real_amount', 'available_virtual_amount'],
-            'creation_date': '%s' % datetime.datetime.now(pytz.utc),
-        })
-        self.validate_error_response(a_name)
-
-    def test_view_balances(self):
-        a_name = 'get_balances'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {}, 'paging_params': {},})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {},
-            'paging_params': {'limit': 0,}})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {},
-            'paging_params': {'limit': 0, 'offset': 0,}})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {'customer_ids': []},
-            'paging_params': {'limit': 0, 'offset': 0,}})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {'customer_ids': ['a', 'b']},
-            'paging_params': {}})
-
-        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'balances': [
-                {
-                    'customer_id': 'c', 'active': True,
-                    'currency_code': 'RU', 'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
-                    'locked_amount': '14.09', 'overdraft_limit': '0.14',
-                    'locking_order': ['available_real_amount', 'available_virtual_amount'],
-                    'creation_date': '%s' % datetime.datetime.now(pytz.utc),
-                },
-            ]
-        })
-        self.validate_error_response(a_name)
-
+#    def test_add_balance(self):
+#        a_name = 'add_balance'
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U-23-52', 'active': True, 'currency': 'YYY'})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U', 'active': True,
+#            'currency': 'YYY', 'overdraft_limit': '500.50'})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U', 'active': True, 'currency': 'YYY',
+#            'overdraft_limit': '500.50', 'locking_order': [
+#                'available_real_amount', 'available_virtual_amount'
+#            ]})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U', 'active': True, 'currency': 'YYY',
+#            'overdraft_limit': '500.50', 'locking_order': [
+#                'available_real_amount'
+#            ]})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U', 'active': True, 'currency': 'YYY',
+#            'overdraft_limit': '500.50', 'locking_order': None})
+#
+#        self.api.validate_response(a_name,
+#            {'status': 'ok', 'id': 1})
+#        self.validate_error_response(a_name)
+#
+#    def test_modify_balance(self):
+#        a_name = 'modify_balance'
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U2', 'new_active': True,
+#            'new_overdraft_limit': '500.50', 'new_locking_order': None})
+#
+#        self.validate_status_response(a_name)
+#
+#    def test_delete_balance(self):
+#        a_name = 'delete_balance'
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U2'})
+#        self.validate_status_response(a_name)
+#
+#    def test_get_balance(self):
+#        a_name = 'get_balance'
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'customer_id': 'U2'})
+#
+#        self.api.validate_response(a_name, {'status': 'ok', 'customer_id': 'c',
+#            'active': True, 'currency_code': 'RU',
+#            'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
+#            'locked_amount': '14.09', 'overdraft_limit': '0.14',
+#            'locking_order': ['available_real_amount', 'available_virtual_amount'],
+#            'creation_date': '%s' % datetime.datetime.now(pytz.utc),
+#        })
+#        self.validate_error_response(a_name)
+#
+#    def test_view_balances(self):
+#        a_name = 'get_balances'
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'filter_params': {}, 'paging_params': {},})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'filter_params': {},
+#            'paging_params': {'limit': 0,}})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'filter_params': {},
+#            'paging_params': {'limit': 0, 'offset': 0,}})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'filter_params': {'customer_ids': []},
+#            'paging_params': {'limit': 0, 'offset': 0,}})
+#        self.api.validate_request(a_name, {'session_id': 'i',
+#            'filter_params': {'customer_ids': ['a', 'b']},
+#            'paging_params': {}})
+#
+#        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+#            'balances': [
+#                {
+#                    'customer_id': 'c', 'active': True,
+#                    'currency_code': 'RU', 'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
+#                    'locked_amount': '14.09', 'overdraft_limit': '0.14',
+#                    'locking_order': ['available_real_amount', 'available_virtual_amount'],
+#                    'creation_date': '%s' % datetime.datetime.now(pytz.utc),
+#                },
+#            ]
+#        })
+#        self.validate_error_response(a_name)
+#
 #    def enroll_income(self, a_name):
 #        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'customer_id': 'N5',
 #            'amount': '0.0'})

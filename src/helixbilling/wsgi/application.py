@@ -7,7 +7,7 @@ from helixbilling.db.dataobject import ActionLog
 
 class HelixbillingApplication(Application):
     def __init__(self, h, p, l):
-        tracking_api_calls = ('login', 'logout',)
+        tracking_api_calls = ()
         super(HelixbillingApplication, self).__init__(h, p, l, tracking_api_calls)
 
     @transaction()

@@ -13,9 +13,12 @@ from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
 
 locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
-GET_CURRENCIES_REQUEST = {
-    Optional('ordering_params'): [AnyOf('code', '-code')],
-}
+GET_CURRENCIES_REQUEST = dict(
+    {
+        Optional('ordering_params'): [AnyOf('code', '-code')],
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
 
 GET_CURRENCIES_RESPONSE = AnyOf(
     dict(

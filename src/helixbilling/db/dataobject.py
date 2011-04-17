@@ -2,7 +2,7 @@ from helixcore.mapping.objects import Mapped
 
 
 class Currency(Mapped):
-    __slots__ = ['id', 'cent_factor', 'name', 'location']
+    __slots__ = ['id', 'code', 'cent_factor', 'name', 'location']
     table = 'currency'
 
 class UsedCurrency(Mapped):

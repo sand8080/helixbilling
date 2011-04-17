@@ -20,6 +20,6 @@ def logout_success(_, __):
     return {'status': 'ok'}
 
 
-auth.Authentifier.check_access = access_granted
-auth.Authentifier.login = login_success
-auth.Authentifier.logout = logout_success
+auth.CoreAuthenticator.check_access = access_granted
+auth.CoreAuthenticator.login = login_success
+auth.CoreAuthenticator.logout = logout_success

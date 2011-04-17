@@ -2,10 +2,12 @@ from functools import wraps
 
 from helixcore.actions.handler import AbstractHandler
 from helixcore.server.response import response_ok
-from helixcore.server.api import Session
-from helixcore.security.auth import Authentifier
+from helixcore.security import Session
+from helixcore.security.auth import CoreAuthenticator
 
 from helixbilling.conf import settings
+from helixbilling.conf.db import transaction
+from helixbilling.db.filters import CurrencyFilter
 
 #from helixbilling.logic.helper import compute_locks
 #from helixbilling.logic import selector
@@ -16,15 +18,17 @@ from helixbilling.conf import settings
 #    ORDER_STATUS_CHARGED_OFF)
 
 
-def authentificate(method):
+def authenticate(method):
     @wraps(method)
-#    @detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
     def decroated(self, data, curs):
-        auth = Authentifier(settings.auth_server_url)
+        auth = CoreAuthenticator(settings.auth_server_url)
         session_id = data['session_id']
-        resp = auth.check_access(session_id, 'billing', method)
-        session = Session.from_dict(resp)
-        return method(self, data, session, curs)
+        resp = auth.check_access(session_id, 'billing', method.__name__)
+        if resp.get('status') == 'ok':
+            session = Session.from_dict(resp)
+            return method(self, data, session, curs=curs)
+        else:
+            return resp
     return decroated
 
 
@@ -37,27 +41,29 @@ class Handler(AbstractHandler):
         return response_ok()
 
     def login(self, data):
-        auth = Authentifier(settings.auth_server_url)
+        auth = CoreAuthenticator(settings.auth_server_url)
         resp = auth.login(data)
         return resp
 
     def logout(self, data):
-        auth = Authentifier(settings.auth_server_url)
+        auth = CoreAuthenticator(settings.auth_server_url)
         resp = auth.logout(data)
         return resp
 
-#    @transaction()
-#    def get_currencies(self, data, curs=None): #IGNORE:W0613
-#        ordering_params = data.get('ordering_params')
-#        currencies = selector.get_currencies(curs, ordering_params=ordering_params)
-#        def viewer(currency):
-#            return {
-#                'code': currency.code,
-#                'cent_factor': currency.cent_factor,
-#                'name': currency.name,
-#                'location': currency.location,
-#            }
-#        return response_ok(currencies=self.objects_info(currencies, viewer))
+    @transaction()
+    @authenticate
+    def get_currencies(self, data, session, curs=None): #IGNORE:W0613
+        f = CurrencyFilter({}, {}, data.get('ordering_params'))
+        currencies = f.filter_objs(curs)
+        def viewer(currency):
+            return {
+                'code': currency.code,
+                'cent_factor': currency.cent_factor,
+                'name': currency.name,
+                'location': currency.location,
+            }
+        return response_ok(currencies=self.objects_info(currencies, viewer))
+
 #    # --- operator ---
 #    @transaction()
 #    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'login')
@@ -71,7 +77,7 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(DataIntegrityError, RequestProcessingError.Category.data_integrity, 'new_login')
 #    def modify_operator(self, data, operator, curs=None):
 #        if 'new_password' in data:
@@ -82,7 +88,7 @@ class Handler(AbstractHandler):
 #
 #    # --- balance ---
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(CurrencyNotFound, RequestProcessingError.Category.data_integrity, 'currency')
 #    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    def add_balance(self, data, operator, curs=None): #IGNORE:W0613
@@ -95,7 +101,7 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    def modify_balance(self, data, operator, curs=None):
 #        c_id = data['customer_id']
@@ -107,7 +113,7 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    def delete_balance(self, data, operator, curs=None):
 #        obj = selector.get_balance(curs, operator, data['customer_id'], for_update=True)
@@ -115,7 +121,7 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    def get_balance(self, data, operator, curs=None):
 #        c_id = data['customer_id']
@@ -138,7 +144,7 @@ class Handler(AbstractHandler):
 #        }
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    def view_balances(self, data, operator, curs=None):
 #        f = BalanceFilter(operator, data['filter_params'], data['paging_params'],
@@ -178,7 +184,7 @@ class Handler(AbstractHandler):
 #
 #    # --- receipt ---
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
@@ -198,14 +204,14 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_receipts(self, data, operator, curs=None):
 #        receipts, total = self.view_income_money(curs, data, operator, ReceiptFilter)
 #        return response_ok(receipts=receipts, total=total)
 #
 #    # --- bonus ---
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'amount')
@@ -225,7 +231,7 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_bonuses(self, data, operator, curs=None):
 #        bonuses, total = self.view_income_money(curs, data, operator, BonusFilter)
 #        return response_ok(bonuses=bonuses, total=total)
@@ -270,7 +276,7 @@ class Handler(AbstractHandler):
 #            mapping.update(curs, balance)
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'order_id')
@@ -280,13 +286,13 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def balance_lock_list(self, data, operator, curs=None):
 #        self._balance_lock(curs, operator, data['locks'])
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_balance_locks(self, data, operator, curs=None):
 #        filter_params = data['filter_params']
 #        paging_params = data['paging_params']
@@ -346,7 +352,7 @@ class Handler(AbstractHandler):
 #            mapping.update(curs, balance)
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'order_id')
@@ -355,7 +361,7 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def balance_unlock_list(self, data, operator, curs=None):
 #        self._balance_unlock(curs, operator, data['unlocks'])
 #        return response_ok()
@@ -403,7 +409,7 @@ class Handler(AbstractHandler):
 #            mapping.update(curs, balance)
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    @detalize_error(BalanceDisabled, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
 #    @detalize_error(ActionNotAllowedError, RequestProcessingError.Category.data_integrity, 'order_id')
@@ -412,13 +418,13 @@ class Handler(AbstractHandler):
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def chargeoff_list(self, data, operator, curs=None):
 #        self._chargeoff(curs, operator, data['chargeoffs'])
 #        return response_ok()
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_chargeoffs(self, data, operator, curs=None):
 #        filter_params = data['filter_params']
 #        paging_params = data['paging_params']
@@ -448,7 +454,7 @@ class Handler(AbstractHandler):
 #        return response_ok(chargeoffs=self.objects_info(chargeoffs, viewer), total=total)
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_status(self, data, operator, curs=None):
 #        pass
 #
@@ -507,7 +513,7 @@ class Handler(AbstractHandler):
 #        return statuses
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def order_status(self, data, operator, curs=None):
 #        filter_params = filter_dict(('customer_id', 'order_id'), data)
 #        statuses = self.order_statuses(curs, operator, filter_params, {})
@@ -517,14 +523,14 @@ class Handler(AbstractHandler):
 #        return response_ok(**status)
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_order_statuses(self, data, operator, curs=None):
 #        filter_params = data['filter_params']
 #        statuses = self.order_statuses(curs, operator, filter_params, {})
 #        return response_ok(order_statuses=statuses)
 #
 #    @transaction()
-#    @authentificate
+#    @authenticate
 #    def view_action_logs(self, data, operator, curs=None):
 #        filter_params = data['filter_params']
 #        paging_params = data['paging_params']

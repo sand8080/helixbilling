@@ -12,5 +12,5 @@ def login_failure(_, __):
         'code': error_code.HELIX_AUTH_ERROR}
 
 
-auth.Authentifier.check_access = access_denied
-auth.Authentifier.login = login_failure
+auth.CoreAuthenticator.check_access = access_denied
+auth.CoreAuthenticator.login = login_failure
