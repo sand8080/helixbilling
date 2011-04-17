@@ -20,20 +20,25 @@ GET_CURRENCIES_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
+CURRENCY_INFO = {
+    'id': int,
+    'code': Text(),
+    'cent_factor': Positive(int),
+    'name': Text(),
+    'location': Text(),
+}
+
 GET_CURRENCIES_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        **{'currencies': [
-            {
-                'code': Text(),
-                'cent_factor': Positive(int),
-                'name': Text(),
-                'location': Text(),
-            }
-        ]}
+        **{'currencies': [CURRENCY_INFO]}
     ),
     RESPONSE_STATUS_ERROR
 )
+
+GET_USED_CURRENCIES_REQUEST = GET_CURRENCIES_REQUEST
+
+GET_USED_CURRENCIES_RESPONSE = GET_CURRENCIES_RESPONSE
 
 ADD_BALANCE_REQUEST = dict(
     {
@@ -398,22 +403,25 @@ protocol = [
     ApiCall('get_currencies_request', Scheme(GET_CURRENCIES_REQUEST)),
     ApiCall('get_currencies_response', Scheme(GET_CURRENCIES_RESPONSE)),
 
-    # balance
-    ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),
-    ApiCall('add_balance_response', Scheme(ADD_BALANCE_RESPONSE)),
+    ApiCall('get_used_currencies_request', Scheme(GET_USED_CURRENCIES_REQUEST)),
+    ApiCall('get_used_currencies_response', Scheme(GET_USED_CURRENCIES_RESPONSE)),
 
-    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE_REQUEST)),
-    ApiCall('modify_balance_response', Scheme(MODIFY_BALANCE_RESPONSE)),
-
-    ApiCall('delete_balance_request', Scheme(DELETE_BALANCE_REQUEST)),
-    ApiCall('delete_balance_response', Scheme(DELETE_BALANCE_RESPONSE)),
-
-    ApiCall('get_balance_request', Scheme(GET_BALANCE_REQUEST)),
-    ApiCall('get_balance_response', Scheme(GET_BALANCE_RESPONSE)),
-
-    ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
-    ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
-
+#    # balance
+#    ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),
+#    ApiCall('add_balance_response', Scheme(ADD_BALANCE_RESPONSE)),
+#
+#    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE_REQUEST)),
+#    ApiCall('modify_balance_response', Scheme(MODIFY_BALANCE_RESPONSE)),
+#
+#    ApiCall('delete_balance_request', Scheme(DELETE_BALANCE_REQUEST)),
+#    ApiCall('delete_balance_response', Scheme(DELETE_BALANCE_RESPONSE)),
+#
+#    ApiCall('get_balance_request', Scheme(GET_BALANCE_REQUEST)),
+#    ApiCall('get_balance_response', Scheme(GET_BALANCE_RESPONSE)),
+#
+#    ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
+#    ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
+#
 #    # receipt
 #    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
 #    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),

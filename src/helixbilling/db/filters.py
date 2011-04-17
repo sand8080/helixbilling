@@ -2,8 +2,7 @@ from helixcore.db.sql import And, Eq, In, MoreEq, LessEq, Any
 from helixcore.db.wrapper import SelectedMoreThanOneRow, ObjectNotFound
 from helixcore.db.filters import InSessionFilter, ObjectsFilter
 
-from helixbilling.db.dataobject import (Balance, Receipt, Bonus, BalanceLock,
-    ChargeOff, ActionLog, Currency)
+from helixbilling.db.dataobject import (Currency, UsedCurrency)
 from helixbilling.error import BalanceNotFound
 
 
@@ -11,6 +10,12 @@ class CurrencyFilter(ObjectsFilter):
     def __init__(self, filter_params, paging_params, ordering_params):
         super(CurrencyFilter, self).__init__(filter_params, paging_params,
             ordering_params, Currency)
+
+
+class UsedCurrencyFilter(InSessionFilter):
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(UsedCurrencyFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, UsedCurrency)
 
 
 #class BalanceFilter(ObjectsFilter):

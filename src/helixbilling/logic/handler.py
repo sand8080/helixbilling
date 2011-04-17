@@ -7,7 +7,7 @@ from helixcore.security.auth import CoreAuthenticator
 
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
-from helixbilling.db.filters import CurrencyFilter
+from helixbilling.db.filters import CurrencyFilter, UsedCurrencyFilter
 
 #from helixbilling.logic.helper import compute_locks
 #from helixbilling.logic import selector
@@ -50,19 +50,30 @@ class Handler(AbstractHandler):
         resp = auth.logout(data)
         return resp
 
-    @transaction()
-    @authenticate
-    def get_currencies(self, data, session, curs=None): #IGNORE:W0613
-        f = CurrencyFilter({}, {}, data.get('ordering_params'))
-        currencies = f.filter_objs(curs)
+    def _get_currencies(self, curs, db_filter):
+        currencies = db_filter.filter_objs(curs)
         def viewer(currency):
             return {
+                'id': currency.id,
                 'code': currency.code,
                 'cent_factor': currency.cent_factor,
                 'name': currency.name,
                 'location': currency.location,
             }
         return response_ok(currencies=self.objects_info(currencies, viewer))
+
+    @transaction()
+    @authenticate
+    def get_currencies(self, data, session, curs=None):
+        f = CurrencyFilter({}, {}, data.get('ordering_params'))
+        return self._get_currencies(curs, f)
+
+    @transaction()
+    @authenticate
+    def get_used_currencies(self, data, session, curs=None):
+        f = UsedCurrencyFilter(session, {'environment_id': session.environment_id},
+            {}, data.get('ordering_params'))
+        return self._get_currencies(curs, f)
 
 #    # --- operator ---
 #    @transaction()

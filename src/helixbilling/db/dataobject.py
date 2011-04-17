@@ -5,6 +5,7 @@ class Currency(Mapped):
     __slots__ = ['id', 'code', 'cent_factor', 'name', 'location']
     table = 'currency'
 
+
 class UsedCurrency(Mapped):
     __slots__ = ['id', 'environment_id', 'currencies_ids']
     table = 'used_currency'
