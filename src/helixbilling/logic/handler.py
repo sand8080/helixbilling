@@ -36,25 +36,16 @@ class Handler(AbstractHandler):
     def ping(self, data): #IGNORE:W0613
         return response_ok()
 
-    def login(self, data, curs=None):
+    def login(self, data):
         auth = Authentifier(settings.auth_server_url)
         resp = auth.login(data)
         return resp
 
-#    @transaction()
-#    @detalize_error(HelixauthError, 'session_id')
-#    def logout(self, data, curs=None):
-#
-#        session_id = data.get('session_id')
-#        f = SessionFilter({'session_id': session_id}, {}, {})
-#        try:
-#            session = f.filter_one_obj(curs, for_update=True)
-#            mapping.delete(curs, session)
-#            _add_log_info(data, session)
-#        except SessionNotFound:
-#            pass
-#        return response_ok()
-#
+    def logout(self, data):
+        auth = Authentifier(settings.auth_server_url)
+        resp = auth.logout(data)
+        return resp
+
 #    @transaction()
 #    def get_currencies(self, data, curs=None): #IGNORE:W0613
 #        ordering_params = data.get('ordering_params')

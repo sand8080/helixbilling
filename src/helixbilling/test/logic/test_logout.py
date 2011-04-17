@@ -1,16 +1,13 @@
 import unittest
 
-from helixauth.test.logic.actor_logic_test import ActorLogicTestCase
+from helixbilling.test.logic.logic_test import LogicTestCase
 
 
-class LogoutTestCase(ActorLogicTestCase):
+class LogoutTestCase(LogicTestCase):
     def test_logout(self):
-        self.create_actor_env()
-        sess_id = self.login_actor()
-        req = {'session_id': sess_id}
+        from helixbilling.test.logic import access_granted #@UnusedImport
+        req = {'session_id': 's'}
         resp = self.logout(**req)
-        self.check_response_ok(resp)
-        req = {'session_id': sess_id}
         self.check_response_ok(resp)
 
 
