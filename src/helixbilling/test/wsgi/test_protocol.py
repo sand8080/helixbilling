@@ -1,6 +1,4 @@
 # coding=utf-8
-import datetime
-import pytz
 import unittest
 
 from helixcore.server.api import Api
@@ -42,6 +40,16 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                 'location': 'y', 'cent_factor': 100}
         ]})
         self.validate_error_response(a_name)
+
+    def test_modify_used_currencies(self):
+        a_name = 'modify_used_currencies'
+        self.api.validate_request(a_name, {'session_id': 's'})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'new_currencies_ids': []})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'new_currencies_ids': [1, 2, 10]})
+
+        self.validate_status_response(a_name)
 
 #    def test_add_balance(self):
 #        a_name = 'add_balance'

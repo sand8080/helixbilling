@@ -13,6 +13,10 @@ class CurrencyFilter(ObjectsFilter):
 
 
 class UsedCurrencyFilter(InSessionFilter):
+    cond_map = [
+        ('environment_id', 'environment_id', Eq),
+    ]
+
     def __init__(self, session, filter_params, paging_params, ordering_params):
         super(UsedCurrencyFilter, self).__init__(session, filter_params,
             paging_params, ordering_params, UsedCurrency)

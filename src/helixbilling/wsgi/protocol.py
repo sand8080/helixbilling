@@ -40,6 +40,15 @@ GET_USED_CURRENCIES_REQUEST = GET_CURRENCIES_REQUEST
 
 GET_USED_CURRENCIES_RESPONSE = GET_CURRENCIES_RESPONSE
 
+MODIFY_USED_CURRENCIES_REQUEST = dict(
+    {
+        Optional('new_currencies_ids'): [int],
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+MODIFY_USED_CURRENCIES_RESPONSE = RESPONSE_STATUS_ONLY
+
 ADD_BALANCE_REQUEST = dict(
     {
         'customer_id': Text(),
@@ -405,6 +414,9 @@ protocol = [
 
     ApiCall('get_used_currencies_request', Scheme(GET_USED_CURRENCIES_REQUEST)),
     ApiCall('get_used_currencies_response', Scheme(GET_USED_CURRENCIES_RESPONSE)),
+
+    ApiCall('modify_used_currencies_request', Scheme(MODIFY_USED_CURRENCIES_REQUEST)),
+    ApiCall('modify_used_currencies_response', Scheme(MODIFY_USED_CURRENCIES_RESPONSE)),
 
 #    # balance
 #    ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),

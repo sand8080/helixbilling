@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import wraps, partial
 
 from helixcore.actions.handler import AbstractHandler
 from helixcore.server.response import response_ok
@@ -8,6 +8,9 @@ from helixcore.security.auth import CoreAuthenticator
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
 from helixbilling.db.filters import CurrencyFilter, UsedCurrencyFilter
+from helixcore.db.wrapper import ObjectNotFound
+from helixbilling.db.dataobject import UsedCurrency
+from helixcore import mapping
 
 #from helixbilling.logic.helper import compute_locks
 #from helixbilling.logic import selector
@@ -50,8 +53,7 @@ class Handler(AbstractHandler):
         resp = auth.logout(data)
         return resp
 
-    def _get_currencies(self, curs, db_filter):
-        currencies = db_filter.filter_objs(curs)
+    def _currencies_info(self, currencies):
         def viewer(currency):
             return {
                 'id': currency.id,
@@ -60,20 +62,54 @@ class Handler(AbstractHandler):
                 'name': currency.name,
                 'location': currency.location,
             }
-        return response_ok(currencies=self.objects_info(currencies, viewer))
+        return self.objects_info(currencies, viewer)
 
     @transaction()
     @authenticate
     def get_currencies(self, data, session, curs=None):
         f = CurrencyFilter({}, {}, data.get('ordering_params'))
-        return self._get_currencies(curs, f)
+        currencies = f.filter_objs(curs)
+        def viewer(currency):
+            return {
+                'id': currency.id,
+                'code': currency.code,
+                'cent_factor': currency.cent_factor,
+                'name': currency.name,
+                'location': currency.location,
+            }
+        return response_ok(currencies=self._currencies_info(currencies))
 
     @transaction()
     @authenticate
     def get_used_currencies(self, data, session, curs=None):
-        f = UsedCurrencyFilter(session, {'environment_id': session.environment_id},
-            {}, data.get('ordering_params'))
-        return self._get_currencies(curs, f)
+        f = CurrencyFilter({}, {}, data.get('ordering_params'))
+        currs = f.filter_objs(curs)
+        f = UsedCurrencyFilter(session, {}, {}, {})
+        try:
+            u_currs = f.filter_one_obj(curs)
+            u_currs_ids = u_currs.currencies_ids
+        except ObjectNotFound:
+            u_currs_ids = []
+        filtered_currs = [curr for curr in currs if curr.id in u_currs_ids]
+        return response_ok(currencies=self._currencies_info(filtered_currs))
+
+    @transaction()
+    @authenticate
+    def modify_used_currencies(self, data, session, curs=None):
+        f = CurrencyFilter({}, {}, {})
+        currs = f.filter_objs(curs)
+        new_currs_ids = data.get('new_currencies_ids', [])
+        filtered_currs_ids = [curr.id for curr in currs if curr.id in new_currs_ids]
+        data['new_currencies_ids'] = filtered_currs_ids
+        f = UsedCurrencyFilter(session, {}, {}, {})
+        try:
+            loader = partial(f.filter_one_obj, curs, for_update=True)
+            self.update_obj(curs, data, loader)
+        except ObjectNotFound:
+            u_currs = UsedCurrency(environment_id=session.environment_id,
+                currencies_ids=filtered_currs_ids)
+            mapping.save(curs, u_currs)
+        return response_ok()
 
 #    # --- operator ---
 #    @transaction()
