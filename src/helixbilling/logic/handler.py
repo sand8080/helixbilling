@@ -28,7 +28,8 @@ def authenticate(method):
         session_id = data['session_id']
         resp = auth.check_access(session_id, 'billing', method.__name__)
         if resp.get('status') == 'ok':
-            session = Session.from_dict(resp)
+            session = Session(session_id, '%s' % resp['environment_id'],
+                '%s' % resp['user_id'])
             return method(self, data, session, curs=curs)
         else:
             return resp
