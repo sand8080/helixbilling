@@ -21,18 +21,29 @@ from helixcore import mapping
 #    ORDER_STATUS_CHARGED_OFF)
 
 
+def _add_log_info(data, session, custom_actor_info=None):
+    data['actor_user_id'] = session.user_id
+    data['environment_id'] = session.environment_id
+    data['session_id'] = session.session_id
+    if custom_actor_info:
+        data['custom_actor_info'] = custom_actor_info
+
+
 def authenticate(method):
     @wraps(method)
     def decroated(self, data, curs):
         auth = CoreAuthenticator(settings.auth_server_url)
         session_id = data['session_id']
+        custom_actor_info = data.get('custom_actor_info')
         resp = auth.check_access(session_id, 'billing', method.__name__)
         if resp.get('status') == 'ok':
             session = Session(session_id, '%s' % resp['environment_id'],
                 '%s' % resp['user_id'])
-            return method(self, data, session, curs=curs)
+            result = method(self, data, session, curs=curs)
         else:
-            return resp
+            result = resp
+        _add_log_info(data, session, custom_actor_info)
+        return result
     return decroated
 
 

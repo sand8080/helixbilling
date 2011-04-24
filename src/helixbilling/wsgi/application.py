@@ -7,12 +7,12 @@ from helixbilling.db.dataobject import ActionLog
 
 class HelixbillingApplication(Application):
     def __init__(self, h, p, l):
-        tracking_api_calls = ()
+        tracking_api_calls = ('modify_used_currencies',)
         super(HelixbillingApplication, self).__init__(h, p, l, tracking_api_calls)
 
     @transaction()
     def track_api_call(self, remote_addr, s_req, s_resp,
-        action_name, authorized_data, processed_data, curs=None): #IGNORE:W0221
+        action_name, processed_data, curs=None):
         super(HelixbillingApplication, self).track_api_call(remote_addr, s_req, s_resp,
             action_name, processed_data)
 
