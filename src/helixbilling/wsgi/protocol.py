@@ -1,9 +1,8 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Optional, AnyOf, NonNegative, Positive,
-    Scheme, Text, NullableText, IsoDatetime, DecimalText, ArbitraryDict)
+    Scheme, Text, NullableText, IsoDatetime, DecimalText)
 from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
     RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR, RESPONSE_STATUS_ONLY,
-    AUTHORIZED_RESPONSE_STATUS_OK, AUTHORIZED_RESPONSE_STATUS_ERROR,
     AUTHORIZED_REQUEST_AUTH_INFO,
     ADDING_OBJECT_RESPONSE,
     PING_REQUEST, PING_RESPONSE,
@@ -48,6 +47,61 @@ MODIFY_USED_CURRENCIES_REQUEST = dict(
 )
 
 MODIFY_USED_CURRENCIES_RESPONSE = RESPONSE_STATUS_ONLY
+
+ACTION_LOG_INFO = {
+    'id': int,
+    'session_id': NullableText(),
+    'custom_actor_user_info': NullableText(),
+    'actor_user_id': NullableText(),
+    'subject_users_ids': [Text()],
+    'action': Text(),
+    'request_date': IsoDatetime(),
+    'remote_addr': Text(),
+    'request': Text(),
+    'response': Text(),
+}
+
+GET_ACTION_LOGS_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('from_request_date'): IsoDatetime(),
+            Optional('to_request_date'): IsoDatetime(),
+            Optional('action'): Text(),
+            Optional('session_id'): Text(),
+            Optional('user_id'): int,
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('request_date', '-request_date', 'id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+GET_ACTION_LOGS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'action_logs': [ACTION_LOG_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+GET_ACTION_LOGS_SELF_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('from_request_date'): IsoDatetime(),
+            Optional('to_request_date'): IsoDatetime(),
+            Optional('action'): Text(),
+            Optional('session_id'): Text(),
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('request_date', '-request_date', 'id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+GET_ACTION_LOGS_SELF_RESPONSE = GET_ACTION_LOGS_RESPONSE
 
 ADD_BALANCE_REQUEST = dict(
     {
@@ -417,6 +471,13 @@ protocol = [
 
     ApiCall('modify_used_currencies_request', Scheme(MODIFY_USED_CURRENCIES_REQUEST)),
     ApiCall('modify_used_currencies_response', Scheme(MODIFY_USED_CURRENCIES_RESPONSE)),
+
+    # action log
+    ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
+    ApiCall('get_action_logs_response', Scheme(GET_ACTION_LOGS_RESPONSE)),
+
+    ApiCall('get_action_logs_self_request', Scheme(GET_ACTION_LOGS_SELF_REQUEST)),
+    ApiCall('get_action_logs_self_response', Scheme(GET_ACTION_LOGS_SELF_RESPONSE)),
 
 #    # balance
 #    ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),

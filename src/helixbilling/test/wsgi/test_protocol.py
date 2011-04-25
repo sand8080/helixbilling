@@ -6,6 +6,8 @@ from helixcore.test.utils_for_testing import ProtocolTester
 
 from helixbilling.test.root_test import RootTestCase
 from helixbilling.wsgi.protocol import protocol
+import datetime
+import pytz
 
 
 class ProtocolTestCase(RootTestCase, ProtocolTester):
@@ -50,6 +52,71 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'new_currencies_ids': [1, 2, 10]})
 
         self.validate_status_response(a_name)
+
+    def test_get_action_logs(self):
+        a_name = 'get_action_logs'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {'limit': 0,},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {'limit': 0, 'offset': 0,},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'from_request_date': '2011-02-21 00:00:00',
+            'to_request_date': '2011-02-21 23:59:59'},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'action': 'a'}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'user_id': 1}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'session_id': ''}, 'paging_params': {}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'action_logs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 4,
+            'action_logs': [
+            {
+                'id': 42, 'session_id': 's_id', 'custom_actor_user_info': None,
+                'subject_users_ids': ['zzz'], 'actor_user_id': '1', 'action': 'a',
+                'request_date': '%s' % datetime.datetime.now(pytz.utc),
+                'remote_addr': '127.0.0.1', 'request': 'req',
+                'response': 'resp'
+            },
+        ]})
+        self.validate_error_response(a_name)
+
+    def test_get_action_logs_self(self):
+        a_name = 'get_action_logs_self'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {'limit': 0,},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {'limit': 0, 'offset': 0,},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'from_request_date': '2011-02-21 00:00:00',
+            'to_request_date': '2011-02-21 23:59:59'},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'action': 'a'}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'session_id': ''}, 'paging_params': {}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'action_logs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 4,
+            'action_logs': [
+            {
+                'id': 42, 'session_id': 's_id', 'custom_actor_user_info': None,
+                'subject_users_ids': ['3'], 'actor_user_id': '1', 'action': 'a',
+                'request_date': '%s' % datetime.datetime.now(pytz.utc),
+                'remote_addr': '127.0.0.1', 'request': 'req',
+                'response': 'resp'
+            },
+        ]})
+        self.validate_error_response(a_name)
+
 
 #    def test_add_balance(self):
 #        a_name = 'add_balance'
