@@ -13,4 +13,4 @@ def apply(curs):
 
 def revert(curs):
     print 'Dropping table used_currency'
-    curs.execute('DROP TABLE used_currency')
+    curs.execute('DROP TABLE IF EXISTS used_currency')
