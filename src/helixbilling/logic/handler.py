@@ -7,7 +7,8 @@ from helixcore.security.auth import CoreAuthenticator
 
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
-from helixbilling.db.filters import CurrencyFilter, UsedCurrencyFilter
+from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
+    ActionLogFilter)
 from helixcore.db.wrapper import ObjectNotFound
 from helixbilling.db.dataobject import UsedCurrency
 from helixcore import mapping
@@ -122,6 +123,35 @@ class Handler(AbstractHandler):
                 currencies_ids=filtered_currs_ids)
             mapping.save(curs, u_currs)
         return response_ok()
+
+    @transaction()
+    @authenticate
+    def get_action_logs(self, data, session, curs=None):
+        return self._get_action_logs(data, session, curs)
+
+    @transaction()
+    @authenticate
+    def get_action_logs_self(self, data, session, curs=None):
+        data['filter_params']['user_id'] = session.user_id
+        return self._get_action_logs(data, session, curs)
+
+    def _get_action_logs(self, data, session, curs):
+        f_params = data['filter_params']
+        u_id = f_params.pop('user_id', None)
+        if u_id:
+            f_params[('subject_users_ids', 'actor_user_id')] = (u_id, u_id)
+        f = ActionLogFilter(session.environment_id, f_params,
+            data['paging_params'], data.get('ordering_params'))
+        ss, total = f.filter_counted(curs)
+        def viewer(obj):
+            result = obj.to_dict()
+            result.pop('environment_id', None)
+            result['request_date'] = '%s' % result['request_date']
+            return result
+        return response_ok(action_logs=self.objects_info(ss, viewer),
+            total=total)
+
+
 
 #    # --- operator ---
 #    @transaction()

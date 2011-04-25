@@ -15,18 +15,25 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         super(ActionLogTestCase, self).setUp()
         self.cli = Client()
 
-#    def test_get_currencies(self):
-#        action = 'get_currencies'
-#        req = {'session_id': 's'}
-#        self._not_logged_action(action, sess_id, req)
+    def test_get_currencies(self):
+        action = 'get_currencies'
+        req = {}
+        self._not_logged_action(action, self.sess_id, req)
 
     def test_modify_used_currencies(self):
         action = 'modify_used_currencies'
         req = {'session_id': self.sess_id, 'new_currencies_ids': [3, 5]}
-        resp = self.cli.modify_used_currencies(**req)
-        self.check_response_ok(resp)
-        resp = self.cli.modify_used_currencies(**{})
-        print '### resp', resp
+        self._logged_action(action, req)
+
+    def test_get_action_logs(self):
+        action = 'get_action_logs'
+        self._not_logged_filtering_action(action, self.sess_id)
+
+    def test_get_action_logs_self(self):
+        action = 'get_action_logs_self'
+        self._not_logged_filtering_action(action, self.sess_id)
+
+
 
 #    def _check_action_tracked(self, operator, action_name, custom_operator_info):
 #        action_logs = self.get_action_logs(operator, {'action': action_name})
