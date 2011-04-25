@@ -4,7 +4,7 @@ from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.logic import access_granted #@UnusedImport
 
 
-class CurrenciesTestCase(ActorLogicTestCase):
+class CurrencyTestCase(ActorLogicTestCase):
     def test_get_currencies(self):
         sess = self.login_actor()
         req = {'session_id': sess.session_id}
