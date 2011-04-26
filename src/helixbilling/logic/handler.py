@@ -13,14 +13,6 @@ from helixcore.db.wrapper import ObjectNotFound
 from helixbilling.db.dataobject import UsedCurrency
 from helixcore import mapping
 
-#from helixbilling.logic.helper import compute_locks
-#from helixbilling.logic import selector
-#from helixbilling.logic.helper import cents_to_decimal, decimal_texts_to_cents
-#from helixbilling.logic.filters import (BalanceFilter, ReceiptFilter, BonusFilter,
-#    BalanceLockFilter, ChargeOffFilter, ActionLogFilter)
-#from helixbilling.wsgi.protocol import (ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED,
-#    ORDER_STATUS_CHARGED_OFF)
-
 
 def _add_log_info(data, session, custom_actor_info=None):
     data['actor_user_id'] = session.user_id
