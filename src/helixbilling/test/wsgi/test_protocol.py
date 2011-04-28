@@ -121,7 +121,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_add_balance(self):
         a_name = 'add_balance'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY'})
+            'user_id': 'U-23-52', 'currency_code': 'YYY'})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY',
             'overdraft_limit': '500.50'})

@@ -1,6 +1,6 @@
 from functools import wraps, partial
 
-from helixcore.actions.handler import AbstractHandler
+from helixcore.actions.handler import AbstractHandler, detalize_error
 from helixcore.server.response import response_ok
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
@@ -8,10 +8,13 @@ from helixcore.security.auth import CoreAuthenticator
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
-    ActionLogFilter)
-from helixcore.db.wrapper import ObjectNotFound
-from helixbilling.db.dataobject import UsedCurrency
+    ActionLogFilter, BalanceFilter)
+from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
+from helixbilling.db.dataobject import (UsedCurrency, Balance)
 from helixcore import mapping
+from helixbilling.error import CurrencyNotFound, BalanceAlreadyExists
+from helixcore.db.filters import build_index
+from helixbilling.logic import decimal_texts_to_cents
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -143,44 +146,29 @@ class Handler(AbstractHandler):
         return response_ok(action_logs=self.objects_info(ss, viewer),
             total=total)
 
+    @transaction()
+    @authenticate
+    @detalize_error(CurrencyNotFound, 'currency_code')
+    @detalize_error(ObjectCreationError, ['user_id', 'currency_code'])
+    def add_balance(self, data, session, curs=None):
+        curr_f = CurrencyFilter({}, {}, {})
+        currs = curr_f.filter_objs(curs)
+        currs_code_idx = build_index(currs, idx_field='code')
 
+        curr_code = data['currency_code']
+        if curr_code not in currs_code_idx:
+            raise CurrencyNotFound(currency_code=curr_code)
 
-#    # --- operator ---
-#    @transaction()
-#    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'login')
-#    def add_operator(self, data, curs=None):
-#        data['password'] = security.encrypt_password(data['password'])
-#        data.pop('custom_operator_info', None)
-#        try:
-#            mapping.insert(curs, Operator(**data))
-#        except ObjectCreationError:
-#            raise OperatorAlreadyExists(data['login'])
-#        return response_ok()
-#
-#    @transaction()
-#    @authenticate
-#    @detalize_error(DataIntegrityError, RequestProcessingError.Category.data_integrity, 'new_login')
-#    def modify_operator(self, data, operator, curs=None):
-#        if 'new_password' in data:
-#            data['new_password'] = security.encrypt_password(data['new_password'])
-#        loader = partial(selector.get_operator, curs, operator.id, for_update=True)
-#        self.update_obj(curs, data, loader)
-#        return response_ok()
-#
-#    # --- balance ---
-#    @transaction()
-#    @authenticate
-#    @detalize_error(CurrencyNotFound, RequestProcessingError.Category.data_integrity, 'currency')
-#    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'customer_id')
-#    def add_balance(self, data, operator, curs=None): #IGNORE:W0613
-#        currency = selector.get_currency_by_code(curs, data['currency'])
-#        data['currency_id'] = currency.id
-#        del data['currency']
-#        amount_fields = ['overdraft_limit']
-#        balance = Balance(**decimal_texts_to_cents(data, currency, amount_fields))
-#        mapping.insert(curs, balance)
-#        return response_ok()
-#
+        curr = currs_code_idx[curr_code]
+        del data['currency_code']
+        del data['session_id']
+        data['environment_id'] = session.environment_id
+        data['currency_id'] = curr.id
+        amount_fields = ['overdraft_limit']
+        balance = Balance(**decimal_texts_to_cents(data, curr, amount_fields))
+        mapping.insert(curs, balance)
+        return response_ok(id=balance.id)
+
 #    @transaction()
 #    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')

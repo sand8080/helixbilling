@@ -1,31 +1,43 @@
-from helixcore.db.wrapper import ObjectNotFound
-from helixcore.error import ActionNotAllowedError
+from helixcore import security
+from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
+
+from helixbilling import error_code
 
 
 class HelixbillingError(Exception):
-    pass
+    code = error_code.HELIXBILLING_ERROR
 
 
-class OperatorAlreadyExists(ActionNotAllowedError, HelixbillingError):
-    def __init__(self, login):
-        super(OperatorAlreadyExists, self).__init__("Operator '%s' already exists" % login)
+class HelixbillingObjectNotFound(HelixbillingError, ObjectNotFound):
+    def __init__(self, class_name, **kwargs):
+        sanitized_kwargs = security.sanitize_credentials(kwargs)
+        super(HelixbillingObjectNotFound, self).__init__('%s not found by params: %s' %
+            (class_name, sanitized_kwargs))
+        self.code = error_code.HELIXBILLING_OBJECT_NOT_FOUND
 
 
-class BalanceNotFound(ObjectNotFound):
-    def __init__(self, customer_id):
-        super(BalanceNotFound, self).__init__('Balance not found for customer %s' % customer_id)
+class HelixbillingObjectAlreadyExists(HelixbillingError, ObjectCreationError):
+    def __init__(self, *args, **kwargs):
+        super(HelixbillingObjectAlreadyExists, self).__init__(*args, **kwargs)
+        self.code = error_code.HELIXBILLING_OBJECT_ALREADY_EXISTS
 
 
-class BalanceDisabled(ActionNotAllowedError):
-    def __init__(self, customer_id):
-        super(BalanceDisabled, self).__init__('Balance disabled for customer %s' % customer_id)
+class CurrencyNotFound(HelixbillingObjectNotFound):
+    def __init__(self, **kwargs):
+        super(CurrencyNotFound, self).__init__('Currency', **kwargs)
 
 
-class CurrencyNotFound(ObjectNotFound):
-    def __init__(self, currency):
-        super(CurrencyNotFound, self).__init__('Currency %s not found' % currency)
+class BalanceNotFound(HelixbillingObjectNotFound):
+    def __init__(self, **kwargs):
+        super(BalanceNotFound, self).__init__('Balance', **kwargs)
 
 
-class OperatorNotFound(ObjectNotFound):
-    def __init__(self, operator_id):
-        super(OperatorNotFound, self).__init__("Operator '%s' not found" % operator_id)
+class BalanceAlreadyExists(HelixbillingObjectAlreadyExists):
+    def __init__(self, **kwargs):
+        super(BalanceAlreadyExists, self).__init__(**kwargs)
+        self.code = error_code.HELIXBILLING_BALANCE_ALREADY_EXISTS
+
+
+#class BalanceDisabled(ActionNotAllowedError):
+#    def __init__(self, customer_id):
+#        super(BalanceDisabled, self).__init__('Balance disabled for customer %s' % customer_id)

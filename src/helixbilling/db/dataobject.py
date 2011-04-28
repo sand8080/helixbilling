@@ -12,9 +12,9 @@ class UsedCurrency(Mapped):
 
 
 class Balance(Mapped):
-    __slots__ = ['id', 'operator_id', 'active', 'customer_id', 'currency_id', 'creation_date',
-        'available_real_amount', 'available_virtual_amount', 'locking_order', 'locked_amount',
-        'overdraft_limit',
+    __slots__ = ['id', 'environment_id', 'is_active', 'user_id', 'currency_id',
+        'available_real_amount', 'available_virtual_amount', 'locking_order',
+        'locked_amount', 'overdraft_limit',
     ]
     table = 'balance'
 

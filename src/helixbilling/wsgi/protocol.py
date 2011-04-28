@@ -103,12 +103,11 @@ GET_ACTION_LOGS_SELF_REQUEST = dict(
 
 GET_ACTION_LOGS_SELF_RESPONSE = GET_ACTION_LOGS_RESPONSE
 
-
 ADD_BALANCE_REQUEST = dict(
     {
         'user_id': Text(),
-        'is_active': bool,
         'currency_code': Text(),
+        Optional('is_active'): bool,
         Optional('overdraft_limit'): DecimalText(),
         Optional('locking_order'): locking_order_validator
     },

@@ -1,8 +1,11 @@
-from helixcore.db.sql import Eq, MoreEq, LessEq, Any
+from helixcore.db.sql import Eq, MoreEq, LessEq, Any, In
 from helixcore.db.filters import (InSessionFilter, ObjectsFilter,
     EnvironmentObjectsFilter)
 
-from helixbilling.db.dataobject import (Currency, UsedCurrency, ActionLog)
+from helixbilling.db.dataobject import (Currency, UsedCurrency, ActionLog,
+    Balance)
+from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
+from helixbilling.error import BalanceNotFound
 
 
 class CurrencyFilter(ObjectsFilter):
@@ -38,23 +41,25 @@ class ActionLogFilter(EnvironmentObjectsFilter):
             filter_params, paging_params, ordering_params, ActionLog)
 
 
-#class BalanceFilter(ObjectsFilter):
-#    cond_map = [
-#        ('customer_id', 'customer_id', Eq),
-#        ('customer_ids', 'customer_id', In),
-#        ('active', 'active', Eq),
-#    ]
-#
-#    def __init__(self, operator, filter_params, paging_params, ordering_params):
-#        super(BalanceFilter, self).__init__(operator, filter_params, paging_params,
-#            ordering_params, Balance)
-#
-#    def filter_one_obj(self, curs, for_update=False):
-#        try:
-#            return super(BalanceFilter, self).filter_one_obj(curs, for_update=for_update)
-#        except (ObjectNotFound, SelectedMoreThanOneRow):
-#            raise BalanceNotFound(self.filter_params.get('customer_id'))
-#
+class BalanceFilter(InSessionFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+        ('user_id', 'user_id', Eq),
+        ('users_ids', 'users_id', In),
+        ('is_active', 'is_active', Eq),
+    ]
+
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(BalanceFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, Balance)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(BalanceFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise BalanceNotFound(**self.filter_params)
+
 #
 #class ReceiptFilter(ObjectsFilter):
 #    cond_map = [
