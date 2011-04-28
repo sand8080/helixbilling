@@ -118,31 +118,30 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.validate_error_response(a_name)
 
 
-#    def test_add_balance(self):
-#        a_name = 'add_balance'
-#        self.api.validate_request(a_name, {'session_id': 'i',
-#            'customer_id': 'U-23-52', 'active': True, 'currency': 'YYY'})
-#        self.api.validate_request(a_name, {'session_id': 'i',
-#            'customer_id': 'U', 'active': True,
-#            'currency': 'YYY', 'overdraft_limit': '500.50'})
-#        self.api.validate_request(a_name, {'session_id': 'i',
-#            'customer_id': 'U', 'active': True, 'currency': 'YYY',
-#            'overdraft_limit': '500.50', 'locking_order': [
-#                'available_real_amount', 'available_virtual_amount'
-#            ]})
-#        self.api.validate_request(a_name, {'session_id': 'i',
-#            'customer_id': 'U', 'active': True, 'currency': 'YYY',
-#            'overdraft_limit': '500.50', 'locking_order': [
-#                'available_real_amount'
-#            ]})
-#        self.api.validate_request(a_name, {'session_id': 'i',
-#            'customer_id': 'U', 'active': True, 'currency': 'YYY',
-#            'overdraft_limit': '500.50', 'locking_order': None})
-#
-#        self.api.validate_response(a_name,
-#            {'status': 'ok', 'id': 1})
-#        self.validate_error_response(a_name)
-#
+    def test_add_balance(self):
+        a_name = 'add_balance'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY'})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY',
+            'overdraft_limit': '500.50'})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY',
+            'overdraft_limit': '500.50', 'locking_order': [
+                'available_real_amount', 'available_virtual_amount'
+            ]})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
+            'overdraft_limit': '500.50', 'locking_order': [
+                'available_real_amount'
+            ]})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
+            'overdraft_limit': '500.50', 'locking_order': None})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
+        self.validate_error_response(a_name)
+
 #    def test_modify_balance(self):
 #        a_name = 'modify_balance'
 #        self.api.validate_request(a_name, {'session_id': 'i',

@@ -103,11 +103,12 @@ GET_ACTION_LOGS_SELF_REQUEST = dict(
 
 GET_ACTION_LOGS_SELF_RESPONSE = GET_ACTION_LOGS_RESPONSE
 
+
 ADD_BALANCE_REQUEST = dict(
     {
-        'customer_id': Text(),
-        'active': bool,
-        'currency': Text(),
+        'user_id': Text(),
+        'is_active': bool,
+        'currency_code': Text(),
         Optional('overdraft_limit'): DecimalText(),
         Optional('locking_order'): locking_order_validator
     },
@@ -115,6 +116,9 @@ ADD_BALANCE_REQUEST = dict(
 )
 
 ADD_BALANCE_RESPONSE = ADDING_OBJECT_RESPONSE
+
+
+
 
 MODIFY_BALANCE_REQUEST = dict(
     {
@@ -479,10 +483,10 @@ protocol = [
     ApiCall('get_action_logs_self_request', Scheme(GET_ACTION_LOGS_SELF_REQUEST)),
     ApiCall('get_action_logs_self_response', Scheme(GET_ACTION_LOGS_SELF_RESPONSE)),
 
-#    # balance
-#    ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),
-#    ApiCall('add_balance_response', Scheme(ADD_BALANCE_RESPONSE)),
-#
+    # balance
+    ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),
+    ApiCall('add_balance_response', Scheme(ADD_BALANCE_RESPONSE)),
+
 #    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE_REQUEST)),
 #    ApiCall('modify_balance_response', Scheme(MODIFY_BALANCE_RESPONSE)),
 #
