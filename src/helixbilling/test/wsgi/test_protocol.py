@@ -142,14 +142,14 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
-#    def test_modify_balance(self):
-#        a_name = 'modify_balance'
-#        self.api.validate_request(a_name, {'session_id': 'i',
-#            'customer_id': 'U2', 'new_active': True,
-#            'new_overdraft_limit': '500.50', 'new_locking_order': None})
-#
-#        self.validate_status_response(a_name)
-#
+    def test_modify_balance(self):
+        a_name = 'modify_balance'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U2', 'new_is_active': True,
+            'new_overdraft_limit': '500.50', 'new_locking_order': None})
+
+        self.validate_status_response(a_name)
+
 #    def test_delete_balance(self):
 #        a_name = 'delete_balance'
 #        self.api.validate_request(a_name, {'session_id': 'i',
