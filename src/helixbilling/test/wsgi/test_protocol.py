@@ -13,6 +13,22 @@ import pytz
 class ProtocolTestCase(RootTestCase, ProtocolTester):
     api = Api(protocol)
 
+    def test_login(self):
+        a_name = 'login'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'environment_name': 'e', 'custom_actor_info': 'i'})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'environment_name': 'n'})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'session_id': 'i',
+            'user_id': '5', 'environment_id': '7'})
+        self.validate_error_response(a_name)
+
+    def test_logout(self):
+        a_name = 'logout'
+        self.api.validate_request(a_name, {'session_id': 'i'})
+        self.validate_status_response(a_name)
+
     def test_get_currencies(self):
         a_name = 'get_currencies'
         self.api.validate_request(a_name, {'session_id': 's'})
