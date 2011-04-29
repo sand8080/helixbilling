@@ -137,16 +137,10 @@ DELETE_BALANCE_REQUEST = dict(
 
 DELETE_BALANCE_RESPONSE = RESPONSE_STATUS_ONLY
 
-GET_BALANCE_REQUEST = dict(
-    {'customer_id': Text()},
-    **AUTHORIZED_REQUEST_AUTH_INFO
-)
-
 BALANCE_INFO = {
-    'customer_id': Text(),
-    'active': bool,
+    'user_id': Text(),
+    'is_active': bool,
     'currency_code': Text(),
-    'creation_date': IsoDatetime(),
     'available_real_amount': DecimalText(),
     'available_virtual_amount': DecimalText(),
     'overdraft_limit': DecimalText(),
@@ -154,7 +148,9 @@ BALANCE_INFO = {
     'locking_order': locking_order_validator,
 }
 
-GET_BALANCE_RESPONSE = AnyOf(
+GET_BALANCE_SELF_REQUEST = AUTHORIZED_REQUEST_AUTH_INFO
+
+GET_BALANCE_SELF_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **BALANCE_INFO
@@ -165,7 +161,9 @@ GET_BALANCE_RESPONSE = AnyOf(
 GET_BALANCES_REQUEST = dict(
     {
         'filter_params': {
-            Optional('customer_ids'): [Text()],
+            Optional('users_ids'): [Text()],
+            Optional('is_active'): bool,
+#            Optional('overdraft_limit'): DecimalText(),
         },
         'paging_params': REQUEST_PAGING_PARAMS,
     },
@@ -488,15 +486,12 @@ protocol = [
     ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE_REQUEST)),
     ApiCall('modify_balance_response', Scheme(MODIFY_BALANCE_RESPONSE)),
 
-#    ApiCall('delete_balance_request', Scheme(DELETE_BALANCE_REQUEST)),
-#    ApiCall('delete_balance_response', Scheme(DELETE_BALANCE_RESPONSE)),
-#
-#    ApiCall('get_balance_request', Scheme(GET_BALANCE_REQUEST)),
-#    ApiCall('get_balance_response', Scheme(GET_BALANCE_RESPONSE)),
-#
-#    ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
-#    ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
-#
+    ApiCall('get_balance_self_request', Scheme(GET_BALANCE_SELF_REQUEST)),
+    ApiCall('get_balance_self_response', Scheme(GET_BALANCE_SELF_RESPONSE)),
+
+    ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
+    ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
+
 #    # receipt
 #    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
 #    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),
