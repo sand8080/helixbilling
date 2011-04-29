@@ -8,11 +8,11 @@ from helixcore.security.auth import CoreAuthenticator
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
-    ActionLogFilter, BalanceFilter)
+    ActionLogFilter)
 from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 from helixbilling.db.dataobject import (UsedCurrency, Balance)
 from helixcore import mapping
-from helixbilling.error import CurrencyNotFound, BalanceAlreadyExists
+from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound)
 from helixcore.db.filters import build_index
 from helixbilling.logic import decimal_texts_to_cents
 
@@ -92,7 +92,7 @@ class Handler(AbstractHandler):
     def get_used_currencies(self, data, session, curs=None):
         f = CurrencyFilter({}, {}, data.get('ordering_params'))
         currs = f.filter_objs(curs)
-        f = UsedCurrencyFilter(session, {}, {}, {})
+        f = UsedCurrencyFilter(session, {}, {}, None)
         try:
             u_currs = f.filter_one_obj(curs)
             u_currs_ids = u_currs.currencies_ids
@@ -104,12 +104,12 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     def modify_used_currencies(self, data, session, curs=None):
-        f = CurrencyFilter({}, {}, {})
+        f = CurrencyFilter({}, {}, None)
         currs = f.filter_objs(curs)
         new_currs_ids = data.get('new_currencies_ids', [])
         filtered_currs_ids = [curr.id for curr in currs if curr.id in new_currs_ids]
         data['new_currencies_ids'] = filtered_currs_ids
-        f = UsedCurrencyFilter(session, {}, {}, {})
+        f = UsedCurrencyFilter(session, {}, {}, None)
         try:
             loader = partial(f.filter_one_obj, curs, for_update=True)
             self.update_obj(curs, data, loader)
@@ -149,17 +149,28 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     @detalize_error(CurrencyNotFound, 'currency_code')
+    @detalize_error(UsedCurrencyNotFound, 'currency_code')
     @detalize_error(ObjectCreationError, ['user_id', 'currency_code'])
     def add_balance(self, data, session, curs=None):
-        curr_f = CurrencyFilter({}, {}, {})
+        curr_f = CurrencyFilter({}, {}, None)
         currs = curr_f.filter_objs(curs)
         currs_code_idx = build_index(currs, idx_field='code')
 
         curr_code = data['currency_code']
         if curr_code not in currs_code_idx:
             raise CurrencyNotFound(currency_code=curr_code)
-
         curr = currs_code_idx[curr_code]
+
+        try:
+            u_curr_f = UsedCurrencyFilter(session, {}, {}, None)
+            u_currs = u_curr_f.filter_one_obj(curs)
+            u_currs_ids = u_currs.currencies_ids
+        except ObjectNotFound:
+            u_currs_ids = []
+
+        if curr.id not in u_currs_ids:
+            raise UsedCurrencyNotFound(currency_code=curr_code)
+
         del data['currency_code']
         del data['session_id']
         data['environment_id'] = session.environment_id

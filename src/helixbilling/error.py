@@ -27,6 +27,11 @@ class CurrencyNotFound(HelixbillingObjectNotFound):
         super(CurrencyNotFound, self).__init__('Currency', **kwargs)
 
 
+class UsedCurrencyNotFound(HelixbillingObjectNotFound):
+    def __init__(self, **kwargs):
+        super(UsedCurrencyNotFound, self).__init__('UsedCurrency', **kwargs)
+
+
 class BalanceNotFound(HelixbillingObjectNotFound):
     def __init__(self, **kwargs):
         super(BalanceNotFound, self).__init__('Balance', **kwargs)

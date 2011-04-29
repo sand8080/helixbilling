@@ -13,6 +13,13 @@ class BalanceTestCase(ActorLogicTestCase):
     def test_add_balance(self, curs=None):
         sess = self.login_actor()
         user_id = '4444'
+
+        # not used currency
+        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
+        self.assertRaises(RequestProcessingError, self.add_balance, **req)
+
+        self.new_used_currencies(['RUB', 'BZD'])
+
         # correct balance creation
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         resp = self.add_balance(**req)
@@ -39,14 +46,13 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(0, balance.locked_amount)
         self.assertEquals(['available_real_amount'], balance.locking_order)
 
+        # wrong currency code
+        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'XXX'}
+        self.assertRaises(RequestProcessingError, self.add_balance, **req)
 
-#
-#        # wrong currency code
-#        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'XXX'}
-#        self.assertRaises(RequestProcessingError, self.add_balance, **req)
-#        # adding balance with duplicate currency
-#        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
-#        self.assertRaises(RequestProcessingError, self.add_balance, **req)
+        # adding balance with duplicate currency
+        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
+        self.assertRaises(RequestProcessingError, self.add_balance, **req)
 
 #    def test_modify_balance(self):
 #        c_id='U-23-52'
