@@ -8,11 +8,12 @@ from helixcore.security.auth import CoreAuthenticator
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
-    ActionLogFilter)
+    ActionLogFilter, BalanceFilter)
 from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 from helixbilling.db.dataobject import (UsedCurrency, Balance)
 from helixcore import mapping
-from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound)
+from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
+    BalanceNotFound)
 from helixcore.db.filters import build_index
 from helixbilling.logic import decimal_texts_to_cents
 
@@ -180,18 +181,21 @@ class Handler(AbstractHandler):
         mapping.insert(curs, balance)
         return response_ok(id=balance.id)
 
-#    @transaction()
-#    @authenticate
-#    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
-#    def modify_balance(self, data, operator, curs=None):
-#        c_id = data['customer_id']
-#        balance = selector.get_balance(curs, operator, c_id, for_update=True)
-#        currency = selector.get_currency_by_balance(curs, balance)
-#        amount_fields = ['new_overdraft_limit']
-#        self.update_obj(curs, decimal_texts_to_cents(data, currency, amount_fields),
-#            partial(lambda x: x, balance))
-#        return response_ok()
-#
+    @transaction()
+    @authenticate
+    @detalize_error(BalanceNotFound, 'user_id')
+    def modify_balance(self, data, session, curs=None):
+        u_id = data['user_id']
+        balance_f = BalanceFilter(session, {'user_id': u_id}, {}, None)
+        balance = balance_f.filter_one_obj(curs)
+
+        curr_f = CurrencyFilter({'id': balance.currency_id}, {}, None)
+        curr = curr_f.filter_one_obj(curs)
+        amount_fields = ['new_overdraft_limit']
+        self.update_obj(curs, decimal_texts_to_cents(data, curr, amount_fields),
+            partial(lambda x: x, balance))
+        return response_ok()
+
 #    @transaction()
 #    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')

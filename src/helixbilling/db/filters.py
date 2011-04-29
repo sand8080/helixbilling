@@ -9,6 +9,10 @@ from helixbilling.error import BalanceNotFound
 
 
 class CurrencyFilter(ObjectsFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+    ]
+
     def __init__(self, filter_params, paging_params, ordering_params):
         super(CurrencyFilter, self).__init__(filter_params, paging_params,
             ordering_params, Currency)
