@@ -169,8 +169,8 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         a_name = 'get_balance_self'
         self.api.validate_request(a_name, {'session_id': 'i'})
 
-        self.api.validate_response(a_name, {'status': 'ok', 'user_id': 'c',
-            'is_active': True, 'currency_code': 'RU',
+        self.api.validate_response(a_name, {'status': 'ok', 'id': 2,
+            'user_id': 'c', 'is_active': True, 'currency_code': 'RU',
             'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
             'locked_amount': '14.09', 'overdraft_limit': '0.14',
             'locking_order': ['available_real_amount', 'available_virtual_amount'],
@@ -197,7 +197,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'balances': [
                 {
-                    'user_id': 'c', 'is_active': True,
+                    'id': 22, 'user_id': 'c', 'is_active': True,
                     'currency_code': 'RU', 'available_real_amount': '3.15',
                     'available_virtual_amount': '0.0',
                     'locked_amount': '14.09', 'overdraft_limit': '0.14',

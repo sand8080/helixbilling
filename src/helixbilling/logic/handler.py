@@ -15,7 +15,7 @@ from helixcore import mapping
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     BalanceNotFound)
 from helixcore.db.filters import build_index
-from helixbilling.logic import decimal_texts_to_cents
+from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -203,37 +203,34 @@ class Handler(AbstractHandler):
             partial(lambda x: x, balance))
         return response_ok()
 
-#    @transaction()
-#    @authenticate
-#    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
-#    def delete_balance(self, data, operator, curs=None):
-#        obj = selector.get_balance(curs, operator, data['customer_id'], for_update=True)
-#        mapping.delete(curs, obj)
-#        return response_ok()
-#
-#    @transaction()
-#    @authenticate
-#    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
-#    def get_balance(self, data, operator, curs=None):
-#        c_id = data['customer_id']
-#        balance = selector.get_balance(curs, operator, c_id)
-#        currencies_idx = selector.get_currencies_indexed_by_id(curs)
-#        return response_ok(**self.balance_viewer(currencies_idx, balance))
-#
-#    def balance_viewer(self, currencies_idx, balance):
-#        currency = currencies_idx[balance.currency_id]
-#        return {
-#            'customer_id': balance.customer_id,
-#            'active': balance.active,
-#            'currency_code': currency.code,
-#            'creation_date': '%s' % balance.creation_date.isoformat(),
-#            'available_real_amount': '%s' % cents_to_decimal(currency, balance.available_real_amount),
-#            'available_virtual_amount': '%s' % cents_to_decimal(currency, balance.available_virtual_amount),
-#            'overdraft_limit': '%s' % cents_to_decimal(currency, balance.overdraft_limit),
-#            'locked_amount': '%s' % cents_to_decimal(currency, balance.locked_amount),
-#            'locking_order': balance.locking_order,
-#        }
-#
+    @transaction()
+    @authenticate
+    @detalize_error(BalanceNotFound, 'session_id')
+    @detalize_error(CurrencyNotFound, 'session_id')
+    def get_balance_self(self, data, session, curs=None):
+        balance_f = BalanceFilter(session, {'user_id': session.user_id}, {}, None)
+        balance = balance_f.filter_one_obj(curs)
+
+        curr_f = CurrencyFilter({'id': balance.currency_id}, {}, None)
+        curr = curr_f.filter_one_obj(curs)
+        currs_id_idx = build_index([curr])
+
+        return response_ok(**self._balance_viewer(currs_id_idx, balance))
+
+    def _balance_viewer(self, currencies_idx, balance):
+        currency = currencies_idx[balance.currency_id]
+        return {
+            'id': balance.id,
+            'user_id': balance.user_id,
+            'is_active': balance.is_active,
+            'currency_code': currency.code,
+            'available_real_amount': '%s' % cents_to_decimal(currency, balance.available_real_amount),
+            'available_virtual_amount': '%s' % cents_to_decimal(currency, balance.available_virtual_amount),
+            'overdraft_limit': '%s' % cents_to_decimal(currency, balance.overdraft_limit),
+            'locked_amount': '%s' % cents_to_decimal(currency, balance.locked_amount),
+            'locking_order': balance.locking_order,
+        }
+
 #    @transaction()
 #    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')

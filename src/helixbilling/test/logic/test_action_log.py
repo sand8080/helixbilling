@@ -42,6 +42,11 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': '4242'}
         self._logged_action(action, req)
 
+    def test_get_balance_self(self):
+        action = 'get_balance_self'
+        req = {'session_id': self.sess_id}
+        self._not_logged_action(action, self.sess_id, req)
+
 
 if __name__ == '__main__':
     unittest.main()

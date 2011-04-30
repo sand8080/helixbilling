@@ -128,16 +128,8 @@ MODIFY_BALANCE_REQUEST = dict(
 
 MODIFY_BALANCE_RESPONSE = RESPONSE_STATUS_ONLY
 
-
-
-DELETE_BALANCE_REQUEST = dict(
-    {'customer_id': Text()},
-    **AUTHORIZED_REQUEST_AUTH_INFO
-)
-
-DELETE_BALANCE_RESPONSE = RESPONSE_STATUS_ONLY
-
 BALANCE_INFO = {
+    'id': int,
     'user_id': Text(),
     'is_active': bool,
     'currency_code': Text(),

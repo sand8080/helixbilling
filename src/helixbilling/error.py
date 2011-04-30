@@ -35,6 +35,7 @@ class UsedCurrencyNotFound(HelixbillingObjectNotFound):
 class BalanceNotFound(HelixbillingObjectNotFound):
     def __init__(self, **kwargs):
         super(BalanceNotFound, self).__init__('Balance', **kwargs)
+        self.code = error_code.HELIXBILLING_BALANCE_NOT_FOUND
 
 
 class BalanceAlreadyExists(HelixbillingObjectAlreadyExists):
