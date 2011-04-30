@@ -18,7 +18,9 @@ class BalanceTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         self.assertRaises(RequestProcessingError, self.add_balance, **req)
 
-        self.new_used_currencies(['RUB', 'BZD'])
+        req = {'session_id': sess.session_id, 'new_currencies_codes': ['RUB', 'BZD']}
+        resp = self.modify_used_currencies(**req)
+        self.check_response_ok(resp)
 
         # correct balance creation
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
@@ -59,7 +61,10 @@ class BalanceTestCase(ActorLogicTestCase):
     @transaction()
     def test_modify_balance(self, curs=None):
         sess = self.login_actor()
-        self.new_used_currencies(['RUB'])
+
+        req = {'session_id': sess.session_id, 'new_currencies_codes': ['RUB']}
+        resp = self.modify_used_currencies(**req)
+        self.check_response_ok(resp)
 
         user_id='U-23-52'
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}

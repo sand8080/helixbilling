@@ -22,7 +22,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
     def test_modify_used_currencies(self):
         action = 'modify_used_currencies'
-        req = {'session_id': self.sess_id, 'new_currencies_ids': [3, 5]}
+        req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB']}
         self._logged_action(action, req)
 
     def test_get_action_logs(self):
@@ -32,7 +32,6 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
     def test_get_action_logs_self(self):
         action = 'get_action_logs_self'
         self._not_logged_filtering_action(action, self.sess_id)
-
 
 
 #    def _check_action_tracked(self, operator, action_name, custom_operator_info):

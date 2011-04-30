@@ -104,19 +104,26 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
+    @detalize_error(CurrencyNotFound, 'new_currencies_codes')
     def modify_used_currencies(self, data, session, curs=None):
         f = CurrencyFilter({}, {}, None)
         currs = f.filter_objs(curs)
-        new_currs_ids = data.get('new_currencies_ids', [])
-        filtered_currs_ids = [curr.id for curr in currs if curr.id in new_currs_ids]
-        data['new_currencies_ids'] = filtered_currs_ids
+        currs_code_idx = build_index(currs, idx_field='code')
+        new_currs_codes = data.pop('new_currencies_codes', [])
+
+        for curr_code in new_currs_codes:
+            if curr_code not in currs_code_idx:
+                raise CurrencyNotFound(code=curr_code)
+
+        new_currs_ids = [curr.id for curr in currs if curr.code in new_currs_codes]
+        data['new_currencies_ids'] = new_currs_ids
         f = UsedCurrencyFilter(session, {}, {}, None)
         try:
             loader = partial(f.filter_one_obj, curs, for_update=True)
             self.update_obj(curs, data, loader)
         except ObjectNotFound:
             u_currs = UsedCurrency(environment_id=session.environment_id,
-                currencies_ids=filtered_currs_ids)
+                currencies_ids=new_currs_ids)
             mapping.save(curs, u_currs)
         return response_ok()
 

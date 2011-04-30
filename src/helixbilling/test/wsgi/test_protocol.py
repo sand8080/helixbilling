@@ -63,9 +63,9 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         a_name = 'modify_used_currencies'
         self.api.validate_request(a_name, {'session_id': 's'})
         self.api.validate_request(a_name, {'session_id': 's',
-            'new_currencies_ids': []})
+            'new_currencies_codes': []})
         self.api.validate_request(a_name, {'session_id': 's',
-            'new_currencies_ids': [1, 2, 10]})
+            'new_currencies_codes': ['XXX', 'RUR', 'RUB']})
 
         self.validate_status_response(a_name)
 

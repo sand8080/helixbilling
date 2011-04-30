@@ -41,7 +41,7 @@ GET_USED_CURRENCIES_RESPONSE = GET_CURRENCIES_RESPONSE
 
 MODIFY_USED_CURRENCIES_REQUEST = dict(
     {
-        Optional('new_currencies_ids'): [int],
+        Optional('new_currencies_codes'): [Text()],
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
