@@ -145,7 +145,10 @@ GET_BALANCE_SELF_REQUEST = AUTHORIZED_REQUEST_AUTH_INFO
 GET_BALANCE_SELF_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        **BALANCE_INFO
+        **{
+            'balances': [BALANCE_INFO],
+            'total': NonNegative(int),
+        }
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -170,16 +173,8 @@ GET_BALANCES_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-GET_BALANCES_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{
-            'balances': [BALANCE_INFO],
-            'total': NonNegative(int),
-        }
-    ),
-    RESPONSE_STATUS_ERROR
-)
+GET_BALANCES_RESPONSE = GET_BALANCE_SELF_RESPONSE
+
 
 ## --- common income money structures ---
 #ENROLL_INCOME = dict(
