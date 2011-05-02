@@ -100,8 +100,15 @@ class BalanceTestCase(ActorLogicTestCase):
     def test_get_balance_self(self):
         sess = self.login_actor()
 
-        self.set_used_currencies(sess, ['RUB'])
+        self.set_used_currencies(sess, ['RUB', 'BYR'])
 
+        req = {'session_id': sess.session_id}
+        resp = self.get_balance_self(**req)
+        self.check_response_ok(resp)
+        self.assertEquals([], resp['balances'])
+        self.assertEquals(0, resp['total'])
+
+        # adding first balance
         req = {'session_id': sess.session_id, 'user_id': sess.user_id, 'currency_code': 'RUB'}
         resp = self.add_balance(**req)
         self.check_response_ok(resp)
@@ -110,32 +117,32 @@ class BalanceTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id}
         resp = self.get_balance_self(**req)
         self.check_response_ok(resp)
+        self.assertEquals(1, len(resp['balances']))
 
-        self.assertEquals(balance_id, resp['id'])
-        self.assertEquals(sess.user_id, resp['user_id'])
-        self.assertEquals(True, resp['is_active'])
-        self.assertEquals('0.00', resp['overdraft_limit'])
-        self.assertEquals('0.00', resp['locked_amount'])
-        self.assertEquals(None, resp['locking_order'])
-        self.assertEquals('0.00', resp['available_real_amount'])
-        self.assertEquals('0.00', resp['available_virtual_amount'])
-        self.assertEquals('RUB', resp['currency_code'])
+        balance = resp['balances'][0]
+        self.assertEquals(balance_id, balance['id'])
+        self.assertEquals(sess.user_id, balance['user_id'])
+        self.assertEquals(True, balance['is_active'])
+        self.assertEquals('0.00', balance['overdraft_limit'])
+        self.assertEquals('0.00', balance['locked_amount'])
+        self.assertEquals(None, balance['locking_order'])
+        self.assertEquals('0.00', balance['available_real_amount'])
+        self.assertEquals('0.00', balance['available_virtual_amount'])
+        self.assertEquals('RUB', balance['currency_code'])
 
-#        self.add_balance(self.test_login, self.test_password, c_id, self.currency)
-#        response = self.handle_action('get_balance', {
-#            'login': self.test_login,
-#            'password': self.test_password,
-#            'customer_id': c_id
-#        })
-#        self.assertEqual(True, response['active'])
-#        self.assertEqual(c_id, response['customer_id'])
-#        self.assertEqual(self.currency.code, response['currency_code']) #IGNORE:E1103
-#        self.assertEqual(Decimal('0.0'), Decimal(response['available_real_amount']))
-#        self.assertEqual(Decimal('0.0'), Decimal(response['available_virtual_amount']))
-#        self.assertEqual(Decimal('0.0'), Decimal(response['overdraft_limit']))
-#        self.assertEqual(Decimal('0.0'), Decimal(response['locked_amount']))
-#        self.assertEqual(None, response['locking_order'])
-#
+        # adding second balance
+        req = {'session_id': sess.session_id, 'user_id': sess.user_id, 'currency_code': 'BYR'}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_id = resp['id']
+
+        req = {'session_id': sess.session_id}
+        resp = self.get_balance_self(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(2, len(resp['balances']))
+
+
+
 #    def test_view_balances(self):
 #        l, p = 't', 'p'
 #        self.add_operator('t', 'p')

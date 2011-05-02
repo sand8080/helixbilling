@@ -203,33 +203,34 @@ class Handler(AbstractHandler):
             partial(lambda x: x, balance))
         return response_ok()
 
+    def _get_balances(self, curs, balance_f):
+        balances, total = balance_f.filter_counted(curs)
+
+        curr_f = CurrencyFilter({}, {}, None)
+        currs = curr_f.filter_objs(curs)
+        currs_id_idx = build_index(currs)
+
+        def viewer(balance):
+            currency = currs_id_idx[balance.currency_id]
+            return {
+                'id': balance.id,
+                'user_id': balance.user_id,
+                'is_active': balance.is_active,
+                'currency_code': currency.code,
+                'available_real_amount': '%s' % cents_to_decimal(currency, balance.available_real_amount),
+                'available_virtual_amount': '%s' % cents_to_decimal(currency, balance.available_virtual_amount),
+                'overdraft_limit': '%s' % cents_to_decimal(currency, balance.overdraft_limit),
+                'locked_amount': '%s' % cents_to_decimal(currency, balance.locked_amount),
+                'locking_order': balance.locking_order,
+            }
+        return response_ok(balances=self.objects_info(balances, viewer), total=total)
+
     @transaction()
     @authenticate
-    @detalize_error(BalanceNotFound, 'session_id')
     @detalize_error(CurrencyNotFound, 'session_id')
     def get_balance_self(self, data, session, curs=None):
         balance_f = BalanceFilter(session, {'user_id': session.user_id}, {}, None)
-        balance = balance_f.filter_one_obj(curs)
-
-        curr_f = CurrencyFilter({'id': balance.currency_id}, {}, None)
-        curr = curr_f.filter_one_obj(curs)
-        currs_id_idx = build_index([curr])
-
-        return response_ok(**self._balance_viewer(currs_id_idx, balance))
-
-    def _balance_viewer(self, currencies_idx, balance):
-        currency = currencies_idx[balance.currency_id]
-        return {
-            'id': balance.id,
-            'user_id': balance.user_id,
-            'is_active': balance.is_active,
-            'currency_code': currency.code,
-            'available_real_amount': '%s' % cents_to_decimal(currency, balance.available_real_amount),
-            'available_virtual_amount': '%s' % cents_to_decimal(currency, balance.available_virtual_amount),
-            'overdraft_limit': '%s' % cents_to_decimal(currency, balance.overdraft_limit),
-            'locked_amount': '%s' % cents_to_decimal(currency, balance.locked_amount),
-            'locking_order': balance.locking_order,
-        }
+        return self._get_balances(curs, balance_f)
 
 #    @transaction()
 #    @authenticate
