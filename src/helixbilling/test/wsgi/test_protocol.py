@@ -183,15 +183,16 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'filter_params': {}, 'paging_params': {},})
         self.api.validate_request(a_name, {'session_id': 'i',
             'filter_params': {},
-            'paging_params': {'limit': 0,}})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {},
             'paging_params': {'limit': 0, 'offset': 0,}})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {'users_ids': []},
-            'paging_params': {'limit': 0, 'offset': 0,}})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {'users_ids': ['a', 'b']},
+            'filter_params': {'users_ids': [], 'is_active': True,
+            'currency_code': 'XXX',
+            'from_available_real_amount': '1.0',
+            'to_available_real_amount': '2.01',
+            'from_available_virtual_amount': '7.10',
+            'to_available_virtual_amount': '19.01',
+            'from_overdraft_limit': '600.17', 'to_overdraft_limit': '700',
+            'from_locked_amount': '41.24', 'to_locked_amount': '50',},
             'paging_params': {}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
