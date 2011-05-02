@@ -141,53 +141,43 @@ class BalanceTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
         self.assertEquals(2, len(resp['balances']))
 
+    def test_get_balances(self):
+        sess = self.login_actor()
+        self.set_used_currencies(sess, ['RUB', 'BYR'])
 
+        # creating balances
+        u_id_0, u_id_1 = 'u_id_0', 'u_id_1'
+        req = {'session_id': sess.session_id, 'user_id': u_id_0, 'currency_code': 'RUB'}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'user_id': u_id_1, 'currency_code': 'RUB'}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'user_id': u_id_1, 'currency_code': 'BYR'}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
 
-#    def test_view_balances(self):
-#        l, p = 't', 'p'
-#        self.add_operator('t', 'p')
-#        c_ids = list('abcdef')
-#        for idx, c_id in enumerate(c_ids):
-#            self.add_balance(l, p, c_id, self.currency, overdraft_limit='%s' % idx,
-#                locking_order=['available_real_amount'])
-#        expected_c_ids = c_ids[:3]
-#        response = self.handle_action('view_balances', {
-#            'login': l, 'password': p,
-#            'filter_params': {'customer_ids': expected_c_ids},
-#            'paging_params': {},
-#        })
-#        b_info = response['balances']
-#        self.assertEqual(len(expected_c_ids), len(b_info))
-#        self.assertEqual(response['total'], len(expected_c_ids))
-#        actual_c_ids = [i['customer_id'] for i in b_info]
-#        self.assertEqual(sorted(actual_c_ids), sorted(expected_c_ids))
-#
-#        offset = 2
-#        expected_c_ids = c_ids[offset:]
-#        response = self.handle_action('view_balances', {
-#            'login': l, 'password': p,
-#            'filter_params': {},
-#            'paging_params': {'offset': offset},
-#        })
-#        b_info = response['balances']
-#        self.assertEqual(len(expected_c_ids), len(b_info))
-#        self.assertEqual(response['total'], len(c_ids))
-#        actual_c_ids = [i['customer_id'] for i in b_info]
-#        self.assertEqual(sorted(actual_c_ids), sorted(expected_c_ids))
-#
-#        offset = 1
-#        limit = 2
-#        expected_c_ids = c_ids[offset:offset + limit]
-#        response = self.handle_action('view_balances', {
-#            'login': l, 'password': p,
-#            'filter_params': {},
-#            'paging_params': {'offset': offset, 'limit': 2}
-#        })
-#        b_info = response['balances']
-#        self.assertEqual(len(expected_c_ids), len(b_info))
-#        self.assertEqual(response['total'], len(c_ids))
-#        actual_c_ids = [i['customer_id'] for i in b_info]
-#        self.assertEqual(sorted(actual_c_ids), sorted(expected_c_ids))
+        # testing getting balances
+        req = {'session_id': sess.session_id, 'filter_params': {'users_ids': ['u_id_0']},
+            'paging_params': {}}
+        resp = self.get_balances(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, len(resp['balances']))
+
+        req = {'session_id': sess.session_id, 'filter_params': {'currency_code': 'XXX'},
+            'paging_params': {}}
+        resp = self.get_balances(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(0, len(resp['balances']))
+
+        req = {'session_id': sess.session_id, 'filter_params': {'users_ids': ['u_id_1'],
+            'currency_code': 'RUB'},
+            'paging_params': {}}
+        resp = self.get_balances(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, len(resp['balances']))
+        balance = resp['balances'][0]
+        self.assertEquals('RUB', balance['currency_code'])
 
 
 if __name__ == '__main__':

@@ -160,10 +160,7 @@ class Handler(AbstractHandler):
     @detalize_error(UsedCurrencyNotFound, 'currency_code')
     @detalize_error(ObjectCreationError, ['user_id', 'currency_code'])
     def add_balance(self, data, session, curs=None):
-        curr_f = CurrencyFilter({}, {}, None)
-        currs = curr_f.filter_objs(curs)
-        currs_code_idx = build_index(currs, idx_field='code')
-
+        currs_code_idx = self._get_currs_idx(curs, 'code')
         curr_code = data['currency_code']
         if curr_code not in currs_code_idx:
             raise CurrencyNotFound(currency_code=curr_code)
@@ -195,7 +192,6 @@ class Handler(AbstractHandler):
         u_id = data['user_id']
         balance_f = BalanceFilter(session, {'user_id': u_id}, {}, None)
         balance = balance_f.filter_one_obj(curs)
-
         curr_f = CurrencyFilter({'id': balance.currency_id}, {}, None)
         curr = curr_f.filter_one_obj(curs)
         amount_fields = ['new_overdraft_limit']
@@ -203,12 +199,14 @@ class Handler(AbstractHandler):
             partial(lambda x: x, balance))
         return response_ok()
 
-    def _get_balances(self, curs, balance_f):
-        balances, total = balance_f.filter_counted(curs)
-
+    def _get_currs_idx(self, curs, idx_field):
         curr_f = CurrencyFilter({}, {}, None)
         currs = curr_f.filter_objs(curs)
-        currs_id_idx = build_index(currs)
+        return build_index(currs, idx_field=idx_field)
+
+    def _get_balances(self, curs, balance_f):
+        balances, total = balance_f.filter_counted(curs)
+        currs_id_idx = self._get_currs_idx(curs, 'id')
 
         def viewer(balance):
             currency = currs_id_idx[balance.currency_id]
@@ -227,9 +225,25 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    @detalize_error(CurrencyNotFound, 'session_id')
     def get_balance_self(self, data, session, curs=None):
         balance_f = BalanceFilter(session, {'user_id': session.user_id}, {}, None)
+        return self._get_balances(curs, balance_f)
+
+    @transaction()
+    @authenticate
+    def get_balances(self, data, session, curs=None):
+        f_params = data['filter_params']
+        if 'currency_code' in f_params:
+            currency_code = f_params.pop('currency_code')
+            currs_code_idx = self._get_currs_idx(curs, 'code')
+            curr = currs_code_idx.get(currency_code)
+            if curr:
+                f_params['currency_id'] = curr.id
+            else:
+                f_params['currency_id'] = None
+
+        balance_f = BalanceFilter(session, f_params,
+            data['paging_params'], data.get('ordering_params'))
         return self._get_balances(curs, balance_f)
 
 #    @transaction()

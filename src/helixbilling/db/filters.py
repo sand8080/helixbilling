@@ -49,8 +49,17 @@ class BalanceFilter(InSessionFilter):
     cond_map = [
         ('id', 'id', Eq),
         ('user_id', 'user_id', Eq),
-        ('users_ids', 'users_id', In),
+        ('users_ids', 'user_id', In),
         ('is_active', 'is_active', Eq),
+        ('currency_id', 'currency_id', Eq),
+        ('from_available_real_amount', 'available_real_amount', MoreEq),
+        ('to_available_real_amount', 'available_real_amount', LessEq),
+        ('from_available_virtual_amount', 'available_virtual_amount', MoreEq),
+        ('to_available_virtual_amount', 'available_virtual_amount', LessEq),
+        ('from_overdraft_limit', 'overdraft_limit', MoreEq),
+        ('to_overdraft_limit', 'overdraft_limit', LessEq),
+        ('from_locked_amount', 'locked_amount', MoreEq),
+        ('to_locked_amount', 'locked_amount', LessEq),
     ]
 
     def __init__(self, session, filter_params, paging_params, ordering_params):
