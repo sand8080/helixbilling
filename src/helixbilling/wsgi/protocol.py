@@ -156,6 +156,7 @@ GET_BALANCE_SELF_RESPONSE = AnyOf(
 GET_BALANCES_REQUEST = dict(
     {
         'filter_params': {
+            Optional('user_id'): Text(),
             Optional('users_ids'): [Text()],
             Optional('is_active'): bool,
             Optional('currency_code'): Text(),
@@ -169,6 +170,7 @@ GET_BALANCES_REQUEST = dict(
             Optional('to_locked_amount'): DecimalText(),
         },
         'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
