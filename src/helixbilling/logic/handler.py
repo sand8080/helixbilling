@@ -226,7 +226,8 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     def get_balance_self(self, data, session, curs=None):
-        balance_f = BalanceFilter(session, {'user_id': session.user_id}, {}, None)
+        balance_f = BalanceFilter(session, {'user_id': session.user_id}, {},
+            ['-currency_id'])
         return self._get_balances(curs, balance_f)
 
     @transaction()
