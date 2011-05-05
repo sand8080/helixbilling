@@ -42,6 +42,10 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': '4242'}
         self._logged_action(action, req)
 
+        action = 'add_balance'
+        req = {'session_id': self.sess_id, 'currency_code': 'XXX', 'user_id': '4242'}
+        self._logged_action(action, req, check_resp=False)
+
     def test_get_balance_self(self):
         action = 'get_balance_self'
         req = {'session_id': self.sess_id}
