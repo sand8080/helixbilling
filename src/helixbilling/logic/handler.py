@@ -36,7 +36,12 @@ def authenticate(method):
         if resp.get('status') == 'ok':
             session = Session(session_id, '%s' % resp['environment_id'],
                 '%s' % resp['user_id'])
-            result = method(self, data, session, curs=curs)
+            try:
+                result = method(self, data, session, curs=curs)
+            except Exception, e:
+                data['environment_id'] = session.environment_id
+                _add_log_info(data, session, custom_actor_info)
+                raise e
         else:
             result = resp
         _add_log_info(data, session, custom_actor_info)
