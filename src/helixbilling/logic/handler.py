@@ -31,7 +31,7 @@ def authenticate(method):
     def decroated(self, data, curs):
         auth = CoreAuthenticator(settings.auth_server_url)
         session_id = data['session_id']
-        custom_actor_info = data.get('custom_actor_info')
+        custom_actor_info = data.pop('custom_actor_info', None)
         resp = auth.check_access(session_id, 'billing', method.__name__)
         if resp.get('status') == 'ok':
             session = Session(session_id, '%s' % resp['environment_id'],
