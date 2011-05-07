@@ -26,7 +26,7 @@ class HelixbillingApplication(Application):
         data = {
             'environment_id': environment_id,
             'session_id': session_id,
-            'custom_actor_user_info': custom_actor_info,
+            'custom_actor_info': custom_actor_info,
             'actor_user_id': actor_user_id,
             'subject_users_ids': users_ids,
             'action': action_name,

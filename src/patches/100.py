@@ -7,7 +7,7 @@ def apply(curs):
             PRIMARY KEY(id),
             environment_id varchar NOT NULL,
             session_id text,
-            custom_actor_user_info varchar,
+            custom_actor_info varchar,
             actor_user_id varchar NOT NULL,
             subject_users_ids varchar[],
             action varchar NOT NULL,

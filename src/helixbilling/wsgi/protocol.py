@@ -51,7 +51,7 @@ MODIFY_USED_CURRENCIES_RESPONSE = RESPONSE_STATUS_ONLY
 ACTION_LOG_INFO = {
     'id': int,
     'session_id': NullableText(),
-    'custom_actor_user_info': NullableText(),
+    'custom_actor_info': NullableText(),
     'actor_user_id': NullableText(),
     'subject_users_ids': [Text()],
     'action': Text(),

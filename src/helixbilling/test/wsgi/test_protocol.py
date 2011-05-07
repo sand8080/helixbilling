@@ -93,7 +93,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'total': 4,
             'action_logs': [
             {
-                'id': 42, 'session_id': 's_id', 'custom_actor_user_info': None,
+                'id': 42, 'session_id': 's_id', 'custom_actor_info': None,
                 'subject_users_ids': ['zzz'], 'actor_user_id': '1', 'action': 'a',
                 'request_date': '%s' % datetime.datetime.now(pytz.utc),
                 'remote_addr': '127.0.0.1', 'request': 'req',
@@ -124,7 +124,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'total': 4,
             'action_logs': [
             {
-                'id': 42, 'session_id': 's_id', 'custom_actor_user_info': None,
+                'id': 42, 'session_id': 's_id', 'custom_actor_info': None,
                 'subject_users_ids': ['3'], 'actor_user_id': '1', 'action': 'a',
                 'request_date': '%s' % datetime.datetime.now(pytz.utc),
                 'remote_addr': '127.0.0.1', 'request': 'req',
