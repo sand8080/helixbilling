@@ -165,6 +165,10 @@ class Handler(AbstractHandler):
     @detalize_error(UsedCurrencyNotFound, 'currency_code')
     @detalize_error(ObjectCreationError, ['user_id', 'currency_code'])
     def add_balance(self, data, session, curs=None):
+        check_user_exist = data.pop('check_user_exist', False)
+        if check_user_exist:
+            # TODO: implement check_user_exist call
+            pass
         currs_code_idx = self._get_currs_idx(curs, 'code')
         curr_code = data['currency_code']
         if curr_code not in currs_code_idx:

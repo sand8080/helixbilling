@@ -109,7 +109,8 @@ ADD_BALANCE_REQUEST = dict(
         'currency_code': Text(),
         Optional('is_active'): bool,
         Optional('overdraft_limit'): DecimalText(),
-        Optional('locking_order'): locking_order_validator
+        Optional('locking_order'): locking_order_validator,
+        Optional('check_user_exist'): bool,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )

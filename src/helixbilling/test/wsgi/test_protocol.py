@@ -153,6 +153,9 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'locking_order': None})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
+            'overdraft_limit': '500.50', 'check_user_exist': True})
 
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)

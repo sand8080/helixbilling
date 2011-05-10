@@ -9,6 +9,16 @@ from helixbilling.db.filters import BalanceFilter
 
 
 class BalanceTestCase(ActorLogicTestCase):
+    def test_add_balance_with_user_checking(self):
+        sess = self.login_actor()
+        user_id = sess.user_id
+        self.set_used_currencies(sess, ['RUB', 'BZD'])
+
+        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB',
+            'check_user_exist': True}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+
     @transaction()
     def test_add_balance(self, curs=None):
         sess = self.login_actor()
@@ -55,7 +65,6 @@ class BalanceTestCase(ActorLogicTestCase):
         # adding balance with duplicate currency
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         self.assertRaises(RequestProcessingError, self.add_balance, **req)
-
     @transaction()
     def test_modify_balance(self, curs=None):
         sess = self.login_actor()
