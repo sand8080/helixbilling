@@ -22,7 +22,7 @@ class BalanceTestCase(ActorLogicTestCase):
     @transaction()
     def test_add_balance(self, curs=None):
         sess = self.login_actor()
-        user_id = '4444'
+        user_id = 4444
 
         # not used currency
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
@@ -65,13 +65,14 @@ class BalanceTestCase(ActorLogicTestCase):
         # adding balance with duplicate currency
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         self.assertRaises(RequestProcessingError, self.add_balance, **req)
+
     @transaction()
     def test_modify_balance(self, curs=None):
         sess = self.login_actor()
 
         self.set_used_currencies(sess, ['RUB'])
 
-        user_id='U-23-52'
+        user_id = 23
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         resp = self.add_balance(**req)
         self.check_response_ok(resp)
@@ -155,7 +156,7 @@ class BalanceTestCase(ActorLogicTestCase):
         self.set_used_currencies(sess, ['RUB', 'BYR'])
 
         # creating balances
-        u_id_0, u_id_1 = 'u_id_0', 'u_id_1'
+        u_id_0, u_id_1 = 1, 2
         req = {'session_id': sess.session_id, 'user_id': u_id_0, 'currency_code': 'RUB'}
         resp = self.add_balance(**req)
         self.check_response_ok(resp)
@@ -167,7 +168,7 @@ class BalanceTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
 
         # testing getting balances
-        req = {'session_id': sess.session_id, 'filter_params': {'users_ids': ['u_id_0']},
+        req = {'session_id': sess.session_id, 'filter_params': {'users_ids': [u_id_0]},
             'paging_params': {}}
         resp = self.get_balances(**req)
         self.check_response_ok(resp)
@@ -179,7 +180,7 @@ class BalanceTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
         self.assertEquals(0, len(resp['balances']))
 
-        req = {'session_id': sess.session_id, 'filter_params': {'users_ids': ['u_id_1'],
+        req = {'session_id': sess.session_id, 'filter_params': {'users_ids': [u_id_1],
             'currency_code': 'RUB'},
             'paging_params': {}}
         resp = self.get_balances(**req)

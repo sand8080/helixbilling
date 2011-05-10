@@ -5,9 +5,9 @@ def apply(curs):
         CREATE TABLE balance (
             id serial,
             PRIMARY KEY(id),
-            environment_id varchar NOT NULL,
+            environment_id integer NOT NULL,
             is_active boolean NOT NULL DEFAULT True,
-            user_id varchar NOT NULL,
+            user_id integer NOT NULL,
             currency_id int NOT NULL,
             FOREIGN KEY(currency_id) REFERENCES currency(id),
             available_real_amount NUMERIC DEFAULT 0,

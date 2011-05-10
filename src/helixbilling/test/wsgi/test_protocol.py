@@ -21,7 +21,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'environment_name': 'n'})
 
         self.api.validate_response(a_name, {'status': 'ok', 'session_id': 'i',
-            'user_id': '5', 'environment_id': '7'})
+            'user_id': 5, 'environment_id': 7})
         self.validate_error_response(a_name)
 
     def test_logout(self):
@@ -84,7 +84,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 's',
             'filter_params': {'action': 'a'}, 'paging_params': {}})
         self.api.validate_request(a_name, {'session_id': 's',
-            'filter_params': {'user_id': '1'}, 'paging_params': {}})
+            'filter_params': {'user_id': 1}, 'paging_params': {}})
         self.api.validate_request(a_name, {'session_id': 's',
             'filter_params': {'session_id': ''}, 'paging_params': {}})
 
@@ -94,7 +94,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'action_logs': [
             {
                 'id': 42, 'session_id': 's_id', 'custom_actor_info': None,
-                'subject_users_ids': ['zzz'], 'actor_user_id': '1', 'action': 'a',
+                'subject_users_ids': [3], 'actor_user_id': 1, 'action': 'a',
                 'request_date': '%s' % datetime.datetime.now(pytz.utc),
                 'remote_addr': '127.0.0.1', 'request': 'req',
                 'response': 'resp'
@@ -125,7 +125,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'action_logs': [
             {
                 'id': 42, 'session_id': 's_id', 'custom_actor_info': None,
-                'subject_users_ids': ['3'], 'actor_user_id': '1', 'action': 'a',
+                'subject_users_ids': [3], 'actor_user_id': 1, 'action': 'a',
                 'request_date': '%s' % datetime.datetime.now(pytz.utc),
                 'remote_addr': '127.0.0.1', 'request': 'req',
                 'response': 'resp'
@@ -136,25 +136,25 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_add_balance(self):
         a_name = 'add_balance'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'currency_code': 'YYY'})
+            'user_id': 23, 'currency_code': 'YYY'})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY',
+            'user_id': 23, 'is_active': True, 'currency_code': 'YYY',
             'overdraft_limit': '500.50'})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'is_active': True, 'currency_code': 'YYY',
+            'user_id': 23, 'is_active': True, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'locking_order': [
                 'available_real_amount', 'available_virtual_amount'
             ]})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
+            'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'locking_order': [
                 'available_real_amount'
             ]})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
+            'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'locking_order': None})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U-23-52', 'is_active': False, 'currency_code': 'YYY',
+            'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'check_user_exist': True})
 
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
@@ -163,7 +163,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_modify_balance(self):
         a_name = 'modify_balance'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 'U2', 'new_is_active': True,
+            'user_id': 2, 'new_is_active': True,
             'new_overdraft_limit': '500.50', 'new_locking_order': None})
 
         self.validate_status_response(a_name)
@@ -173,7 +173,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i'})
 
         self.api.validate_response(a_name, {'status': 'ok', 'balances': [
-                {'id': 2, 'user_id': 'c', 'is_active': True, 'currency_code': 'RUB',
+                {'id': 2, 'user_id': 3, 'is_active': True, 'currency_code': 'RUB',
                 'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
                 'locked_amount': '14.09', 'overdraft_limit': '0.14',
                 'locking_order': ['available_real_amount', 'available_virtual_amount']}
@@ -203,7 +203,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'balances': [
                 {
-                    'id': 22, 'user_id': 'c', 'is_active': True,
+                    'id': 22, 'user_id': 4, 'is_active': True,
                     'currency_code': 'RU', 'available_real_amount': '3.15',
                     'available_virtual_amount': '0.0',
                     'locked_amount': '14.09', 'overdraft_limit': '0.14',

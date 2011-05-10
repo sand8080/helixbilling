@@ -52,8 +52,8 @@ ACTION_LOG_INFO = {
     'id': int,
     'session_id': NullableText(),
     'custom_actor_info': NullableText(),
-    'actor_user_id': NullableText(),
-    'subject_users_ids': [Text()],
+    'actor_user_id': AnyOf(int, None),
+    'subject_users_ids': [int],
     'action': Text(),
     'request_date': IsoDatetime(),
     'remote_addr': Text(),
@@ -68,7 +68,7 @@ GET_ACTION_LOGS_REQUEST = dict(
             Optional('to_request_date'): IsoDatetime(),
             Optional('action'): Text(),
             Optional('session_id'): Text(),
-            Optional('user_id'): Text(),
+            Optional('user_id'): int,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
         Optional('ordering_params'): [AnyOf('request_date', '-request_date', 'id', '-id')]
@@ -105,7 +105,7 @@ GET_ACTION_LOGS_SELF_RESPONSE = GET_ACTION_LOGS_RESPONSE
 
 ADD_BALANCE_REQUEST = dict(
     {
-        'user_id': Text(),
+        'user_id': int,
         'currency_code': Text(),
         Optional('is_active'): bool,
         Optional('overdraft_limit'): DecimalText(),
@@ -119,7 +119,7 @@ ADD_BALANCE_RESPONSE = ADDING_OBJECT_RESPONSE
 
 MODIFY_BALANCE_REQUEST = dict(
     {
-        'user_id': Text(),
+        'user_id': int,
         Optional('new_is_active'): bool,
         Optional('new_overdraft_limit'): DecimalText(),
         Optional('new_locking_order'): locking_order_validator
@@ -131,7 +131,7 @@ MODIFY_BALANCE_RESPONSE = RESPONSE_STATUS_ONLY
 
 BALANCE_INFO = {
     'id': int,
-    'user_id': Text(),
+    'user_id': int,
     'is_active': bool,
     'currency_code': Text(),
     'available_real_amount': DecimalText(),
@@ -157,8 +157,8 @@ GET_BALANCE_SELF_RESPONSE = AnyOf(
 GET_BALANCES_REQUEST = dict(
     {
         'filter_params': {
-            Optional('user_id'): Text(),
-            Optional('users_ids'): [Text()],
+            Optional('user_id'): int,
+            Optional('users_ids'): [int],
             Optional('is_active'): bool,
             Optional('currency_code'): Text(),
             Optional('from_available_real_amount'): DecimalText(),
