@@ -13,7 +13,7 @@ from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 from helixbilling.db.dataobject import (UsedCurrency, Balance)
 from helixcore import mapping
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
-    BalanceNotFound)
+    BalanceNotFound, UserNotExists, UserCheckingError)
 from helixcore.db.filters import build_index
 from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal
 
@@ -159,16 +159,28 @@ class Handler(AbstractHandler):
         return response_ok(action_logs=self.objects_info(ss, viewer),
             total=total)
 
+    def _check_user_exist(self, session, user_id):
+        auth = CoreAuthenticator(settings.auth_server_url)
+        resp = auth.check_user_exist(session.session_id, user_id)
+        if resp['status'] == 'ok':
+            if resp['exist'] == True:
+                pass
+            else:
+                raise UserNotExists('User %s not exists' % user_id)
+        else:
+            raise UserCheckingError(resp.get('message'))
+
     @transaction()
     @authenticate
     @detalize_error(CurrencyNotFound, 'currency_code')
     @detalize_error(UsedCurrencyNotFound, 'currency_code')
     @detalize_error(ObjectCreationError, ['user_id', 'currency_code'])
+    @detalize_error(UserCheckingError, 'user_id')
+    @detalize_error(UserNotExists, 'user_id')
     def add_balance(self, data, session, curs=None):
         check_user_exist = data.pop('check_user_exist', False)
         if check_user_exist:
-            # TODO: implement check_user_exist call
-            pass
+            self._check_user_exist(session, data['user_id'])
         currs_code_idx = self._get_currs_idx(curs, 'code')
         curr_code = data['currency_code']
         if curr_code not in currs_code_idx:

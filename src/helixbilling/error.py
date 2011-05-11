@@ -32,6 +32,18 @@ class UsedCurrencyNotFound(HelixbillingObjectNotFound):
         super(UsedCurrencyNotFound, self).__init__('UsedCurrency', **kwargs)
 
 
+class UserNotExists(HelixbillingError):
+    def __init__(self, *args, **kwargs):
+        super(UserNotExists, self).__init__(*args, **kwargs)
+        self.code = error_code.HELIXBILLING_USER_NOT_EXISTS
+
+
+class UserCheckingError(HelixbillingError):
+    def __init__(self, *args, **kwargs):
+        super(UserCheckingError, self).__init__(*args, **kwargs)
+        self.code = error_code.HELIXBILLING_USER_CHECKING_ERROR
+
+
 class BalanceNotFound(HelixbillingObjectNotFound):
     def __init__(self, **kwargs):
         super(BalanceNotFound, self).__init__('Balance', **kwargs)

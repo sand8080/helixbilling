@@ -6,6 +6,7 @@ from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.logic import access_granted #@UnusedImport
 from helixbilling.conf.db import transaction
 from helixbilling.db.filters import BalanceFilter
+from helixcore.security.auth import CoreAuthenticator
 
 
 class BalanceTestCase(ActorLogicTestCase):
@@ -14,6 +15,13 @@ class BalanceTestCase(ActorLogicTestCase):
         user_id = sess.user_id
         self.set_used_currencies(sess, ['RUB', 'BZD'])
 
+        req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB',
+            'check_user_exist': True}
+        self.assertRaises(RequestProcessingError, self.add_balance, **req)
+
+        def user_exist(_, __, ___):
+            return {'status': 'ok', 'exist': True}
+        CoreAuthenticator.check_user_exist = user_exist
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB',
             'check_user_exist': True}
         resp = self.add_balance(**req)
