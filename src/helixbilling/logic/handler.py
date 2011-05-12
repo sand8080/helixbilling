@@ -150,13 +150,13 @@ class Handler(AbstractHandler):
             f_params[('subject_users_ids', 'actor_user_id')] = (u_id, u_id)
         f = ActionLogFilter(session.environment_id, f_params,
             data['paging_params'], data.get('ordering_params'))
-        ss, total = f.filter_counted(curs)
+        action_logs, total = f.filter_counted(curs)
         def viewer(obj):
             result = obj.to_dict()
             result.pop('environment_id', None)
             result['request_date'] = '%s' % result['request_date']
             return result
-        return response_ok(action_logs=self.objects_info(ss, viewer),
+        return response_ok(action_logs=self.objects_info(action_logs, viewer),
             total=total)
 
     def _check_user_exist(self, session, user_id):
