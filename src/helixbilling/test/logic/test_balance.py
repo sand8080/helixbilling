@@ -1,6 +1,6 @@
 import unittest
 
-from helixcore.error import RequestProcessingError
+from helixcore.error import RequestProcessingError, HelixcoreException
 
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.logic import access_granted #@UnusedImport
@@ -17,7 +17,7 @@ class BalanceTestCase(ActorLogicTestCase):
 
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB',
             'check_user_exist': True}
-        self.assertRaises(RequestProcessingError, self.add_balance, **req)
+        self.assertRaises(HelixcoreException, self.add_balance, **req)
 
         def user_exist(_, __, ___):
             return {'status': 'ok', 'exist': True}
@@ -70,7 +70,7 @@ class BalanceTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'XXX'}
         self.assertRaises(RequestProcessingError, self.add_balance, **req)
 
-        # adding balance with duplicate currency
+        # adding duplicate balance
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         self.assertRaises(RequestProcessingError, self.add_balance, **req)
 

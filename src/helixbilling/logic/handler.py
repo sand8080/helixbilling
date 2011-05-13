@@ -13,7 +13,7 @@ from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 from helixbilling.db.dataobject import (UsedCurrency, Balance)
 from helixcore import mapping
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
-    BalanceNotFound, UserNotExists, UserCheckingError)
+    BalanceNotFound, UserNotExists, UserCheckingError, BalanceAlreadyExists)
 from helixcore.db.filters import build_index
 from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal
 
@@ -24,6 +24,13 @@ def _add_log_info(data, session, custom_actor_info=None):
     data['session_id'] = session.session_id
     if custom_actor_info:
         data['custom_actor_info'] = custom_actor_info
+
+
+def _add_subject_users_ids(data, user_ids):
+    if isinstance(user_ids, list):
+        data['subject_users_ids'] = user_ids
+    else:
+        data['subject_users_ids'] = [user_ids]
 
 
 def authenticate(method):
@@ -178,9 +185,11 @@ class Handler(AbstractHandler):
     @detalize_error(UserCheckingError, 'user_id')
     @detalize_error(UserNotExists, 'user_id')
     def add_balance(self, data, session, curs=None):
-        check_user_exist = data.pop('check_user_exist', False)
+        user_id = data['user_id']
+        _add_subject_users_ids(data, user_id)
+        check_user_exist = data.get('check_user_exist', False)
         if check_user_exist:
-            self._check_user_exist(session, data['user_id'])
+            self._check_user_exist(session, user_id)
         currs_code_idx = self._get_currs_idx(curs, 'code')
         curr_code = data['currency_code']
         if curr_code not in currs_code_idx:
@@ -197,13 +206,21 @@ class Handler(AbstractHandler):
         if curr.id not in u_currs_ids:
             raise UsedCurrencyNotFound(currency_code=curr_code)
 
-        del data['currency_code']
-        del data['session_id']
-        data['environment_id'] = session.environment_id
-        data['currency_id'] = curr.id
+        b_data = dict(data)
+        b_data.pop('currency_code', None)
+        b_data.pop('session_id', None)
+        b_data.pop('check_user_exist', None)
+        b_data.pop('subject_users_ids', None)
+
+        b_data['environment_id'] = session.environment_id
+        b_data['currency_id'] = curr.id
         amount_fields = ['overdraft_limit']
-        balance = Balance(**decimal_texts_to_cents(data, curr, amount_fields))
-        mapping.insert(curs, balance)
+        balance = Balance(**decimal_texts_to_cents(b_data, curr, amount_fields))
+        try:
+            mapping.insert(curs, balance)
+        except ObjectCreationError:
+            raise BalanceAlreadyExists()
+
         return response_ok(id=balance.id)
 
     @transaction()
