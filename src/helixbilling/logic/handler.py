@@ -1,6 +1,7 @@
 from functools import wraps, partial
 
-from helixcore.actions.handler import AbstractHandler, detalize_error
+from helixcore.actions.handler import (AbstractHandler, detalize_error,
+    set_subject_users_ids)
 from helixcore.server.response import response_ok
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
@@ -24,13 +25,6 @@ def _add_log_info(data, session, custom_actor_info=None):
     data['session_id'] = session.session_id
     if custom_actor_info:
         data['custom_actor_info'] = custom_actor_info
-
-
-def _add_subject_users_ids(data, user_ids):
-    if isinstance(user_ids, list):
-        data['subject_users_ids'] = user_ids
-    else:
-        data['subject_users_ids'] = [user_ids]
 
 
 def authenticate(method):
@@ -177,6 +171,7 @@ class Handler(AbstractHandler):
         else:
             raise UserCheckingError(resp.get('message'))
 
+    @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
     @detalize_error(CurrencyNotFound, 'currency_code')
@@ -186,7 +181,6 @@ class Handler(AbstractHandler):
     @detalize_error(UserNotExists, 'user_id')
     def add_balance(self, data, session, curs=None):
         user_id = data['user_id']
-        _add_subject_users_ids(data, user_id)
         check_user_exist = data.get('check_user_exist', False)
         if check_user_exist:
             self._check_user_exist(session, user_id)
@@ -220,7 +214,6 @@ class Handler(AbstractHandler):
             mapping.insert(curs, balance)
         except ObjectCreationError:
             raise BalanceAlreadyExists()
-
         return response_ok(id=balance.id)
 
     @transaction()
