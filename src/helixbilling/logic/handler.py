@@ -14,7 +14,7 @@ from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 from helixbilling.db.dataobject import (UsedCurrency, Balance)
 from helixcore import mapping
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
-    BalanceNotFound, UserNotExists, UserCheckingError, BalanceAlreadyExists)
+    UserNotExists, UserCheckingError, BalanceAlreadyExists)
 from helixcore.db.filters import build_index
 from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal
 
@@ -221,14 +221,31 @@ class Handler(AbstractHandler):
     @authenticate
     def modify_balances(self, data, session, curs=None):
         balances_ids = data['ids']
-        f = BalanceFilter(session, {'ids': balances_ids}, {}, None)
-        balances = f.filter_objs(curs)
+        currency_f = CurrencyFilter({}, {}, None)
+        currencies = currency_f.filter_objs(curs)
+        currencies_id_idx = build_index(currencies, 'id')
+
+        balance_f = BalanceFilter(session, {'ids': balances_ids}, {}, None)
+        balances = balance_f.filter_objs(curs)
+
+        # Setting users ids for logging
         users_ids = [balance.user_id for balance in balances]
         data['users_ids'] = users_ids
-        loader = lambda: balances
+
+        # Handling different currencies for different balances
+        new_overdraft_limit = data.pop('new_overdraft_limit', None)
+        def loader():
+            if new_overdraft_limit is not None:
+                for b in balances:
+                    d = {'new_overdraft_limit': new_overdraft_limit}
+                    amount_fields = ['new_overdraft_limit']
+                    currency = currencies_id_idx[b.currency_id]
+                    d = decimal_texts_to_cents(d, currency, amount_fields)
+                    b.overdraft_limit = d['new_overdraft_limit']
+            return balances
+
         self.update_objs(curs, data, loader)
         return response_ok()
-
 
     def _get_currs_idx(self, curs, idx_field):
         curr_f = CurrencyFilter({}, {}, None)
