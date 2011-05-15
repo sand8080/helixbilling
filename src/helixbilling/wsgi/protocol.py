@@ -157,6 +157,8 @@ GET_BALANCE_SELF_RESPONSE = AnyOf(
 GET_BALANCES_REQUEST = dict(
     {
         'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
             Optional('user_id'): int,
             Optional('users_ids'): [int],
             Optional('is_active'): bool,

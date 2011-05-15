@@ -74,8 +74,7 @@ class BalanceTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'RUB'}
         self.assertRaises(RequestProcessingError, self.add_balance, **req)
 
-    @transaction()
-    def test_modify_balance(self, curs=None):
+    def test_modify_balances(self):
         sess = self.login_actor()
 
         self.set_used_currencies(sess, ['RUB'])
@@ -86,34 +85,36 @@ class BalanceTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
         balance_id = resp['id']
 
-        balance_f = BalanceFilter(sess, {'id': balance_id}, {}, {})
-        balance = balance_f.filter_one_obj(curs)
-        self.assertEquals(True, balance.is_active)
-        self.assertEquals(sess.environment_id, balance.environment_id)
-        self.assertEquals(user_id, balance.user_id)
-        self.assertEquals(0, balance.overdraft_limit)
-        self.assertEquals(0, balance.available_real_amount)
-        self.assertEquals(0, balance.available_virtual_amount)
-        self.assertEquals(0, balance.locked_amount)
-        self.assertEquals(None, balance.locking_order)
-
-        req = {'session_id': sess.session_id, 'user_id': user_id,
-            'new_is_active': False, 'new_overdraft_limit': '100',
-            'new_locking_order': ['available_real_amount', 'available_virtual_amount']}
-        resp = self.modify_balance(**req)
+        req = {'session_id': sess.session_id, 'filter_params': {'id': balance_id},
+            'paging_params': {}}
+        resp = self.get_balances(**req)
         self.check_response_ok(resp)
-
-        balance_f = BalanceFilter(sess, {'id': balance_id}, {}, {})
-        balance = balance_f.filter_one_obj(curs)
-        self.assertEquals(False, balance.is_active)
-        self.assertEquals(sess.environment_id, balance.environment_id)
-        self.assertEquals(user_id, balance.user_id)
-        self.assertEquals(10000, balance.overdraft_limit)
-        self.assertEquals(0, balance.available_real_amount)
-        self.assertEquals(0, balance.available_virtual_amount)
-        self.assertEquals(0, balance.locked_amount)
-        self.assertEquals(['available_real_amount', 'available_virtual_amount'],
-            balance.locking_order)
+#        self.assertEquals(True, balance.is_active)
+#        self.assertEquals(sess.environment_id, balance.environment_id)
+#        self.assertEquals(user_id, balance.user_id)
+#        self.assertEquals(0, balance.overdraft_limit)
+#        self.assertEquals(0, balance.available_real_amount)
+#        self.assertEquals(0, balance.available_virtual_amount)
+#        self.assertEquals(0, balance.locked_amount)
+#        self.assertEquals(None, balance.locking_order)
+#
+#        req = {'session_id': sess.session_id, 'user_id': user_id,
+#            'new_is_active': False, 'new_overdraft_limit': '100',
+#            'new_locking_order': ['available_real_amount', 'available_virtual_amount']}
+#        resp = self.modify_balance(**req)
+#        self.check_response_ok(resp)
+#
+#        balance_f = BalanceFilter(sess, {'id': balance_id}, {}, {})
+#        balance = balance_f.filter_one_obj(curs)
+#        self.assertEquals(False, balance.is_active)
+#        self.assertEquals(sess.environment_id, balance.environment_id)
+#        self.assertEquals(user_id, balance.user_id)
+#        self.assertEquals(10000, balance.overdraft_limit)
+#        self.assertEquals(0, balance.available_real_amount)
+#        self.assertEquals(0, balance.available_virtual_amount)
+#        self.assertEquals(0, balance.locked_amount)
+#        self.assertEquals(['available_real_amount', 'available_virtual_amount'],
+#            balance.locking_order)
 
     def test_get_balance_self(self):
         sess = self.login_actor()

@@ -48,6 +48,7 @@ class ActionLogFilter(EnvironmentObjectsFilter):
 class BalanceFilter(InSessionFilter):
     cond_map = [
         ('id', 'id', Eq),
+        ('ids', 'id', In),
         ('user_id', 'user_id', Eq),
         ('users_ids', 'user_id', In),
         ('is_active', 'is_active', Eq),

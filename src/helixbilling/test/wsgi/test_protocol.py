@@ -202,6 +202,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'from_overdraft_limit': '600.17', 'to_overdraft_limit': '700',
             'from_locked_amount': '41.24', 'to_locked_amount': '50',},
             'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'ids': [2, 3]}, 'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'id': 2}, 'paging_params': {}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'balances': [
