@@ -216,6 +216,7 @@ class Handler(AbstractHandler):
             raise BalanceAlreadyExists()
         return response_ok(id=balance.id)
 
+    @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
     @detalize_error(BalanceNotFound, 'user_id')
@@ -229,6 +230,31 @@ class Handler(AbstractHandler):
         self.update_obj(curs, decimal_texts_to_cents(data, curr, amount_fields),
             partial(lambda x: x, balance))
         return response_ok()
+
+    @set_subject_users_ids('users_ids')
+    @transaction()
+    @authenticate
+#    @detalize_error(SuperUserModificationDenied, 'subject_users_ids')
+#    @detalize_error(DataIntegrityError, 'ids')
+    def modify_balances(self, data, session, curs=None):
+        u_ids = data['ids']
+        f = UserFilter(session, {'roles': [User.ROLE_SUPER]}, {}, None)
+        su = f.filter_one_obj(curs)
+        if su.id in u_ids:
+            raise SuperUserModificationDenied()
+        groups_ids = data.get('new_groups_ids', [])
+        filtered_g_ids = self._filter_existed_groups(curs, session, groups_ids)
+        data['new_groups_ids'] = filtered_g_ids
+        if 'new_password' in data:
+            a = Authenticator()
+            salt = a.salt()
+            data['new_password'] = a.encrypt_password(data['new_password'], salt)
+            data['new_salt'] = salt
+        f = UserFilter(session, {'ids': u_ids}, {}, None)
+        loader = partial(f.filter_objs, curs, for_update=True)
+        self.update_objs(curs, data, loader)
+        return response_ok()
+
 
     def _get_currs_idx(self, curs, idx_field):
         curr_f = CurrencyFilter({}, {}, None)
