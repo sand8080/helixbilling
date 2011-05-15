@@ -117,9 +117,9 @@ ADD_BALANCE_REQUEST = dict(
 
 ADD_BALANCE_RESPONSE = ADDING_OBJECT_RESPONSE
 
-MODIFY_BALANCE_REQUEST = dict(
+MODIFY_BALANCES_REQUEST = dict(
     {
-        'user_id': int,
+        'ids': [int],
         Optional('new_is_active'): bool,
         Optional('new_overdraft_limit'): DecimalText(),
         Optional('new_locking_order'): locking_order_validator
@@ -127,7 +127,7 @@ MODIFY_BALANCE_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-MODIFY_BALANCE_RESPONSE = RESPONSE_STATUS_ONLY
+MODIFY_BALANCES_RESPONSE = RESPONSE_STATUS_ONLY
 
 BALANCE_INFO = {
     'id': int,
@@ -481,8 +481,8 @@ protocol = [
     ApiCall('add_balance_request', Scheme(ADD_BALANCE_REQUEST)),
     ApiCall('add_balance_response', Scheme(ADD_BALANCE_RESPONSE)),
 
-    ApiCall('modify_balance_request', Scheme(MODIFY_BALANCE_REQUEST)),
-    ApiCall('modify_balance_response', Scheme(MODIFY_BALANCE_RESPONSE)),
+    ApiCall('modify_balances_request', Scheme(MODIFY_BALANCES_REQUEST)),
+    ApiCall('modify_balances_response', Scheme(MODIFY_BALANCES_RESPONSE)),
 
     ApiCall('get_balance_self_request', Scheme(GET_BALANCE_SELF_REQUEST)),
     ApiCall('get_balance_self_response', Scheme(GET_BALANCE_SELF_RESPONSE)),

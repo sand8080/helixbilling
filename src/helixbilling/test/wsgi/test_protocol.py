@@ -160,10 +160,13 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
-    def test_modify_balance(self):
-        a_name = 'modify_balance'
+    def test_modify_balances(self):
+        a_name = 'modify_balances'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 2, 'new_is_active': True,
+            'ids': [2], 'new_is_active': True,
+            'new_overdraft_limit': '500.50', 'new_locking_order': None})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'ids': [2, 3, 4], 'new_is_active': True,
             'new_overdraft_limit': '500.50', 'new_locking_order': None})
 
         self.validate_status_response(a_name)
