@@ -54,6 +54,29 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         req = {'session_id': self.sess_id}
         self._not_logged_action(action, self.sess_id, req)
 
+    def test_modify_balances(self):
+        action = 'modify_used_currencies'
+        req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB', 'BYR']}
+        self._logged_action(action, req)
+
+        action = 'add_balance'
+        user_id = 4242
+        req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
+        resp = self.cli.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_rub_id = resp['id']
+
+        req = {'session_id': self.sess_id, 'currency_code': 'BYR', 'user_id': user_id}
+        resp = self.cli.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_byr_id = resp['id']
+
+        action = 'modify_balances'
+        req = {'session_id': self.sess_id, 'ids': [balance_rub_id, balance_byr_id],
+            'new_is_active': False}
+        self._logged_action(action, req, check_resp=False)
+        self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
 
 if __name__ == '__main__':
     unittest.main()
