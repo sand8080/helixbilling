@@ -171,8 +171,8 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
         self.validate_status_response(a_name)
 
-    def test_get_balance_self(self):
-        a_name = 'get_balance_self'
+    def test_get_balances_self(self):
+        a_name = 'get_balances_self'
         self.api.validate_request(a_name, {'session_id': 'i'})
 
         self.api.validate_response(a_name, {'status': 'ok', 'balances': [

@@ -49,8 +49,8 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
-    def test_get_balance_self(self):
-        action = 'get_balance_self'
+    def test_get_balances_self(self):
+        action = 'get_balances_self'
         req = {'session_id': self.sess_id}
         self._not_logged_action(action, self.sess_id, req)
 

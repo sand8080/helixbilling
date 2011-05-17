@@ -201,13 +201,13 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(['available_real_amount'],
             balance['locking_order'])
 
-    def test_get_balance_self(self):
+    def test_get_balances_self(self):
         sess = self.login_actor()
 
         self.set_used_currencies(sess, ['RUB', 'BYR'])
 
         req = {'session_id': sess.session_id}
-        resp = self.get_balance_self(**req)
+        resp = self.get_balances_self(**req)
         self.check_response_ok(resp)
         self.assertEquals([], resp['balances'])
         self.assertEquals(0, resp['total'])
@@ -219,7 +219,7 @@ class BalanceTestCase(ActorLogicTestCase):
         balance_id = resp['id']
 
         req = {'session_id': sess.session_id}
-        resp = self.get_balance_self(**req)
+        resp = self.get_balances_self(**req)
         self.check_response_ok(resp)
         self.assertEquals(1, len(resp['balances']))
 
@@ -241,7 +241,7 @@ class BalanceTestCase(ActorLogicTestCase):
         balance_id = resp['id']
 
         req = {'session_id': sess.session_id}
-        resp = self.get_balance_self(**req)
+        resp = self.get_balances_self(**req)
         self.check_response_ok(resp)
         self.assertEquals(2, len(resp['balances']))
 

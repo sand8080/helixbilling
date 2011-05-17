@@ -141,9 +141,9 @@ BALANCE_INFO = {
     'locking_order': locking_order_validator,
 }
 
-GET_BALANCE_SELF_REQUEST = AUTHORIZED_REQUEST_AUTH_INFO
+GET_BALANCES_SELF_REQUEST = AUTHORIZED_REQUEST_AUTH_INFO
 
-GET_BALANCE_SELF_RESPONSE = AnyOf(
+GET_BALANCES_SELF_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
@@ -178,7 +178,7 @@ GET_BALANCES_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-GET_BALANCES_RESPONSE = GET_BALANCE_SELF_RESPONSE
+GET_BALANCES_RESPONSE = GET_BALANCES_SELF_RESPONSE
 
 
 ## --- common income money structures ---
@@ -486,8 +486,8 @@ protocol = [
     ApiCall('modify_balances_request', Scheme(MODIFY_BALANCES_REQUEST)),
     ApiCall('modify_balances_response', Scheme(MODIFY_BALANCES_RESPONSE)),
 
-    ApiCall('get_balance_self_request', Scheme(GET_BALANCE_SELF_REQUEST)),
-    ApiCall('get_balance_self_response', Scheme(GET_BALANCE_SELF_RESPONSE)),
+    ApiCall('get_balances_self_request', Scheme(GET_BALANCES_SELF_REQUEST)),
+    ApiCall('get_balances_self_response', Scheme(GET_BALANCES_SELF_RESPONSE)),
 
     ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
     ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
