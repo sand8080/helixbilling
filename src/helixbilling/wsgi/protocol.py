@@ -173,7 +173,7 @@ GET_BALANCES_REQUEST = dict(
             Optional('to_locked_amount'): DecimalText(),
         },
         'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('id', '-id')]
+        Optional('ordering_params'): [AnyOf('id', '-id', 'currency_id', '-currency_id')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )

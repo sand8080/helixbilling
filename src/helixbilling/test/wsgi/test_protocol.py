@@ -205,7 +205,8 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i',
             'filter_params': {'ids': [2, 3]}, 'paging_params': {}})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'filter_params': {'id': 2}, 'paging_params': {}})
+            'filter_params': {'id': 2}, 'paging_params': {},
+            'ordering_params': ['currency_id']})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'balances': [
