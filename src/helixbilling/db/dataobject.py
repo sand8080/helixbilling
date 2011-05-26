@@ -21,7 +21,7 @@ class Balance(Mapped):
 
 class Transaction(Mapped):
     __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'amount',
-        'creation_date', 'currency_id', 'type'
+        'creation_date', 'currency_code', 'type'
     ]
     table = 'transaction'
 

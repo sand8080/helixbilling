@@ -317,7 +317,7 @@ class Handler(AbstractHandler):
 
         trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
             'balance_id': balance.id, 'amount': amount_dec,
-            'currency_id': currency.id, 'type': transaction_type}
+            'currency_code': currency.code, 'type': transaction_type}
         trans = Transaction(**trans_data)
 
         if transaction_type == 'receipt':

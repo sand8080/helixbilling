@@ -11,9 +11,9 @@ def apply(curs):
             FOREIGN KEY(balance_id) REFERENCES balance(id),
             amount DECIMAL NOT NULL,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
-            currency_id int NOT NULL,
-            FOREIGN KEY(currency_id) REFERENCES currency(id),
-            type varchar CHECK (type IN ('receipt', 'bonus', 'lock', 'chargeoff'))
+            currency_code varchar NOT NULL,
+            type varchar CHECK (type IN ('receipt', 'bonus', 'lock', 'chargeoff')),
+            custom_info text
         )
     ''')
 
