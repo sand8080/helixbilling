@@ -221,6 +221,17 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_add_receipt(self):
+        a_name = 'add_receipt'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 23, 'currency_code': 'YYY', 'amount': '44'})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 23, 'currency_code': 'YYY', 'amount': '44.42'})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'transaction_id': 1})
+        self.validate_error_response(a_name)
+
+
 #    def enroll_income(self, a_name):
 #        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'customer_id': 'N5',
 #            'amount': '0.0'})
