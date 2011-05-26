@@ -9,7 +9,7 @@ class HelixbillingApplication(Application):
     def __init__(self, h, p, l):
         tracking_api_calls = ('modify_used_currencies',
             'add_balance', 'modify_balances',
-            'add_receipt')
+            'add_receipt', 'add_bonus')
         super(HelixbillingApplication, self).__init__(h, p, l, tracking_api_calls)
 
     @transaction()

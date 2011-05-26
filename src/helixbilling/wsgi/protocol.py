@@ -189,12 +189,18 @@ ENROLL_MONEY_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-ADD_RECEIPT_REQUEST = ENROLL_MONEY_REQUEST
-
-ADD_RECEIPT_RESPONSE = AnyOf(
+TRANSACTION_CREATION_RESPONSE = AnyOf(
     dict({'transaction_id': int}, **RESPONSE_STATUS_OK),
     RESPONSE_STATUS_ERROR
 )
+
+ADD_RECEIPT_REQUEST = ENROLL_MONEY_REQUEST
+
+ADD_RECEIPT_RESPONSE = TRANSACTION_CREATION_RESPONSE
+
+ADD_BONUS_REQUEST = ENROLL_MONEY_REQUEST
+
+ADD_BONUS_RESPONSE = TRANSACTION_CREATION_RESPONSE
 
 #VIEW_INCOMES = dict(
 #    {
@@ -501,17 +507,10 @@ protocol = [
     # transactions
     ApiCall('add_receipt_request', Scheme(ADD_RECEIPT_REQUEST)),
     ApiCall('add_receipt_response', Scheme(ADD_RECEIPT_RESPONSE)),
-#
-#    ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
-#    ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
-#
-#    # bonus
-#    ApiCall('enroll_bonus_request', Scheme(ENROLL_BONUS)),
-#    ApiCall('enroll_bonus_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('view_bonuses_request', Scheme(VIEW_BONUSES)),
-#    ApiCall('view_bonuses_response', Scheme(VIEW_BONUSES_RESPONSE)),
-#
+
+    ApiCall('add_bonus_request', Scheme(ADD_BONUS_REQUEST)),
+    ApiCall('add_bonus_response', Scheme(ADD_BONUS_RESPONSE)),
+
 #    # lock
 #    ApiCall('balance_lock_request', Scheme(BALANCE_LOCK)),
 #    ApiCall('balance_lock_response', Scheme(RESPONSE_STATUS_ONLY)),

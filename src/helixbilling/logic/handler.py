@@ -341,6 +341,16 @@ class Handler(AbstractHandler):
         trans_id = self._make_income_transaction(curs, data, session, 'receipt')
         return response_ok(transaction_id=trans_id)
 
+    @set_subject_users_ids('user_id')
+    @transaction()
+    @authenticate
+    @detalize_error(CurrencyNotFound, 'currency_code')
+    @detalize_error(BalanceNotFound, 'currency_code')
+    @detalize_error(BalanceDisabled, 'currency_code')
+    def add_bonus(self, data, session, curs=None):
+        trans_id = self._make_income_transaction(curs, data, session, 'bonus')
+        return response_ok(transaction_id=trans_id)
+
 #    @transaction()
 #    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
