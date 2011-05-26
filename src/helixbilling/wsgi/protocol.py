@@ -180,16 +180,22 @@ GET_BALANCES_REQUEST = dict(
 
 GET_BALANCES_RESPONSE = GET_BALANCES_SELF_RESPONSE
 
+ENROLL_MONEY_REQUEST = dict(
+    {
+        'user_id': int,
+        'currency_code': Text(),
+        'amount': DecimalText(),
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
 
-## --- common income money structures ---
-#ENROLL_INCOME = dict(
-#    {
-#        'customer_id': Text(),
-#        'amount': DecimalText(),
-#    },
-#    **AUTH_INFO
-#)
-#
+ADD_RECEIPT_REQUEST = ENROLL_MONEY_REQUEST
+
+ADD_RECEIPT_RESPONSE = AnyOf(
+    dict({'transaction_id': int}, **RESPONSE_STATUS_OK),
+    RESPONSE_STATUS_ERROR
+)
+
 #VIEW_INCOMES = dict(
 #    {
 #        'filter_params': {
@@ -492,9 +498,9 @@ protocol = [
     ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
     ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
 
-#    # receipt
-#    ApiCall('enroll_receipt_request', Scheme(ENROLL_RECEIPT)),
-#    ApiCall('enroll_receipt_response', Scheme(RESPONSE_STATUS_ONLY)),
+    # transactions
+    ApiCall('add_receipt_request', Scheme(ADD_RECEIPT_REQUEST)),
+    ApiCall('add_receipt_response', Scheme(ADD_RECEIPT_RESPONSE)),
 #
 #    ApiCall('view_receipts_request', Scheme(VIEW_RECEIPTS)),
 #    ApiCall('view_receipts_response', Scheme(VIEW_RECEIPTS_RESPONSE)),
