@@ -11,12 +11,15 @@ from helixbilling.conf.db import transaction
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
     ActionLogFilter, BalanceFilter)
 from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
-from helixbilling.db.dataobject import (UsedCurrency, Balance)
+from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction)
 from helixcore import mapping
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
-    UserNotExists, UserCheckingError, BalanceAlreadyExists)
+    UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
+    BalanceDisabled, HelixbillingError)
 from helixcore.db.filters import build_index
-from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal
+from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal,\
+    decimal_to_cents
+from decimal import Decimal
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -295,6 +298,49 @@ class Handler(AbstractHandler):
             data['paging_params'], data.get('ordering_params'))
         return self._get_balances(curs, balance_f)
 
+    def _make_income_transaction(self, curs, data, session, transaction_type):
+        curr_code = data['currency_code']
+        curr_f = CurrencyFilter({'code': curr_code}, {}, None)
+        currency = curr_f.filter_one_obj(curs)
+
+        user_id = data['user_id']
+        balance_f = BalanceFilter(session, {'user_id': user_id,
+            'currency_id': currency.id}, {}, None)
+        balance = balance_f.filter_one_obj(curs, for_update=True)
+        if not balance.is_active:
+            raise BalanceDisabled()
+
+        amount_dec = Decimal(data['amount'])
+        amount = decimal_to_cents(currency, amount_dec)
+        if amount < 0:
+            amount *= -1
+
+        trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
+            'balance_id': balance.id, 'amount': amount_dec,
+            'currency_id': currency.id, 'type': transaction_type}
+        trans = Transaction(**trans_data)
+
+        if transaction_type == 'receipt':
+            balance.available_real_amount += amount
+        elif transaction_type == 'bonus':
+            balance.available_virtual_amount += amount
+        else:
+            raise HelixbillingError('Unhandled income transaction type: %s' %
+                transaction_type)
+        mapping.update(curs, balance)
+        mapping.insert(curs, trans)
+        return trans.id
+
+    @set_subject_users_ids('user_id')
+    @transaction()
+    @authenticate
+    @detalize_error(CurrencyNotFound, 'currency_code')
+    @detalize_error(BalanceNotFound, 'currency_code')
+    @detalize_error(BalanceDisabled, 'currency_code')
+    def add_receipt(self, data, session, curs=None):
+        trans_id = self._make_income_transaction(curs, data, session, 'receipt')
+        return response_ok(transaction_id=trans_id)
+
 #    @transaction()
 #    @authenticate
 #    @detalize_error(BalanceNotFound, RequestProcessingError.Category.data_integrity, 'customer_id')
@@ -305,11 +351,6 @@ class Handler(AbstractHandler):
 #        currencies_idx = selector.get_currencies_indexed_by_id(curs)
 #        viewer = partial(self.balance_viewer, currencies_idx)
 #        return response_ok(balances=self.objects_info(balances, viewer), total=total)
-#
-#    def check_amount_is_positive(self, data, f_name='amount'):
-#        val = Decimal(data[f_name])
-#        if val <= 0:
-#            raise ActionNotAllowedError("'%s' amount can't be processed" % val)
 #
 #    def view_income_money(self, curs, data, operator, filter_cls):
 #        filter_params = data['filter_params']

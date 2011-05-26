@@ -1,69 +1,60 @@
 import unittest
-from decimal import Decimal
 
-from helixbilling.test.db_based_test import ServiceTestCase
-from helixcore.server.errors import RequestProcessingError
-from helixcore.utils import filter_dict
+from helixcore.error import RequestProcessingError
+
+from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
+from helixbilling.test.logic import access_granted #@UnusedImport
 
 
-class ReceiptTestCase(ServiceTestCase):
-    def test_enroll_receipt(self):
-        c_id = 'U0'
-        self.add_balance(self.test_login, self.test_password, c_id, self.currency)
-        self.add_receipt(self.test_login, self.test_password, c_id, '109.01')
-        self.assertRaises(RequestProcessingError, self.add_receipt, self.test_login,
-            self.test_password, 'fake customer', '109.01')
-        self.assertRaises(RequestProcessingError, self.add_receipt, self.test_login,
-            self.test_password, c_id, '0.0')
-        self.assertRaises(RequestProcessingError, self.add_receipt, self.test_login,
-            self.test_password, c_id, '0.001')
-        self.add_receipt(self.test_login, self.test_password, c_id, '92233720368547758079999')
+class ReceiptTestCase(ActorLogicTestCase):
+    def test_add_receipt(self):
+        sess = self.login_actor()
+        subj_user_id = 4242
 
-        c_id = 'disabled balance'
-        self.add_balance(self.test_login, self.test_password, c_id, self.currency, active=False)
-        self.assertRaises(RequestProcessingError, self.add_receipt, self.test_login, self.test_password, c_id, '9')
+        # checking currency not found
+        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
+            'currency_code': 'XXX', 'amount': '11.12'}
+        self.assertRaises(RequestProcessingError, self.add_receipt, **req)
 
-    def test_view_receipts(self):
-        c_ids = {'U0': 5, 'U1': 1, 'U2': 3, 'U3': 0}
-        for c_id, rec_num in c_ids.items():
-            self.add_balance(self.test_login, self.test_password, c_id, self.currency)
-            for i in xrange(rec_num):
-                self.add_receipt(self.test_login, self.test_password, c_id, '%s' % (i + 1))
-        response = self.handle_action('view_receipts', {'login': self.test_login, 'password': self.test_password,
-            'filter_params': {}, 'paging_params': {}})
-        self.assertEqual(sum(c_ids.values()), response['total'])
+        # checking balance not found
+        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
+            'currency_code': 'RUB', 'amount': '11.12'}
+        self.assertRaises(RequestProcessingError, self.add_receipt, **req)
 
-        c_ids_slice = filter_dict(c_ids.keys()[2:], c_ids)
-        response = self.handle_action('view_receipts', {'login': self.test_login, 'password': self.test_password,
-            'filter_params': {'customer_ids': c_ids_slice.keys()}, 'paging_params': {}})
-        self.assertEqual(sum(c_ids_slice.values()), response['total'])
-        r_info = response['receipts']
-        for r in r_info:
-            self.assertTrue(r['customer_id'] in c_ids_slice.keys())
-            self.assertEqual(self.currency.code, r['currency'])
+        # creating balance
+        self.set_used_currencies(sess, ['RUB'])
+        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
+            'currency_code': 'RUB'}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_id = resp['id']
 
-        c_id = 'A0'
-        currency = self.get_currencies()[0]
-        amount = '15.09'
-        self.add_balance(self.test_login, self.test_password, c_id, currency)
-        self.add_receipt(self.test_login, self.test_password, c_id, amount)
-        response = self.handle_action('view_receipts', {'login': self.test_login, 'password': self.test_password,
-            'filter_params': {'customer_ids': [c_id]}, 'paging_params': {}})
-        self.assertEqual(1, response['total'])
-        r = response['receipts'][0]
-        self.assertEqual(c_id, r['customer_id'])
-        self.assertEqual(currency.code, r['currency'])
-        self.assertEqual(Decimal(amount), Decimal(r['amount']))
+        # adding receipt
+        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
+            'currency_code': 'RUB', 'amount': '11.12'}
+        resp = self.add_receipt(**req)
+        self.check_response_ok(resp)
 
-    # testing fix of wrong selecting currency by balance
-    def test_lot_of_customers(self):
-        operator = self.get_operator_by_login(self.test_login)
-        for i in xrange(len(self.get_currencies())):
-            c_id = '%s' % i
-            self.add_balance(self.test_login, self.test_password, c_id, self.currency)
-            self.add_receipt(self.test_login, self.test_password, c_id, '1')
-            balance = self.get_balance(operator, c_id)
-            self.assertEqual(100, balance.available_real_amount)
+        req = {'session_id': sess.session_id, 'filter_params': {'id': balance_id},
+           'paging_params': {}}
+        resp = self.get_balances(**req)
+        self.check_response_ok(resp)
+        balance_info = resp['balances'][0]
+        self.assertEquals(balance_id, balance_info['id'])
+        self.assertEquals(subj_user_id, balance_info['user_id'])
+        self.assertEquals('11.12', balance_info['available_real_amount'])
+        self.assertEquals('0.00', balance_info['available_virtual_amount'])
+        self.assertEquals('0.00', balance_info['locked_amount'])
+
+        # checking balance disabled
+        req = {'session_id': sess.session_id, 'ids': [balance_id],
+            'new_is_active': False}
+        resp = self.modify_balances(**req)
+
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
+            'currency_code': 'RUB', 'amount': '11.12'}
+        self.assertRaises(RequestProcessingError, self.add_receipt, **req)
 
 
 if __name__ == '__main__':

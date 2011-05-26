@@ -5,17 +5,25 @@ from helixcore.db.filters import (InSessionFilter, ObjectsFilter,
 from helixbilling.db.dataobject import (Currency, UsedCurrency, ActionLog,
     Balance)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
-from helixbilling.error import BalanceNotFound
+from helixbilling.error import BalanceNotFound, CurrencyNotFound
 
 
 class CurrencyFilter(ObjectsFilter):
     cond_map = [
         ('id', 'id', Eq),
+        ('code', 'code', Eq),
     ]
 
     def __init__(self, filter_params, paging_params, ordering_params):
         super(CurrencyFilter, self).__init__(filter_params, paging_params,
             ordering_params, Currency)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(CurrencyFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise CurrencyNotFound(**self.filter_params)
 
 
 class UsedCurrencyFilter(InSessionFilter):

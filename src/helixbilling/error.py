@@ -51,11 +51,12 @@ class BalanceNotFound(HelixbillingObjectNotFound):
 
 
 class BalanceAlreadyExists(HelixbillingObjectAlreadyExists):
-    def __init__(self, **kwargs):
-        super(BalanceAlreadyExists, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(BalanceAlreadyExists, self).__init__(*args, **kwargs)
         self.code = error_code.HELIXBILLING_BALANCE_ALREADY_EXISTS
 
 
-#class BalanceDisabled(ActionNotAllowedError):
-#    def __init__(self, customer_id):
-#        super(BalanceDisabled, self).__init__('Balance disabled for customer %s' % customer_id)
+class BalanceDisabled(HelixbillingError):
+    def __init__(self, **kwargs):
+        super(BalanceDisabled, self).__init__('Balance disabled', **kwargs)
+        self.code = error_code.HELIXBILLING_BALANCE_DISABLED

@@ -19,14 +19,11 @@ class Balance(Mapped):
     table = 'balance'
 
 
-class Receipt(Mapped):
-    __slots__ = ['id', 'operator_id', 'customer_id', 'creation_date', 'amount']
-    table = 'receipt'
-
-
-class Bonus(Mapped):
-    __slots__ = ['id', 'operator_id',  'customer_id', 'creation_date', 'amount']
-    table = 'bonus'
+class Transaction(Mapped):
+    __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'amount',
+        'creation_date', 'currency_id', 'type'
+    ]
+    table = 'transaction'
 
 
 class BalanceLock(Mapped):
@@ -35,15 +32,24 @@ class BalanceLock(Mapped):
     table = 'balance_lock'
 
 
-class ChargeOff(Mapped):
-    __slots__ = ['id', 'operator_id',  'customer_id', 'order_id', 'order_type',
-        'real_amount', 'virtual_amount', 'locking_date', 'chargeoff_date']
-    table = 'chargeoff'
-
-
 class ActionLog(Mapped):
     __slots__ = ['id', 'environment_id', 'session_id',
         'custom_actor_info', 'actor_user_id',
         'subject_users_ids', 'action', 'request_date',
         'remote_addr', 'request', 'response']
     table = 'action_log'
+
+#class Receipt(Mapped):
+#    __slots__ = ['id', 'operator_id', 'customer_id', 'creation_date', 'amount']
+#    table = 'receipt'
+#
+#
+#class Bonus(Mapped):
+#    __slots__ = ['id', 'operator_id',  'customer_id', 'creation_date', 'amount']
+#    table = 'bonus'
+#
+#
+#class ChargeOff(Mapped):
+#    __slots__ = ['id', 'operator_id',  'customer_id', 'order_id', 'order_type',
+#        'real_amount', 'virtual_amount', 'locking_date', 'chargeoff_date']
+#    table = 'chargeoff'
