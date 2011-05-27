@@ -10,8 +10,8 @@ def apply(curs):
             user_id integer NOT NULL,
             currency_id int NOT NULL,
             FOREIGN KEY(currency_id) REFERENCES currency(id),
-            available_real_amount NUMERIC DEFAULT 0,
-            available_virtual_amount NUMERIC DEFAULT 0,
+            real_amount NUMERIC DEFAULT 0,
+            virtual_amount NUMERIC DEFAULT 0,
             locking_order varchar[] DEFAULT NULL,
             locked_amount NUMERIC DEFAULT 0,
             overdraft_limit NUMERIC DEFAULT 0

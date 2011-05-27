@@ -42,8 +42,8 @@ class ReceiptTestCase(ActorLogicTestCase):
         balance_info = resp['balances'][0]
         self.assertEquals(balance_id, balance_info['id'])
         self.assertEquals(subj_user_id, balance_info['user_id'])
-        self.assertEquals('11.12', balance_info['available_real_amount'])
-        self.assertEquals('0.00', balance_info['available_virtual_amount'])
+        self.assertEquals('11.12', balance_info['real_amount'])
+        self.assertEquals('0.00', balance_info['virtual_amount'])
         self.assertEquals('0.00', balance_info['locked_amount'])
 
         # checking balance disabled

@@ -14,14 +14,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=1, #IGNORE:E1103
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=0,
 #            locking_order=None,
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_real_amount': 10, 'available_virtual_amount': 20},
+#            {'real_amount': 10, 'virtual_amount': 20},
 #            get_lockable_amounts(b)
 #        )
 #
@@ -29,14 +29,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=17,
-#            available_virtual_amount=5,
+#            real_amount=17,
+#            virtual_amount=5,
 #            overdraft_limit=9,
 #            locking_order=None,
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_real_amount': 26, 'available_virtual_amount': 5},
+#            {'real_amount': 26, 'virtual_amount': 5},
 #            get_lockable_amounts(b)
 #        )
 #
@@ -45,14 +45,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=0,
 #            locking_order=None,
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_real_amount': 10, 'available_virtual_amount': 5},
+#            {'real_amount': 10, 'virtual_amount': 5},
 #            compute_locks(self.currency, b, 15)
 #        )
 #
@@ -61,14 +61,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=0,
-#            locking_order=['available_virtual_amount', 'available_real_amount'],
+#            locking_order=['virtual_amount', 'real_amount'],
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_virtual_amount': 15, 'available_real_amount': 0},
+#            {'virtual_amount': 15, 'real_amount': 0},
 #            compute_locks(self.currency, b, 15)
 #        )
 #
@@ -76,14 +76,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=0,
-#            locking_order=['available_virtual_amount', 'available_real_amount'],
+#            locking_order=['virtual_amount', 'real_amount'],
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_real_amount': 1, 'available_virtual_amount': 20},
+#            {'real_amount': 1, 'virtual_amount': 20},
 #            compute_locks(self.currency, b, 21)
 #        )
 #
@@ -91,14 +91,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=0,
-#            locking_order=['available_virtual_amount'],
+#            locking_order=['virtual_amount'],
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_virtual_amount': 10},
+#            {'virtual_amount': 10},
 #            compute_locks(self.currency, b, 10)
 #        )
 #
@@ -107,14 +107,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=10,
-#            locking_order=['available_virtual_amount', 'available_real_amount'],
+#            locking_order=['virtual_amount', 'real_amount'],
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_real_amount': 15, 'available_virtual_amount': 20},
+#            {'real_amount': 15, 'virtual_amount': 20},
 #            compute_locks(self.currency, b, 35)
 #        )
 #
@@ -122,14 +122,14 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='customer_id',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=0,
+#            real_amount=10,
+#            virtual_amount=0,
 #            overdraft_limit=10,
-#            locking_order=['available_virtual_amount', 'available_real_amount'],
+#            locking_order=['virtual_amount', 'real_amount'],
 #            locked_amount=0
 #        )
 #        self.assertEqual(
-#            {'available_real_amount': 15, 'available_virtual_amount': 0},
+#            {'real_amount': 15, 'virtual_amount': 0},
 #            compute_locks(self.currency, b, 15)
 #        )
 #
@@ -138,10 +138,10 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='Flatter',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=0,
-#            locking_order=['available_virtual_amount', 'available_real_amount'],
+#            locking_order=['virtual_amount', 'real_amount'],
 #            locked_amount=0
 #        )
 #        self.assertRaises(ActionNotAllowedError, compute_locks, self.currency, b, 40)
@@ -150,10 +150,10 @@ class LogicTestCase(ActorLogicTestCase):
 #            active=1, customer_id='Flatter',
 #            currency_id=-1,
 #            creation_date=datetime.datetime.now(),
-#            available_real_amount=10,
-#            available_virtual_amount=20,
+#            real_amount=10,
+#            virtual_amount=20,
 #            overdraft_limit=10,
-#            locking_order=['available_virtual_amount', 'available_real_amount'],
+#            locking_order=['virtual_amount', 'real_amount'],
 #            locked_amount=0
 #        )
 #        self.assertRaises(ActionNotAllowedError, compute_locks, self.currency, b, 41)

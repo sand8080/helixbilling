@@ -143,12 +143,12 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': True, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'locking_order': [
-                'available_real_amount', 'available_virtual_amount'
+                'real_amount', 'virtual_amount'
             ]})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'locking_order': [
-                'available_real_amount'
+                'real_amount'
             ]})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
@@ -177,9 +177,9 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
         self.api.validate_response(a_name, {'status': 'ok', 'balances': [
                 {'id': 2, 'user_id': 3, 'is_active': True, 'currency_code': 'RUB',
-                'available_real_amount': '3.15', 'available_virtual_amount': '0.0',
+                'real_amount': '3.15', 'virtual_amount': '0.0',
                 'locked_amount': '14.09', 'overdraft_limit': '0.14',
-                'locking_order': ['available_real_amount', 'available_virtual_amount']}
+                'locking_order': ['real_amount', 'virtual_amount']}
             ],
             'total': 1,
         })
@@ -195,10 +195,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i',
             'filter_params': {'users_ids': [], 'is_active': True,
             'currency_code': 'XXX',
-            'from_available_real_amount': '1.0',
-            'to_available_real_amount': '2.01',
-            'from_available_virtual_amount': '7.10',
-            'to_available_virtual_amount': '19.01',
+            'from_real_amount': '1.0',
+            'to_real_amount': '2.01',
+            'from_virtual_amount': '7.10',
+            'to_virtual_amount': '19.01',
             'from_overdraft_limit': '600.17', 'to_overdraft_limit': '700',
             'from_locked_amount': '41.24', 'to_locked_amount': '50',},
             'paging_params': {}})
@@ -212,10 +212,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'balances': [
                 {
                     'id': 22, 'user_id': 4, 'is_active': True,
-                    'currency_code': 'RU', 'available_real_amount': '3.15',
-                    'available_virtual_amount': '0.0',
+                    'currency_code': 'RU', 'real_amount': '3.15',
+                    'virtual_amount': '0.0',
                     'locked_amount': '14.09', 'overdraft_limit': '0.14',
-                    'locking_order': ['available_real_amount', 'available_virtual_amount'],
+                    'locking_order': ['real_amount', 'virtual_amount'],
                 },
             ]
         })

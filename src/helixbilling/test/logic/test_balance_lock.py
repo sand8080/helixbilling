@@ -30,8 +30,8 @@ class BalanceLockTestCase(ServiceTestCase):
 
         operator = self.get_operator_by_login(self.test_login)
         balance = self.get_balance(operator, self.customer_id)
-        self.assertEquals(balance.available_real_amount, -6000)
-        self.assertEquals(balance.available_virtual_amount, 500)
+        self.assertEquals(balance.real_amount, -6000)
+        self.assertEquals(balance.virtual_amount, 500)
         self.assertEquals(balance.locked_amount, 11500)
 
         locks = self.get_balance_locks(operator, [self.customer_id], order_id=order_id, order_by='id')
@@ -55,8 +55,8 @@ class BalanceLockTestCase(ServiceTestCase):
         }
         self.handle_action('balance_lock', data)
         balance = self.get_balance(operator, self.customer_id)
-        self.assertEquals(balance.available_real_amount, -6000)
-        self.assertEquals(balance.available_virtual_amount, 100)
+        self.assertEquals(balance.real_amount, -6000)
+        self.assertEquals(balance.virtual_amount, 100)
         self.assertEquals(balance.locked_amount, 11900)
 
         locks = self.get_balance_locks(operator, [self.customer_id], order_by='id')
@@ -136,7 +136,7 @@ class BalanceLockTestCase(ServiceTestCase):
         operator = self.get_operator_by_login(self.test_login)
         c_id = 'c'
         self.add_balance(self.test_login, self.test_password, c_id, self.currency,
-            locking_order=['available_real_amount', 'available_virtual_amount'])
+            locking_order=['real_amount', 'virtual_amount'])
         self.add_receipt(self.test_login, self.test_password, c_id, '50.00')
         self.add_bonus(self.test_login, self.test_password, c_id, '20.00')
 
@@ -150,12 +150,12 @@ class BalanceLockTestCase(ServiceTestCase):
         }
         self.handle_action('balance_lock', data)
         balance = self.get_balance(operator, c_id)
-        self.assertEqual(0, balance.available_real_amount)
-        self.assertEqual(1000, balance.available_virtual_amount)
+        self.assertEqual(0, balance.real_amount)
+        self.assertEqual(1000, balance.virtual_amount)
         self.assertEqual(6000, balance.locked_amount)
 
         self.modify_balance(self.test_login, self.test_password, c_id,
-            ['available_virtual_amount', 'available_real_amount'])
+            ['virtual_amount', 'real_amount'])
         self.add_receipt(self.test_login, self.test_password, c_id, '10')
 
         order_id = '1'
@@ -168,8 +168,8 @@ class BalanceLockTestCase(ServiceTestCase):
         }
         self.handle_action('balance_lock', data)
         balance = self.get_balance(operator, c_id)
-        self.assertEqual(400, balance.available_real_amount)
-        self.assertEqual(0, balance.available_virtual_amount)
+        self.assertEqual(400, balance.real_amount)
+        self.assertEqual(0, balance.virtual_amount)
         self.assertEqual(7600, balance.locked_amount)
 
     def test_lock_list(self):
@@ -177,7 +177,7 @@ class BalanceLockTestCase(ServiceTestCase):
         c_id_1 = 'c1'
         self.add_balance(self.test_login, self.test_password, c_id_0, self.currency)
         self.add_balance(self.test_login, self.test_password, c_id_1, self.currency,
-            locking_order=['available_virtual_amount'])
+            locking_order=['virtual_amount'])
         self.add_receipt(self.test_login, self.test_password, c_id_0, '10.0')
         self.add_receipt(self.test_login, self.test_password, c_id_1, '20.0')
         self.add_bonus(self.test_login, self.test_password, c_id_1, '30.0')
@@ -231,7 +231,7 @@ class BalanceLockTestCase(ServiceTestCase):
         c_id_1 = 'c1'
         self.add_balance(self.test_login, self.test_password, c_id_0, self.currency)
         self.add_balance(self.test_login, self.test_password, c_id_1, self.currency,
-            locking_order=['available_virtual_amount'])
+            locking_order=['virtual_amount'])
         self.add_receipt(self.test_login, self.test_password, c_id_0, '100.0')
         self.add_receipt(self.test_login, self.test_password, c_id_1, '200.0')
         self.add_bonus(self.test_login, self.test_password, c_id_1, '300.0')

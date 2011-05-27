@@ -266,8 +266,8 @@ class Handler(AbstractHandler):
                 'user_id': balance.user_id,
                 'is_active': balance.is_active,
                 'currency_code': currency.code,
-                'available_real_amount': '%s' % cents_to_decimal(currency, balance.available_real_amount),
-                'available_virtual_amount': '%s' % cents_to_decimal(currency, balance.available_virtual_amount),
+                'real_amount': '%s' % cents_to_decimal(currency, balance.real_amount),
+                'virtual_amount': '%s' % cents_to_decimal(currency, balance.virtual_amount),
                 'overdraft_limit': '%s' % cents_to_decimal(currency, balance.overdraft_limit),
                 'locked_amount': '%s' % cents_to_decimal(currency, balance.locked_amount),
                 'locking_order': balance.locking_order,
@@ -321,9 +321,9 @@ class Handler(AbstractHandler):
         trans = Transaction(**trans_data)
 
         if transaction_type == 'receipt':
-            balance.available_real_amount += amount
+            balance.real_amount += amount
         elif transaction_type == 'bonus':
-            balance.available_virtual_amount += amount
+            balance.virtual_amount += amount
         else:
             raise HelixbillingError('Unhandled income transaction type: %s' %
                 transaction_type)
@@ -402,7 +402,7 @@ class Handler(AbstractHandler):
 #        receipt = Receipt(**prep_data)
 #        mapping.insert(curs, receipt)
 #
-#        balance.available_real_amount += receipt.amount #IGNORE:E1101
+#        balance.real_amount += receipt.amount #IGNORE:E1101
 #        mapping.update(curs, balance)
 #        return response_ok()
 #
@@ -429,7 +429,7 @@ class Handler(AbstractHandler):
 #        bonus = Bonus(**prep_data)
 #        mapping.insert(curs, bonus)
 #
-#        balance.available_virtual_amount += bonus.amount #IGNORE:E1101
+#        balance.virtual_amount += bonus.amount #IGNORE:E1101
 #        mapping.update(curs, balance)
 #        return response_ok()
 #
@@ -467,13 +467,13 @@ class Handler(AbstractHandler):
 #            lock = BalanceLock(**{'operator_id': operator.id, 'customer_id': c_id,
 #                'order_id': data['order_id'],
 #                'order_type': data.get('order_type'),
-#                'real_amount': locks.get('available_real_amount', 0),
-#                'virtual_amount': locks.get('available_virtual_amount', 0),
+#                'real_amount': locks.get('real_amount', 0),
+#                'virtual_amount': locks.get('virtual_amount', 0),
 #            })
 #            mapping.insert(curs, lock)
 #
-#            balance.available_real_amount -= lock.real_amount #IGNORE:E1101
-#            balance.available_virtual_amount -= lock.virtual_amount #IGNORE:E1101
+#            balance.real_amount -= lock.real_amount #IGNORE:E1101
+#            balance.virtual_amount -= lock.virtual_amount #IGNORE:E1101
 #            balance.locked_amount += lock.real_amount #IGNORE:E1101
 #            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
 #            mapping.update(curs, balance)
@@ -548,8 +548,8 @@ class Handler(AbstractHandler):
 #            mapping.delete(curs, lock)
 #
 #            balance = balances_idx[lock.customer_id]
-#            balance.available_real_amount += lock.real_amount
-#            balance.available_virtual_amount += lock.virtual_amount
+#            balance.real_amount += lock.real_amount
+#            balance.virtual_amount += lock.virtual_amount
 #            balance.locked_amount -= lock.real_amount #IGNORE:E1101
 #            balance.locked_amount -= lock.virtual_amount #IGNORE:E1101
 #            mapping.update(curs, balance)

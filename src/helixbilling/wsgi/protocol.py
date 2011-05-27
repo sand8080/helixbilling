@@ -10,7 +10,7 @@ from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
     LOGOUT_REQUEST, LOGOUT_RESPONSE)
 
 
-locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
+locking_order_validator = AnyOf(None, [AnyOf('real_amount', 'virtual_amount')])
 
 GET_CURRENCIES_REQUEST = dict(
     {
@@ -134,8 +134,8 @@ BALANCE_INFO = {
     'user_id': int,
     'is_active': bool,
     'currency_code': Text(),
-    'available_real_amount': DecimalText(),
-    'available_virtual_amount': DecimalText(),
+    'real_amount': DecimalText(),
+    'virtual_amount': DecimalText(),
     'overdraft_limit': DecimalText(),
     'locked_amount': DecimalText(),
     'locking_order': locking_order_validator,
@@ -163,10 +163,10 @@ GET_BALANCES_REQUEST = dict(
             Optional('users_ids'): [int],
             Optional('is_active'): bool,
             Optional('currency_code'): Text(),
-            Optional('from_available_real_amount'): DecimalText(),
-            Optional('to_available_real_amount'): DecimalText(),
-            Optional('from_available_virtual_amount'): DecimalText(),
-            Optional('to_available_virtual_amount'): DecimalText(),
+            Optional('from_real_amount'): DecimalText(),
+            Optional('to_real_amount'): DecimalText(),
+            Optional('from_virtual_amount'): DecimalText(),
+            Optional('to_virtual_amount'): DecimalText(),
             Optional('from_overdraft_limit'): DecimalText(),
             Optional('to_overdraft_limit'): DecimalText(),
             Optional('from_locked_amount'): DecimalText(),

@@ -31,23 +31,23 @@ def decimal_texts_to_cents(data, currency, amount_fields):
 
 def get_lockable_amounts(balance):
     return {
-        'available_real_amount': balance.available_real_amount + balance.overdraft_limit,
-        'available_virtual_amount': balance.available_virtual_amount
+        'real_amount': balance.real_amount + balance.overdraft_limit,
+        'virtual_amount': balance.virtual_amount
     }
 
 
 def compute_locks(currency, balance, lock_amount):
     """
     Returns {field_name: locked_amount}. field_names are from locking_order.
-    If locking_order is None, then default locking order used: [available_real_amount, available_real_amount].
+    If locking_order is None, then default locking order used: [real_amount, real_amount].
 
-    If balance has overdraft_limit > 0 and available_real_amount is in locking_order or locking_order is None,
-    then we can decrease available_real_amount until reach -overdraft_limit value.
+    If balance has overdraft_limit > 0 and real_amount is in locking_order or locking_order is None,
+    then we can decrease real_amount until reach -overdraft_limit value.
 
     ActionNotAllowedError exception raises if money not enough.
     """
     if balance.locking_order is None:
-        locking_order = ['available_real_amount', 'available_virtual_amount']
+        locking_order = ['real_amount', 'virtual_amount']
     else:
         locking_order = balance.locking_order
 
