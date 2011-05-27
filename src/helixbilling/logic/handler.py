@@ -316,18 +316,21 @@ class Handler(AbstractHandler):
             amount *= -1
 
         trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
-            'balance_id': balance.id, 'amount': amount_dec,
-            'currency_code': currency.code, 'type': transaction_type}
-        trans = Transaction(**trans_data)
+            'balance_id': balance.id, 'currency_code': currency.code,
+            'type': transaction_type}
 
         if transaction_type == 'receipt':
             balance.real_amount += amount
+            trans_data['real_amount'] = amount_dec
         elif transaction_type == 'bonus':
             balance.virtual_amount += amount
+            trans_data['virtual_amount'] = amount_dec
         else:
             raise HelixbillingError('Unhandled income transaction type: %s' %
                 transaction_type)
         mapping.update(curs, balance)
+
+        trans = Transaction(**trans_data)
         mapping.insert(curs, trans)
         return trans.id
 
