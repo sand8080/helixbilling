@@ -312,6 +312,8 @@ class Handler(AbstractHandler):
 
         amount_dec = Decimal(data['amount'])
         amount = decimal_to_cents(currency, amount_dec)
+        enrolled_amount_dec = cents_to_decimal(currency, amount)
+
         if amount < 0:
             amount *= -1
 
@@ -321,10 +323,10 @@ class Handler(AbstractHandler):
 
         if transaction_type == 'receipt':
             balance.real_amount += amount
-            trans_data['real_amount'] = amount_dec
+            trans_data['real_amount'] = enrolled_amount_dec
         elif transaction_type == 'bonus':
             balance.virtual_amount += amount
-            trans_data['virtual_amount'] = amount_dec
+            trans_data['virtual_amount'] = enrolled_amount_dec
         else:
             raise HelixbillingError('Unhandled income transaction type: %s' %
                 transaction_type)
