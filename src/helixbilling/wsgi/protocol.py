@@ -1,6 +1,7 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Optional, AnyOf, NonNegative, Positive,
-    Scheme, Text, NullableText, IsoDatetime, DecimalText, PositiveDecimalText)
+    Scheme, Text, NullableText, IsoDatetime, DecimalText, PositiveDecimalText,
+    ArbitraryDict)
 from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
     RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR, RESPONSE_STATUS_ONLY,
     AUTHORIZED_REQUEST_AUTH_INFO,
@@ -185,6 +186,7 @@ ENROLL_MONEY_REQUEST = dict(
         'user_id': int,
         'currency_code': Text(),
         'amount': PositiveDecimalText(),
+        Optional('info'): ArbitraryDict(),
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )

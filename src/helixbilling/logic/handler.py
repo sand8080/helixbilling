@@ -1,25 +1,25 @@
+from decimal import Decimal
 from functools import wraps, partial
 
+from helixcore import mapping
 from helixcore.actions.handler import (AbstractHandler, detalize_error,
     set_subject_users_ids)
+from helixcore.db.filters import build_index
 from helixcore.server.response import response_ok
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
 
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
+from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction)
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
     ActionLogFilter, BalanceFilter)
-from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
-from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction)
-from helixcore import mapping
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
     BalanceDisabled, HelixbillingError)
-from helixcore.db.filters import build_index
 from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal,\
     decimal_to_cents
-from decimal import Decimal
+from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -319,7 +319,7 @@ class Handler(AbstractHandler):
 
         trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
             'balance_id': balance.id, 'currency_code': currency.code,
-            'type': transaction_type}
+            'type': transaction_type, 'info': data.get('info', {})}
 
         if transaction_type == 'receipt':
             balance.real_amount += amount

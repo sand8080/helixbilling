@@ -31,7 +31,8 @@ class ReceiptTestCase(ActorLogicTestCase):
 
         # adding receipt
         req = {'session_id': sess.session_id, 'user_id': subj_user_id,
-            'currency_code': 'RUB', 'amount': '11.12'}
+            'currency_code': 'RUB', 'amount': '11.12',
+            'info': {'payment_system': 'YandexMoney'}}
         resp = self.add_receipt(**req)
         self.check_response_ok(resp)
 

@@ -14,7 +14,7 @@ def apply(curs):
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
             currency_code varchar NOT NULL,
             type varchar CHECK (type IN ('receipt', 'bonus', 'lock', 'chargeoff')),
-            custom_info text
+            serialized_info varchar NOT NULL
         )
     ''')
 

@@ -1,4 +1,4 @@
-from helixcore.mapping.objects import Mapped
+from helixcore.mapping.objects import Mapped, serialize_field
 
 
 class Currency(Mapped):
@@ -21,9 +21,13 @@ class Balance(Mapped):
 
 class Transaction(Mapped):
     __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'real_amount',
-        'virtual_amount', 'creation_date', 'currency_code', 'type'
+        'virtual_amount', 'creation_date', 'currency_code', 'type', 'serialized_info'
     ]
     table = 'transaction'
+
+    def __init__(self, **kwargs):
+        d = serialize_field(kwargs, 'info', 'serialized_info')
+        super(Transaction, self).__init__(**d)
 
 
 class BalanceLock(Mapped):
