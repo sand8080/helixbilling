@@ -243,6 +243,18 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'transaction_id': 1})
         self.validate_error_response(a_name)
 
+    def test_lock(self):
+        a_name = 'lock'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 23, 'currency_code': 'YYY', 'amount': '44'})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'user_id': 23, 'currency_code': 'YYY', 'amount': '44.42',
+            'info': {'reason': 'beauty eyes'}})
+
+        self.api.validate_response(a_name, {'status': 'ok',
+            'transaction_id': 1, 'lock_id': 2})
+        self.validate_error_response(a_name)
+
 
 #    def enroll_income(self, a_name):
 #        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'customer_id': 'N5',

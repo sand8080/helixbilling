@@ -181,7 +181,7 @@ GET_BALANCES_REQUEST = dict(
 
 GET_BALANCES_RESPONSE = GET_BALANCES_SELF_RESPONSE
 
-ENROLL_MONEY_REQUEST = dict(
+MONEY_OPERATION_REQUEST = dict(
     {
         'user_id': int,
         'currency_code': Text(),
@@ -196,13 +196,20 @@ TRANSACTION_CREATION_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-ADD_RECEIPT_REQUEST = ENROLL_MONEY_REQUEST
+ADD_RECEIPT_REQUEST = MONEY_OPERATION_REQUEST
 
 ADD_RECEIPT_RESPONSE = TRANSACTION_CREATION_RESPONSE
 
-ADD_BONUS_REQUEST = ENROLL_MONEY_REQUEST
+ADD_BONUS_REQUEST = MONEY_OPERATION_REQUEST
 
 ADD_BONUS_RESPONSE = TRANSACTION_CREATION_RESPONSE
+
+LOCK_REQUEST = MONEY_OPERATION_REQUEST
+
+LOCK_RESPONSE = AnyOf(
+    dict({'lock_id': int, 'transaction_id': int}, **RESPONSE_STATUS_OK),
+    RESPONSE_STATUS_ERROR
+)
 
 #VIEW_INCOMES = dict(
 #    {
@@ -512,6 +519,9 @@ protocol = [
 
     ApiCall('add_bonus_request', Scheme(ADD_BONUS_REQUEST)),
     ApiCall('add_bonus_response', Scheme(ADD_BONUS_RESPONSE)),
+
+    ApiCall('lock_request', Scheme(LOCK_REQUEST)),
+    ApiCall('lock_response', Scheme(LOCK_RESPONSE)),
 
 #    # lock
 #    ApiCall('balance_lock_request', Scheme(BALANCE_LOCK)),
