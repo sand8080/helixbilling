@@ -4,159 +4,73 @@ from decimal import Decimal
 from helixcore.db import filters
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.logic import access_granted #@UnusedImport
-from helixbilling.logic import (decimal_to_cents, cents_to_decimal)
-from helixbilling.db.dataobject import Currency
+from helixbilling.db.dataobject import Currency, Balance
+from helixbilling.logic import (decimal_to_cents, cents_to_decimal,
+    get_lockable_amounts, compute_locks)
+from helixbilling.error import MoneyNotEnough
 
 
 class LogicTestCase(ActorLogicTestCase):
-#    def test_get_available_resources(self):
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=1, #IGNORE:E1103
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=0,
-#            locking_order=None,
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'real_amount': 10, 'virtual_amount': 20},
-#            get_lockable_amounts(b)
-#        )
-#
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=17,
-#            virtual_amount=5,
-#            overdraft_limit=9,
-#            locking_order=None,
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'real_amount': 26, 'virtual_amount': 5},
-#            get_lockable_amounts(b)
-#        )
-#
-#    def test_compute_locks_default(self):
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=0,
-#            locking_order=None,
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'real_amount': 10, 'virtual_amount': 5},
-#            compute_locks(self.currency, b, 15)
-#        )
-#
-#    def test_compute_locks(self):
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=0,
-#            locking_order=['virtual_amount', 'real_amount'],
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'virtual_amount': 15, 'real_amount': 0},
-#            compute_locks(self.currency, b, 15)
-#        )
-#
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=0,
-#            locking_order=['virtual_amount', 'real_amount'],
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'real_amount': 1, 'virtual_amount': 20},
-#            compute_locks(self.currency, b, 21)
-#        )
-#
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=0,
-#            locking_order=['virtual_amount'],
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'virtual_amount': 10},
-#            compute_locks(self.currency, b, 10)
-#        )
-#
-#    def test_compute_locks_with_overdraft(self):
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=10,
-#            locking_order=['virtual_amount', 'real_amount'],
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'real_amount': 15, 'virtual_amount': 20},
-#            compute_locks(self.currency, b, 35)
-#        )
-#
-#        b = Balance(
-#            active=1, customer_id='customer_id',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=0,
-#            overdraft_limit=10,
-#            locking_order=['virtual_amount', 'real_amount'],
-#            locked_amount=0
-#        )
-#        self.assertEqual(
-#            {'real_amount': 15, 'virtual_amount': 0},
-#            compute_locks(self.currency, b, 15)
-#        )
-#
-#    def test_compute_locks_failure(self):
-#        b = Balance(
-#            active=1, customer_id='Flatter',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=0,
-#            locking_order=['virtual_amount', 'real_amount'],
-#            locked_amount=0
-#        )
-#        self.assertRaises(ActionNotAllowedError, compute_locks, self.currency, b, 40)
-#
-#        b = Balance(
-#            active=1, customer_id='Flatter',
-#            currency_id=-1,
-#            creation_date=datetime.datetime.now(),
-#            real_amount=10,
-#            virtual_amount=20,
-#            overdraft_limit=10,
-#            locking_order=['virtual_amount', 'real_amount'],
-#            locked_amount=0
-#        )
-#        self.assertRaises(ActionNotAllowedError, compute_locks, self.currency, b, 41)
+    def _initial_balance(self):
+        return Balance(environment_id=1, user_id=1, currency_id=1,
+            real_amount=0, virtual_amount=0, overdraft_limit=0,
+            locking_order=None, locked_amount=0, is_active=True)
+
+    def test_get_available_resources(self):
+        balance = self._initial_balance()
+        balance.real_amount = 10
+        balance.virtual_amount = 20
+        self.assertEqual({'real_amount': 10, 'virtual_amount': 20},
+            get_lockable_amounts(balance))
+
+        balance.real_amount = 17
+        balance.virtual_amount = 5
+        balance.overdraft_limit = 9
+        self.assertEqual({'real_amount': 26, 'virtual_amount': 5},
+            get_lockable_amounts(balance))
+
+    def test_compute_locks(self):
+        # default locking order
+        balance = self._initial_balance()
+        balance.real_amount = 10
+        balance.virtual_amount = 20
+        self.assertEqual({'real_amount': 10, 'virtual_amount': 5},
+            compute_locks(balance, 15))
+
+        # defined locking order
+        balance.locking_order = ['virtual_amount', 'real_amount']
+        self.assertEqual({'virtual_amount': 15, 'real_amount': 0},
+            compute_locks(balance, 15))
+
+        balance.locking_order = ['real_amount', 'virtual_amount']
+        self.assertEqual({'real_amount': 10, 'virtual_amount': 11},
+            compute_locks(balance, 21))
+
+        balance.locking_order = ['virtual_amount']
+        self.assertEqual({'virtual_amount': 10},
+            compute_locks(balance, 10))
+
+    def test_compute_locks_with_overdraft(self):
+        balance = self._initial_balance()
+        balance.real_amount = 10
+        balance.virtual_amount = 20
+        balance.overdraft_limit = 10
+        balance.locking_order = ['virtual_amount', 'real_amount']
+
+        self.assertEqual({'real_amount': 15, 'virtual_amount': 20},
+            compute_locks(balance, 35))
+
+        balance.locking_order = ['real_amount', 'virtual_amount']
+        self.assertEqual({'real_amount': 15, 'virtual_amount': 0},
+            compute_locks(balance, 15))
+
+    def test_compute_locks_failure(self):
+        balance = self._initial_balance()
+        balance.real_amount = 10
+        balance.virtual_amount = 20
+        balance.overdraft_limit = 0
+        balance.locking_order = ['virtual_amount', 'real_amount']
+        self.assertRaises(MoneyNotEnough, compute_locks, balance, 40)
 
     def _get_currencies_idx(self):
         sess = self.login_actor()

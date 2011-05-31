@@ -11,14 +11,15 @@ from helixcore.security.auth import CoreAuthenticator
 
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
-from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction)
+from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction,
+    BalanceLock)
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
     ActionLogFilter, BalanceFilter)
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
     BalanceDisabled, HelixbillingError)
-from helixbilling.logic import decimal_texts_to_cents, cents_to_decimal,\
-    decimal_to_cents
+from helixbilling.logic import (decimal_texts_to_cents, cents_to_decimal,
+    decimal_to_cents, get_lockable_amounts, compute_locks)
 from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 
 
@@ -299,16 +300,9 @@ class Handler(AbstractHandler):
         return self._get_balances(curs, balance_f)
 
     def _make_income_transaction(self, curs, data, session, transaction_type):
-        curr_code = data['currency_code']
-        curr_f = CurrencyFilter({'code': curr_code}, {}, None)
-        currency = curr_f.filter_one_obj(curs)
-
+        currency = self._get_currency(data['currency_code'])
         user_id = data['user_id']
-        balance_f = BalanceFilter(session, {'user_id': user_id,
-            'currency_id': currency.id}, {}, None)
-        balance = balance_f.filter_one_obj(curs, for_update=True)
-        if not balance.is_active:
-            raise BalanceDisabled()
+        balance = self._get_balance_for_update(session, curs, user_id, currency)
 
         amount_dec = Decimal(data['amount'])
         amount = decimal_to_cents(currency, amount_dec)
@@ -355,6 +349,95 @@ class Handler(AbstractHandler):
     def add_bonus(self, data, session, curs=None):
         trans_id = self._make_income_transaction(curs, data, session, 'bonus')
         return response_ok(transaction_id=trans_id)
+
+    def _get_currency(self, curs, currency_code):
+        curr_f = CurrencyFilter({'code': currency_code}, {}, None)
+        return curr_f.filter_one_obj(curs)
+
+    def _get_balance_for_update(self, curs, session, user_id, currency):
+        balance_f = BalanceFilter(session, {'user_id': user_id,
+            'currency_id': currency.id}, {}, None)
+        balance = balance_f.filter_one_obj(curs, for_update=True)
+        if not balance.is_active:
+            raise BalanceDisabled()
+        return balance
+
+    @set_subject_users_ids('user_id')
+    @transaction()
+    @authenticate
+    @detalize_error(CurrencyNotFound, 'currency_code')
+    @detalize_error(BalanceNotFound, 'currency_code')
+    @detalize_error(BalanceDisabled, 'currency_code')
+    @detalize_error(BalanceDisabled, 'amount')
+    def lock(self, data, session, curs=None):
+        currency = self._get_currency(data['currency_code'])
+        user_id = data['user_id']
+        balance = self._get_balance_for_update(session, curs, user_id, currency)
+
+        lock_amount_dec = Decimal(data['amount'])
+        lock_amount = decimal_to_cents(currency, lock_amount_dec)
+
+        if lock_amount < 0:
+            lock_amount *= -1
+
+        amounts_to_lock = compute_locks(balance, lock_amount)
+        lock_real = amounts_to_lock.get('real_amount', 0)
+        lock_virtual = amounts_to_lock.get('virtual_amount', 0)
+        info = data.get('info', {})
+
+        trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
+            'balance_id': balance.id, 'currency_code': currency.code,
+            'type': 'lock', 'real_amount': cents_to_decimal(currency, lock_real),
+            'virtual_amount': cents_to_decimal(currency, lock_virtual),
+            'info': info}
+        lock_data = {'environment_id': session.environment_id, 'user_id': user_id,
+            'balance_id': balance.id, 'real_amount': lock_real,
+            'virtual_amount': lock_virtual, 'info': info}
+
+        lock = BalanceLock(**lock_data)
+        balance.real_amount -= lock_real
+        balance.virtual_amount -= lock_virtual
+        balance.locked_amount += lock_real + lock_virtual
+        mapping.update(curs, balance)
+
+        trans = Transaction(**trans_data)
+        mapping.insert(curs, lock)
+        mapping.insert(curs, trans)
+        return trans.id
+
+        return response_ok()
+#        currencies_idx = selector.get_currencies_indexed_by_id(curs)
+#        c_ids = [d['customer_id'] for d in data_list]
+#        f = BalanceFilter(operator, {'customer_ids': c_ids}, {}, None)
+#        # ordering by id excepts deadlocks
+#        balances = f.filter_objs(curs, for_update=True)
+#        self._check_balances_are_active(balances)
+#        balances_idx = dict([(b.customer_id, b) for b in balances])
+#        customers_no_balance = set(c_ids) - set(balances_idx.keys())
+#        if customers_no_balance:
+#            raise BalanceNotFound(', '.join(customers_no_balance))
+#
+#        for data in data_list:
+#            c_id = data['customer_id']
+#            balance = balances_idx[c_id]
+#            currency = currencies_idx[balance.currency_id]
+#            prep_data = decimal_texts_to_cents(data, currency, 'amount')
+#            self.check_amount_is_positive(prep_data)
+#            locks = compute_locks(currency, balance, prep_data['amount'])
+#            lock = BalanceLock(**{'operator_id': operator.id, 'customer_id': c_id,
+#                'order_id': data['order_id'],
+#                'order_type': data.get('order_type'),
+#                'real_amount': locks.get('real_amount', 0),
+#                'virtual_amount': locks.get('virtual_amount', 0),
+#            })
+#            mapping.insert(curs, lock)
+#
+#            balance.real_amount -= lock.real_amount #IGNORE:E1101
+#            balance.virtual_amount -= lock.virtual_amount #IGNORE:E1101
+#            balance.locked_amount += lock.real_amount #IGNORE:E1101
+#            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
+#            mapping.update(curs, balance)
+#
 
 #    def _balance_lock(self, curs, operator, data_list):
 #        currencies_idx = selector.get_currencies_indexed_by_id(curs)

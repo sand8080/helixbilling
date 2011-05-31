@@ -60,3 +60,9 @@ class BalanceDisabled(HelixbillingError):
     def __init__(self, **kwargs):
         super(BalanceDisabled, self).__init__('Balance disabled', **kwargs)
         self.code = error_code.HELIXBILLING_BALANCE_DISABLED
+
+
+class MoneyNotEnough(HelixbillingError):
+    def __init__(self, *args, **kwargs):
+        super(MoneyNotEnough, self).__init__(*args, **kwargs)
+        self.code = error_code.HELIXBILLING_MONEY_NOT_ENOUGH

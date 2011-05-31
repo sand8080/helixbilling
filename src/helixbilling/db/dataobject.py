@@ -35,6 +35,10 @@ class BalanceLock(Mapped):
         'real_amount', 'virtual_amount', 'serialized_info']
     table = 'balance_lock'
 
+    def __init__(self, **kwargs):
+        d = serialize_field(kwargs, 'info', 'serialized_info')
+        super(BalanceLock, self).__init__(**d)
+
 
 class ActionLog(Mapped):
     __slots__ = ['id', 'environment_id', 'session_id',

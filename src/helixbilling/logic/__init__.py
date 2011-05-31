@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from helixcore.error import ActionNotAllowedError
 from helixcore.utils import filter_dict
+from helixbilling.error import MoneyNotEnough
 
 
 def decimal_to_cents(currency, dec):
@@ -36,7 +37,7 @@ def get_lockable_amounts(balance):
     }
 
 
-def compute_locks(currency, balance, lock_amount):
+def compute_locks(balance, lock_amount):
     """
     Returns {field_name: locked_amount}. field_names are from locking_order.
     If locking_order is None, then default locking order used: [real_amount, real_amount].
@@ -51,7 +52,7 @@ def compute_locks(currency, balance, lock_amount):
     else:
         locking_order = balance.locking_order
 
-    locked_amounts = dict([(a, 0) for a in locking_order])
+    amounts_to_lock = dict([(a, 0) for a in locking_order])
     lockable_amounts = get_lockable_amounts(balance)
 
     remain_to_lock = lock_amount
@@ -59,25 +60,11 @@ def compute_locks(currency, balance, lock_amount):
         if remain_to_lock <= 0:
             break
         available_to_lock = min(remain_to_lock, lockable_amounts[amount_name])
-        locked_amounts[amount_name] += available_to_lock
+        amounts_to_lock[amount_name] += available_to_lock
 
         remain_to_lock -= available_to_lock
         lockable_amounts[amount_name] -= available_to_lock
 
     if remain_to_lock > 0:
-        def human_amount(a):
-            return '%s %s' % (cents_to_decimal(currency, a), currency.code)
-        lockable_descr = []
-        for name, avail in get_lockable_amounts(balance).items():
-            descr = '%s: %s' % (name, human_amount(avail))
-            lockable_descr.append(descr)
-        error = {
-            'lock_amount': human_amount(lock_amount),
-            'customer_id': balance.customer_id,
-            'lockable_descr': ', '.join(lockable_descr),
-        }
-        raise ActionNotAllowedError(
-            'Can not lock %(lock_amount)s on balance of customer %(customer_id)s. '
-            'Available to lock: %(lockable_descr)s' % error
-        )
-    return locked_amounts
+        raise MoneyNotEnough()
+    return amounts_to_lock
