@@ -13,3 +13,12 @@ class ActorLogicTestCase(LogicTestCase):
         req = {'session_id': sess.session_id, 'new_currencies_codes': currs_codes}
         resp = self.modify_used_currencies(**req)
         self.check_response_ok(resp)
+
+    def get_balance(self, sess, balance_id):
+        req = {'session_id': sess.session_id, 'filter_params': {'id': balance_id},
+           'paging_params': {}}
+        resp = self.get_balances(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, len(resp['balances']))
+        balance_info = resp['balances'][0]
+        return balance_info

@@ -31,7 +31,7 @@ class Transaction(Mapped):
 
 
 class BalanceLock(Mapped):
-    __slots__ = ['id', 'environmet_id', 'user_id', 'balance_id', 'creation_date',
+    __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'creation_date',
         'real_amount', 'virtual_amount', 'serialized_info']
     table = 'balance_lock'
 

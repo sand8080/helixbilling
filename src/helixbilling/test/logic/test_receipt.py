@@ -36,11 +36,7 @@ class ReceiptTestCase(ActorLogicTestCase):
         resp = self.add_receipt(**req)
         self.check_response_ok(resp)
 
-        req = {'session_id': sess.session_id, 'filter_params': {'id': balance_id},
-           'paging_params': {}}
-        resp = self.get_balances(**req)
-        self.check_response_ok(resp)
-        balance_info = resp['balances'][0]
+        balance_info = self.get_balance(sess, balance_id)
         self.assertEquals(balance_id, balance_info['id'])
         self.assertEquals(subj_user_id, balance_info['user_id'])
         self.assertEquals('11.12', balance_info['real_amount'])

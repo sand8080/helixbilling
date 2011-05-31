@@ -15,7 +15,11 @@ def decimal_to_cents(currency, dec):
 
 def cents_to_decimal(currency, cents):
     prec = int(round(log10(currency.cent_factor)))
-    format = '%%d.%%0%dd' % prec
+    if cents < 0:
+        cents = -1 * cents
+        format = '-%%d.%%0%dd' % prec
+    else:
+        format = '%%d.%%0%dd' % prec
     int_part = cents / currency.cent_factor
     cent_part =  cents % currency.cent_factor
     return Decimal(format % (int_part, cent_part))

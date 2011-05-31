@@ -2,6 +2,7 @@ import unittest
 from decimal import Decimal
 
 from helixcore.db import filters
+
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.logic import access_granted #@UnusedImport
 from helixbilling.db.dataobject import Currency, Balance
@@ -98,8 +99,26 @@ class LogicTestCase(ActorLogicTestCase):
             exp_code = db_currency.code
             self.assertEqual(expects[exp_code], actual)
 
-    def test_cents_to_decimal(self):
+    def test_negative_decimal_to_cents(self):
         db_currs_idx = self._get_currencies_idx()
+        currencies = {'TND': 1000, 'USD': 100, 'CNY': 10, 'MRO': 5, 'JPY': 1}
+        amounts = map(Decimal, ['-0.06', '-0.86', '-13.0', '-53.01', '-1113.36', '-03.001', '-13.359'])
+        expects = {
+            'TND': [-60, -860, -13000, -53010, -1113360, -3001, -13359],
+            'USD': [-6, -86, -1300, -5301, -111336, -300, -1335],
+            'CNY': [0, -8, -130, -530, -11133, -30, -133],
+            'MRO': [0, -8, -65, -265, -5568, -15, -68],
+            'JPY': [0, 0, -13, -53, -1113, -03, -13],
+        }
+        for code, cent_factor in currencies.items():
+            db_currency = db_currs_idx[code]
+            self.assertEqual(cent_factor, db_currency.cent_factor)
+            actual = [decimal_to_cents(db_currency, amount) for amount in amounts]
+            exp_code = db_currency.code
+            self.assertEqual(expects[exp_code], actual)
+
+    def test_cents_to_decimal(self):
+        currs_code_idx = self._get_currencies_idx()
         currencies = {'TND': 1000, 'USD': 100, 'CNY': 10, 'MRO': 5, 'JPY': 1}
         amounts = [6, 86, 13000, 53001, 1113036, 3001, 13359]
         expects = {
@@ -110,7 +129,20 @@ class LogicTestCase(ActorLogicTestCase):
             'JPY': ['6', '86', '13000', '53001', '1113036', '3001', '13359'],
         }
         for code, cent_factor in currencies.items():
-            db_currency = db_currs_idx[code]
+            db_currency = currs_code_idx[code]
+            self.assertEqual(cent_factor, db_currency.cent_factor)
+            actual = [cents_to_decimal(db_currency, amount) for amount in amounts]
+            self.assertEqual(map(Decimal, expects[db_currency.code]), actual)
+
+    def test_negative_cents_to_decimal(self):
+        currs_code_idx = self._get_currencies_idx()
+        currencies = {'USD': 100}
+        amounts = [-6, -86, -13000, -53001, -1113036, -3001, -13359]
+        expects = {
+            'USD': ['-0.06', '-0.86', '-130.0', '-530.01', '-11130.36', '-30.01', '-133.59'],
+        }
+        for code, cent_factor in currencies.items():
+            db_currency = currs_code_idx[code]
             self.assertEqual(cent_factor, db_currency.cent_factor)
             actual = [cents_to_decimal(db_currency, amount) for amount in amounts]
             self.assertEqual(map(Decimal, expects[db_currency.code]), actual)

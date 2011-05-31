@@ -17,9 +17,9 @@ from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
     ActionLogFilter, BalanceFilter)
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
-    BalanceDisabled, HelixbillingError)
+    BalanceDisabled, HelixbillingError, MoneyNotEnough)
 from helixbilling.logic import (decimal_texts_to_cents, cents_to_decimal,
-    decimal_to_cents, get_lockable_amounts, compute_locks)
+    decimal_to_cents, compute_locks)
 from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
 
 
@@ -300,9 +300,9 @@ class Handler(AbstractHandler):
         return self._get_balances(curs, balance_f)
 
     def _make_income_transaction(self, curs, data, session, transaction_type):
-        currency = self._get_currency(data['currency_code'])
+        currency = self._get_currency(curs, data['currency_code'])
         user_id = data['user_id']
-        balance = self._get_balance_for_update(session, curs, user_id, currency)
+        balance = self._get_balance_for_update(curs, session, user_id, currency)
 
         amount_dec = Decimal(data['amount'])
         amount = decimal_to_cents(currency, amount_dec)
@@ -369,10 +369,11 @@ class Handler(AbstractHandler):
     @detalize_error(BalanceNotFound, 'currency_code')
     @detalize_error(BalanceDisabled, 'currency_code')
     @detalize_error(BalanceDisabled, 'amount')
+    @detalize_error(MoneyNotEnough, 'amount')
     def lock(self, data, session, curs=None):
-        currency = self._get_currency(data['currency_code'])
+        currency = self._get_currency(curs, data['currency_code'])
         user_id = data['user_id']
-        balance = self._get_balance_for_update(session, curs, user_id, currency)
+        balance = self._get_balance_for_update(curs, session, user_id, currency)
 
         lock_amount_dec = Decimal(data['amount'])
         lock_amount = decimal_to_cents(currency, lock_amount_dec)
@@ -403,9 +404,8 @@ class Handler(AbstractHandler):
         trans = Transaction(**trans_data)
         mapping.insert(curs, lock)
         mapping.insert(curs, trans)
-        return trans.id
+        return response_ok(transaction_id=trans.id, lock_id=lock.id)
 
-        return response_ok()
 #        currencies_idx = selector.get_currencies_indexed_by_id(curs)
 #        c_ids = [d['customer_id'] for d in data_list]
 #        f = BalanceFilter(operator, {'customer_ids': c_ids}, {}, None)

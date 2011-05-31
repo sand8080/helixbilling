@@ -1,8 +1,8 @@
 import unittest
 
 
-from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixcore.error import RequestProcessingError
+from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.logic import access_granted #@UnusedImport
 
 
@@ -35,11 +35,7 @@ class BonusTestCase(ActorLogicTestCase):
         resp = self.add_bonus(**req)
         self.check_response_ok(resp)
 
-        req = {'session_id': sess.session_id, 'filter_params': {'id': balance_id},
-           'paging_params': {}}
-        resp = self.get_balances(**req)
-        self.check_response_ok(resp)
-        balance_info = resp['balances'][0]
+        balance_info = self.get_balance(sess, balance_id)
         self.assertEquals(balance_id, balance_info['id'])
         self.assertEquals(subj_user_id, balance_info['user_id'])
         self.assertEquals('0.00', balance_info['real_amount'])
@@ -51,11 +47,7 @@ class BonusTestCase(ActorLogicTestCase):
         resp = self.add_bonus(**req)
         self.check_response_ok(resp)
 
-        req = {'session_id': sess.session_id, 'filter_params': {'id': balance_id},
-           'paging_params': {}}
-        resp = self.get_balances(**req)
-        self.check_response_ok(resp)
-        balance_info = resp['balances'][0]
+        balance_info = self.get_balance(sess, balance_id)
         self.assertEquals(balance_id, balance_info['id'])
         self.assertEquals(subj_user_id, balance_info['user_id'])
         self.assertEquals('0.00', balance_info['real_amount'])

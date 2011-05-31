@@ -129,6 +129,29 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
+    def test_add_lock(self):
+        action = 'modify_used_currencies'
+        req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB']}
+        self._logged_action(action, req)
+
+        user_id = 4242
+
+        # testing success action logged
+        action = 'add_balance'
+        req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
+        resp = self.cli.add_balance(**req)
+        self.check_response_ok(resp)
+
+        action = 'add_receipt'
+        req = {'session_id': self.sess_id, 'user_id': user_id, 'currency_code': 'RUB',
+            'amount': '17.09'}
+        self._logged_action(action, req, check_resp=False)
+        self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
+        action = 'lock'
+        self._logged_action(action, req, check_resp=False)
+        self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
 
 if __name__ == '__main__':
     unittest.main()
