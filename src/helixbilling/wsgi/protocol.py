@@ -211,109 +211,49 @@ LOCK_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-#VIEW_INCOMES = dict(
-#    {
-#        'filter_params': {
-#            Optional('customer_ids'): [Text()],
-#            Optional('from_creation_date'): IsoDatetime(),
-#            Optional('to_creation_date'): IsoDatetime(),
-#        },
-#        'paging_params': PAGING_PARAMS,
-#        Optional('ordering_params'): [AnyOf('creation_date', '-creation_date')]
-#    },
-#    **AUTH_INFO
-#)
-#
-#INCOME_INFO = {
-#    'customer_id': Text(),
-#    'amount': DecimalText(),
-#    'currency': Text(),
-#    'creation_date': IsoDatetime(),
-#}
-#
-#
-## --- receipt ---
-#ENROLL_RECEIPT = ENROLL_INCOME
-#
-#VIEW_RECEIPTS = VIEW_INCOMES
-#
-#VIEW_RECEIPTS_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'receipts': [INCOME_INFO],
-#            'total': NonNegative(int),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
-## ---  bonus ---
-#ENROLL_BONUS = ENROLL_INCOME
-#
-#VIEW_BONUSES = VIEW_INCOMES
-#
-#VIEW_BONUSES_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'bonuses': [INCOME_INFO],
-#            'total': NonNegative(int),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
-## --- lock ---
-#BALANCE_LOCK_DATA = {
-#    'customer_id': Text(),
-#    'order_id': Text(),
-#    Optional('order_type'): Text(),
-#    'amount': DecimalText(),
-#}
-#
-#BALANCE_LOCK = dict(BALANCE_LOCK_DATA, **AUTH_INFO)
-#
-#BALANCE_LOCK_LIST = dict(
-#    {'locks': [BALANCE_LOCK_DATA]},
-#    **AUTH_INFO
-#)
-#
-#VIEW_BALANCE_LOCKS = dict(
-#    {
-#        'filter_params': {
-#            Optional('customer_ids'): [Text()],
-#            Optional('order_id'): Text(),
-#            Optional('order_type'): NullableText(),
-#            Optional('from_locking_date'): IsoDatetime(),
-#            Optional('to_locking_date'): IsoDatetime(),
-#        },
-#        'paging_params': PAGING_PARAMS,
-#        Optional('ordering_params'): [AnyOf('locking_date', '-locking_date')]
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_BALANCE_LOCKS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'balance_locks': [{
-#                'customer_id': Text(),
-#                'order_id': Text(),
-#                'order_type': NullableText(),
-#                'real_amount': DecimalText(),
-#                'virtual_amount': DecimalText(),
-#                'currency': Text(),
-#                'locking_date': IsoDatetime(),
-#            }],
-#            'total': NonNegative(int),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
+GET_LOCKS_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
+            Optional('user_id'): int,
+            Optional('balance_id'): int,
+            Optional('currency_code'): Text(),
+            Optional('from_creation_date'): IsoDatetime(),
+            Optional('to_creation_date'): IsoDatetime(),
+            Optional('from_real_amount'): DecimalText(),
+            Optional('to_real_amount'): DecimalText(),
+            Optional('from_virtual_amount'): DecimalText(),
+            Optional('to_virtual_amount'): DecimalText(),
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+LOCK_INFO = {
+    'id': int,
+    'user_id': int,
+    'balance_id': int,
+    'currency_code': Text(),
+    'creation_date': IsoDatetime(),
+    'real_amount': DecimalText(),
+    'virtual_amount': DecimalText(),
+    'info': ArbitraryDict(),
+}
+
+GET_LOCKS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'locks': [LOCK_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 ## --- unlock ---
 #BALANCE_UNLOCK_DATA = {
 #    'customer_id': Text(),
@@ -378,97 +318,6 @@ LOCK_RESPONSE = AnyOf(
 #)
 #
 #
-## --- order ---
-#ORDER_STATUS = dict(
-#    {
-#        'customer_id': Text(),
-#        'order_id': Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#ORDER_STATUS_UNKNOWN = 'unknown'
-#ORDER_STATUS_LOCKED = 'locked'
-#ORDER_STATUS_CHARGED_OFF = 'charged_off'
-#ORDER_STATUSES = AnyOf(ORDER_STATUS_UNKNOWN, ORDER_STATUS_LOCKED, ORDER_STATUS_CHARGED_OFF)
-#
-#ORDER_STATUS_DATA = {
-#    'customer_id': Text(),
-#    'order_id': Text(),
-#    'order_status': ORDER_STATUSES,
-#    'real_amount': AnyOf(None, DecimalText()),
-#    'virtual_amount': AnyOf(None, DecimalText()),
-#    'locking_date': AnyOf(None, IsoDatetime()),
-#    'chargeoff_date': AnyOf(None, IsoDatetime()),
-#}
-#
-#ORDER_STATUS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **ORDER_STATUS_DATA
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_ORDER_STATUSES = dict(
-#    {
-#        'filter_params': {
-#            Optional('customer_ids'): [Text()],
-#            Optional('order_ids'): [Text()],
-#            Optional('order_types'): [NullableText()],
-#            Optional('from_locking_date'): IsoDatetime(),
-#            Optional('to_locking_date'): IsoDatetime(),
-#            Optional('from_chargeoff_date'): IsoDatetime(),
-#            Optional('to_chargeoff_date'): IsoDatetime(),
-#        },
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_ORDER_STATUSES_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{'order_statuses': [ORDER_STATUS_DATA],}
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
-## --- action log ---
-#VIEW_ACTION_LOGS = dict(
-#    {
-#        'filter_params': {
-#            Optional('customer_id'): Text(),
-#            Optional('action'): Text(),
-#            Optional('from_request_date'): IsoDatetime(),
-#            Optional('to_request_date'): IsoDatetime(),
-#            Optional('remote_addr'): Text(),
-#        },
-#        'paging_params': PAGING_PARAMS,
-#    },
-#    **AUTH_INFO
-#)
-#
-#ACTION_LOG_INFO = {
-#    'custom_operator_info': NullableText(),
-#    'action': Text(),
-#    'customer_ids': [Text()],
-#    'request_date': IsoDatetime(),
-#    'remote_addr': NullableText(),
-#    'request': Text(),
-#    'response': Text(),
-#}
-#
-#
-#VIEW_ACTION_LOGS_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'total': NonNegative(int),
-#            'action_logs': [ACTION_LOG_INFO],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-
 
 protocol = [
 
@@ -513,52 +362,21 @@ protocol = [
     ApiCall('get_balances_request', Scheme(GET_BALANCES_REQUEST)),
     ApiCall('get_balances_response', Scheme(GET_BALANCES_RESPONSE)),
 
-    # transactions
+    # receipt
     ApiCall('add_receipt_request', Scheme(ADD_RECEIPT_REQUEST)),
     ApiCall('add_receipt_response', Scheme(ADD_RECEIPT_RESPONSE)),
 
+    # bonus
     ApiCall('add_bonus_request', Scheme(ADD_BONUS_REQUEST)),
     ApiCall('add_bonus_response', Scheme(ADD_BONUS_RESPONSE)),
 
+    # transactions
+
+    # locks
     ApiCall('lock_request', Scheme(LOCK_REQUEST)),
     ApiCall('lock_response', Scheme(LOCK_RESPONSE)),
 
-#    # lock
-#    ApiCall('balance_lock_request', Scheme(BALANCE_LOCK)),
-#    ApiCall('balance_lock_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('balance_lock_list_request', Scheme(BALANCE_LOCK_LIST)),
-#    ApiCall('balance_lock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('view_balance_locks_request', Scheme(VIEW_BALANCE_LOCKS)),
-#    ApiCall('view_balance_locks_response', Scheme(VIEW_BALANCE_LOCKS_RESPONSE)),
-#
-#    # unlock
-#    ApiCall('balance_unlock_request', Scheme(BALANCE_UNLOCK)),
-#    ApiCall('balance_unlock_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('balance_unlock_list_request', Scheme(BALANCE_UNLOCK_LIST)),
-#    ApiCall('balance_unlock_list_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    # chargeoff
-#    ApiCall('chargeoff_request', Scheme(CHARGEOFF)),
-#    ApiCall('chargeoff_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('chargeoff_list_request', Scheme(CHARGEOFF_LIST)),
-#    ApiCall('chargeoff_list_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('view_chargeoffs_request', Scheme(VIEW_CHARGEOFFS)),
-#    ApiCall('view_chargeoffs_response', Scheme(VIEW_CHARGEOFFS_RESPONSE)),
-#
-#    # order
-#    ApiCall('order_status_request', Scheme(ORDER_STATUS)),
-#    ApiCall('order_status_response', Scheme(ORDER_STATUS_RESPONSE)),
-#
-#    ApiCall('view_order_statuses_request', Scheme(VIEW_ORDER_STATUSES)),
-#    ApiCall('view_order_statuses_response', Scheme(VIEW_ORDER_STATUSES_RESPONSE)),
-#
-#    # action log
-#    ApiCall('view_action_logs_request', Scheme(VIEW_ACTION_LOGS)),
-#    ApiCall('view_action_logs_response', Scheme(VIEW_ACTION_LOGS_RESPONSE)),
+    ApiCall('get_locks_request', Scheme(GET_LOCKS_REQUEST)),
+    ApiCall('get_locks_response', Scheme(GET_LOCKS_RESPONSE)),
 
 ]
