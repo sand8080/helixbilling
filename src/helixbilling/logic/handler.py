@@ -14,13 +14,14 @@ from helixbilling.conf.db import transaction
 from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction,
     BalanceLock)
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
-    ActionLogFilter, BalanceFilter)
+    ActionLogFilter, BalanceFilter, BalanceLockFilter)
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
     BalanceDisabled, HelixbillingError, MoneyNotEnough)
 from helixbilling.logic import (decimal_texts_to_cents, cents_to_decimal,
     decimal_to_cents, compute_locks)
 from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
+from helixcore.mapping.objects import deserialize_field
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -286,14 +287,7 @@ class Handler(AbstractHandler):
     @authenticate
     def get_balances(self, data, session, curs=None):
         f_params = data['filter_params']
-        if 'currency_code' in f_params:
-            currency_code = f_params.pop('currency_code')
-            currs_code_idx = self._get_currs_idx(curs, 'code')
-            curr = currs_code_idx.get(currency_code)
-            if curr:
-                f_params['currency_id'] = curr.id
-            else:
-                f_params['currency_id'] = None
+        self._f_param_currecncy_code_to_id(curs, f_params)
 
         balance_f = BalanceFilter(session, f_params,
             data['paging_params'], data.get('ordering_params'))
@@ -406,38 +400,53 @@ class Handler(AbstractHandler):
         mapping.insert(curs, trans)
         return response_ok(transaction_id=trans.id, lock_id=lock.id)
 
-#        currencies_idx = selector.get_currencies_indexed_by_id(curs)
-#        c_ids = [d['customer_id'] for d in data_list]
-#        f = BalanceFilter(operator, {'customer_ids': c_ids}, {}, None)
-#        # ordering by id excepts deadlocks
-#        balances = f.filter_objs(curs, for_update=True)
-#        self._check_balances_are_active(balances)
-#        balances_idx = dict([(b.customer_id, b) for b in balances])
-#        customers_no_balance = set(c_ids) - set(balances_idx.keys())
-#        if customers_no_balance:
-#            raise BalanceNotFound(', '.join(customers_no_balance))
-#
-#        for data in data_list:
-#            c_id = data['customer_id']
-#            balance = balances_idx[c_id]
-#            currency = currencies_idx[balance.currency_id]
-#            prep_data = decimal_texts_to_cents(data, currency, 'amount')
-#            self.check_amount_is_positive(prep_data)
-#            locks = compute_locks(currency, balance, prep_data['amount'])
-#            lock = BalanceLock(**{'operator_id': operator.id, 'customer_id': c_id,
-#                'order_id': data['order_id'],
-#                'order_type': data.get('order_type'),
-#                'real_amount': locks.get('real_amount', 0),
-#                'virtual_amount': locks.get('virtual_amount', 0),
-#            })
-#            mapping.insert(curs, lock)
-#
-#            balance.real_amount -= lock.real_amount #IGNORE:E1101
-#            balance.virtual_amount -= lock.virtual_amount #IGNORE:E1101
-#            balance.locked_amount += lock.real_amount #IGNORE:E1101
-#            balance.locked_amount += lock.virtual_amount #IGNORE:E1101
-#            mapping.update(curs, balance)
-#
+    def _f_param_currecncy_code_to_id(self, curs, f_params):
+        if 'currency_code' in f_params:
+            currency_code = f_params.pop('currency_code')
+            currs_code_idx = self._get_currs_idx(curs, 'code')
+            curr = currs_code_idx.get(currency_code)
+            if curr:
+                f_params['currency_id'] = curr.id
+            else:
+                f_params['currency_id'] = None
+
+    def _get_balance_locks(self, curs, lock_f):
+        locks, total = lock_f.filter_counted(curs)
+        currs_id_idx = self._get_currs_idx(curs, 'id')
+
+        def viewer(lock):
+            currency = currs_id_idx[lock.currency_id]
+            lock_info = deserialize_field(lock.to_dict(), 'serialized_info', 'info')
+            return {
+                'id': lock.id,
+                'user_id': lock.user_id,
+                'balance_id': lock.balance_id,
+                'currency_code': currency.code,
+                'creation_date': '%s' % lock.creation_date,
+                'real_amount': '%s' % cents_to_decimal(currency, lock.real_amount),
+                'virtual_amount': '%s' % cents_to_decimal(currency, lock.virtual_amount),
+                'info': lock_info['info'],
+            }
+        return response_ok(locks=self.objects_info(locks, viewer), total=total)
+
+    @transaction()
+    @authenticate
+    def get_locks(self, data, session, curs=None):
+        f_params = data['filter_params']
+        self._f_param_currecncy_code_to_id(curs, f_params)
+        lock_f = BalanceLockFilter(session, f_params,
+            data['paging_params'], data.get('ordering_params'))
+        return self._get_balance_locks(curs, lock_f)
+
+    @transaction()
+    @authenticate
+    def get_locks_self(self, data, session, curs=None):
+        data['filter_params']['user_id'] = session.user_id
+        f_params = data['filter_params']
+        self._f_param_currecncy_code_to_id(curs, f_params)
+        lock_f = BalanceLockFilter(session, f_params,
+            data['paging_params'], data.get('ordering_params'))
+        return self._get_balance_locks(curs, lock_f)
 
 #    def _balance_lock(self, curs, operator, data_list):
 #        currencies_idx = selector.get_currencies_indexed_by_id(curs)

@@ -66,3 +66,9 @@ class MoneyNotEnough(HelixbillingError):
     def __init__(self, *args, **kwargs):
         super(MoneyNotEnough, self).__init__(*args, **kwargs)
         self.code = error_code.HELIXBILLING_MONEY_NOT_ENOUGH
+
+
+class BalanceLockNotFound(HelixbillingObjectNotFound):
+    def __init__(self, **kwargs):
+        super(BalanceLockNotFound, self).__init__('BalanceLock', **kwargs)
+        self.code = error_code.HELIXBILLING_BALANCE_LOCK_NOT_FOUND

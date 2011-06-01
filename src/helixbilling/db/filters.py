@@ -3,7 +3,7 @@ from helixcore.db.filters import (InSessionFilter, ObjectsFilter,
     EnvironmentObjectsFilter)
 
 from helixbilling.db.dataobject import (Currency, UsedCurrency, ActionLog,
-    Balance)
+    Balance, BalanceLock)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 from helixbilling.error import BalanceNotFound, CurrencyNotFound
 
@@ -82,56 +82,34 @@ class BalanceFilter(InSessionFilter):
         except (ObjectNotFound, SelectedMoreThanOneRow):
             raise BalanceNotFound(**self.filter_params)
 
-#
-#class ReceiptFilter(ObjectsFilter):
-#    cond_map = [
-#        ('customer_id', 'customer_id', Eq),
-#        ('customer_ids', 'customer_id', In),
-#        ('from_creation_date', 'creation_date', MoreEq),
-#        ('to_creation_date', 'creation_date', LessEq),
-#    ]
-#
-#    def __init__(self, operator, filter_params, paging_params, ordering_params):
-#        if ordering_params is None:
-#            ordering_params = '-creation_date'
-#        super(ReceiptFilter, self).__init__(operator, filter_params, paging_params,
-#            ordering_params, Receipt)
-#
-#
-#class BonusFilter(ObjectsFilter):
-#    cond_map = [
-#        ('customer_id', 'customer_id', Eq),
-#        ('customer_ids', 'customer_id', In),
-#        ('from_creation_date', 'creation_date', MoreEq),
-#        ('to_creation_date', 'creation_date', LessEq),
-#    ]
-#
-#    def __init__(self, operator, filter_params, paging_params, ordering_params):
-#        if ordering_params is None:
-#            ordering_params = '-creation_date'
-#        super(BonusFilter, self).__init__(operator, filter_params, paging_params,
-#            ordering_params, Bonus)
-#
-#
-#class BalanceLockFilter(ObjectsFilter):
-#    cond_map = [
-#        ('customer_id', 'customer_id', Eq),
-#        ('customer_ids', 'customer_id', In),
-#        ('order_id', 'order_id', Eq),
-#        ('order_ids', 'order_id', In),
-#        ('order_type', 'order_type', Eq),
-#        ('order_types', 'order_type', In),
-#        ('from_locking_date', 'locking_date', MoreEq),
-#        ('to_locking_date', 'locking_date', LessEq),
-#    ]
-#
-#    def __init__(self, operator, filter_params, paging_params, ordering_params):
-#        if ordering_params is None:
-#            ordering_params = '-locking_date'
-#        super(BalanceLockFilter, self).__init__(operator, filter_params, paging_params,
-#            ordering_params, BalanceLock)
-#
-#
+
+class BalanceLockFilter(InSessionFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+        ('ids', 'id', In),
+        ('user_id', 'user_id', Eq),
+        ('balance_id', 'balance_id', Eq),
+        ('currency_id', 'currency_id', Eq),
+        ('from_creation_date', 'creation_date', MoreEq),
+        ('to_creation_date', 'creation_date', LessEq),
+        ('from_real_amount', 'real_amount', MoreEq),
+        ('to_real_amount', 'real_amount', LessEq),
+        ('from_virtual_amount', 'virtual_amount', MoreEq),
+        ('to_virtual_amount', 'virtual_amount', LessEq),
+    ]
+
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(BalanceLockFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, BalanceLock)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(BalanceLockFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise BalanceNotFound(**self.filter_params)
+
+
 #class ChargeOffFilter(ObjectsFilter):
 #    cond_map = [
 #        ('customer_id', 'customer_id', Eq),
@@ -151,17 +129,3 @@ class BalanceFilter(InSessionFilter):
 #            ordering_params = '-chargeoff_date'
 #        super(ChargeOffFilter, self).__init__(operator, filter_params, paging_params,
 #            ordering_params, ChargeOff)
-#
-#
-#class ActionLogFilter(ObjectsFilter):
-#    cond_map = [
-#        ('customer_id', 'customer_ids', Any),
-#        ('action', 'action', Eq),
-#        ('from_request_date', 'request_date', MoreEq),
-#        ('to_request_date', 'request_date', LessEq),
-#        ('remote_addr', 'remote_addr', Eq),
-#    ]
-#
-#    def __init__(self, operator, filter_params, paging_params, ordering_params):
-#        super(ActionLogFilter, self).__init__(operator, filter_params, paging_params,
-#            ordering_params, ActionLog)
