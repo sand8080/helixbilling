@@ -286,6 +286,37 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_get_locks_self(self):
+        a_name = 'get_locks_self'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {},
+            'paging_params': {'limit': 0, 'offset': 0,}})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'id': 1, 'ids': [1, 2],
+                'balance_id': 5, 'currency_code': 'XXX',
+                'from_real_amount': '1.0', 'to_real_amount': '2.01',
+                'from_virtual_amount': '7.10', 'to_virtual_amount': '19.01',
+                'from_creation_date': '2011-02-21 00:00:00',
+                'to_creation_date': '2011-02-21 23:59:59',},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'id': 2}, 'paging_params': {},
+            'ordering_params': ['id', '-id']})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'locks': [
+                {
+                    'id': 22, 'user_id': 4, 'balance_id': 5, 'currency_code': 'RUB',
+                    'creation_date': '2011-02-21 00:00:00',
+                    'real_amount': '3.15', 'virtual_amount': '0.0',
+                    'info': {'p0': 'v0', 'p1': 'v1'},
+                },
+            ]
+        })
+        self.validate_error_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()

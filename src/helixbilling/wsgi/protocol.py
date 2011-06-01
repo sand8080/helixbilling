@@ -254,6 +254,28 @@ GET_LOCKS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+GET_LOCKS_SELF_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
+            Optional('balance_id'): int,
+            Optional('currency_code'): Text(),
+            Optional('from_creation_date'): IsoDatetime(),
+            Optional('to_creation_date'): IsoDatetime(),
+            Optional('from_real_amount'): DecimalText(),
+            Optional('to_real_amount'): DecimalText(),
+            Optional('from_virtual_amount'): DecimalText(),
+            Optional('to_virtual_amount'): DecimalText(),
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+GET_LOCKS_SELF_RESPONSE = GET_LOCKS_RESPONSE
+
 ## --- unlock ---
 #BALANCE_UNLOCK_DATA = {
 #    'customer_id': Text(),
@@ -378,5 +400,8 @@ protocol = [
 
     ApiCall('get_locks_request', Scheme(GET_LOCKS_REQUEST)),
     ApiCall('get_locks_response', Scheme(GET_LOCKS_RESPONSE)),
+
+    ApiCall('get_locks_self_request', Scheme(GET_LOCKS_SELF_REQUEST)),
+    ApiCall('get_locks_self_response', Scheme(GET_LOCKS_SELF_RESPONSE)),
 
 ]
