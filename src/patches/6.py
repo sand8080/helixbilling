@@ -9,6 +9,8 @@ def apply(curs):
             user_id int NOT NULL,
             balance_id integer NOT NULL,
             FOREIGN KEY(balance_id) REFERENCES balance(id),
+            currency_id integer NOT NULL,
+            FOREIGN KEY(currency_id) REFERENCES currency(id),
             real_amount DECIMAL,
             virtual_amount DECIMAL,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
@@ -26,6 +28,12 @@ def apply(curs):
     curs.execute(
     '''
         CREATE INDEX balance_lock_user_id_idx ON balance_lock(user_id)
+    ''')
+
+    print 'Creating index balance_lock_currency_id_idx on balance_lock'
+    curs.execute(
+    '''
+        CREATE INDEX balance_lock_currency_id_idx ON balance_lock(currency_id)
     ''')
 
     print 'Creating index balance_lock_balance_id_idx on balance_lock'
@@ -50,6 +58,9 @@ def revert(curs):
 
     print 'Dropping index transaction_balance_id_idx on balance_lock'
     curs.execute('DROP INDEX IF EXISTS transaction_balance_id_idx')
+
+    print 'Dropping index transaction_currency_id_idx on balance_lock'
+    curs.execute('DROP INDEX IF EXISTS transaction_currency_id_idx')
 
     print 'Dropping index transaction_creation_date_idx on balance_lock'
     curs.execute('DROP INDEX IF EXISTS transaction_creation_date_idx')

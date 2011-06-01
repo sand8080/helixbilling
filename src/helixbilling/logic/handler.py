@@ -393,7 +393,7 @@ class Handler(AbstractHandler):
             'info': info}
         lock_data = {'environment_id': session.environment_id, 'user_id': user_id,
             'balance_id': balance.id, 'real_amount': lock_real,
-            'virtual_amount': lock_virtual, 'info': info}
+            'currency_id': currency.id, 'virtual_amount': lock_virtual, 'info': info}
 
         lock = BalanceLock(**lock_data)
         balance.real_amount -= lock_real
