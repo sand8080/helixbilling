@@ -50,7 +50,7 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(0, balance.real_amount)
         self.assertEquals(0, balance.virtual_amount)
         self.assertEquals(0, balance.locked_amount)
-        self.assertEquals(None, balance.locking_order)
+        self.assertEquals(['real_amount', 'virtual_amount'], balance.locking_order)
 
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'BZD',
             'overdraft_limit': '102.30', 'locking_order': ['real_amount']}
@@ -110,7 +110,7 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals('0.00', balance['real_amount'])
         self.assertEquals('0.00', balance['virtual_amount'])
         self.assertEquals('0.00', balance['locked_amount'])
-        self.assertEquals(None, balance['locking_order'])
+        self.assertEquals(['real_amount', 'virtual_amount'], balance['locking_order'])
 
         # Balances modification
         req = {'session_id': sess.session_id, 'ids': [balance_rub_id, balance_byr_id,
@@ -229,7 +229,7 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(True, balance['is_active'])
         self.assertEquals('0.00', balance['overdraft_limit'])
         self.assertEquals('0.00', balance['locked_amount'])
-        self.assertEquals(None, balance['locking_order'])
+        self.assertEquals(['real_amount', 'virtual_amount'], balance['locking_order'])
         self.assertEquals('0.00', balance['real_amount'])
         self.assertEquals('0.00', balance['virtual_amount'])
         self.assertEquals('RUB', balance['currency_code'])

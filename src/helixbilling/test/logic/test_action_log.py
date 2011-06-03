@@ -6,6 +6,9 @@ from helixcore.test.utils_for_testing import ActionsLogTester
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.wsgi.client import Client
 from helixbilling.test.logic import access_granted #@UnusedImport
+from helixcore.security.auth import CoreAuthenticator
+from helixbilling.test.logic.access_granted import (access_denied_call,
+    access_granted_call)
 
 
 class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
@@ -151,6 +154,25 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         action = 'lock'
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
+    def _logged_failed_action(self, action, req):
+        logs_num = self._count_records(self.sess_id, action)
+        api_call = getattr(self.cli, action)
+        CoreAuthenticator.check_access = access_denied_call
+        resp = api_call(**req)
+        CoreAuthenticator.check_access = access_granted_call
+        self.assertEquals('error', resp['status'])
+        self.assertEquals(logs_num + 1, self._count_records(self.sess_id, action))
+
+    def test_failed_actions_logged(self):
+        action = 'modify_used_currencies'
+        req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB']}
+        self._logged_action(action, req)
+
+        user_id = 4242
+        action = 'add_balance'
+        req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
+        self._logged_failed_action(action, req)
 
 
 if __name__ == '__main__':

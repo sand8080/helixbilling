@@ -2,9 +2,12 @@ from decimal import Decimal
 from functools import wraps, partial
 
 from helixcore import mapping
+from helixcore import error_code
 from helixcore.actions.handler import (AbstractHandler, detalize_error,
     set_subject_users_ids)
 from helixcore.db.filters import build_index
+from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
+from helixcore.mapping.objects import deserialize_field
 from helixcore.server.response import response_ok
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
@@ -20,8 +23,6 @@ from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     BalanceDisabled, HelixbillingError, MoneyNotEnough)
 from helixbilling.logic import (decimal_texts_to_cents, cents_to_decimal,
     decimal_to_cents, compute_locks)
-from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
-from helixcore.mapping.objects import deserialize_field
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -42,15 +43,17 @@ def authenticate(method):
         if resp.get('status') == 'ok':
             session = Session(session_id, '%s' % resp['environment_id'],
                 '%s' % resp['user_id'])
-            try:
-                result = method(self, data, session, curs=curs)
-            except Exception, e:
-                data['environment_id'] = session.environment_id
-                _add_log_info(data, session, custom_actor_info)
-                raise e
-        else:
-            result = resp
-        _add_log_info(data, session, custom_actor_info)
+            if resp.get('access') == 'granted':
+                try:
+                    result = method(self, data, session, curs=curs)
+                except Exception, e:
+                    data['environment_id'] = session.environment_id
+                    _add_log_info(data, session, custom_actor_info)
+                    raise e
+            else:
+                result = {'status': 'error', 'code': error_code.HELIX_AUTH_ERROR,
+                    'message': 'Access denied'}
+            _add_log_info(data, session, custom_actor_info)
         return result
     return decroated
 
