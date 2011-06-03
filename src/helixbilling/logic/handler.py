@@ -211,6 +211,10 @@ class Handler(AbstractHandler):
         b_data.pop('check_user_exist', None)
         b_data.pop('subject_users_ids', None)
 
+        locking_order = b_data.get('locking_order')
+        if locking_order is None:
+            b_data['locking_order'] = ['real_amount', 'virtual_amount']
+
         b_data['environment_id'] = session.environment_id
         b_data['currency_id'] = curr.id
         amount_fields = ['overdraft_limit']

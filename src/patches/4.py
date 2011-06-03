@@ -12,7 +12,7 @@ def apply(curs):
             FOREIGN KEY(currency_id) REFERENCES currency(id),
             real_amount NUMERIC DEFAULT 0,
             virtual_amount NUMERIC DEFAULT 0,
-            locking_order varchar[] DEFAULT NULL,
+            locking_order varchar[] NOT NULL,
             locked_amount NUMERIC DEFAULT 0,
             overdraft_limit NUMERIC DEFAULT 0
         )
