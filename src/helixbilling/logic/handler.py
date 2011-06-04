@@ -301,9 +301,9 @@ class Handler(AbstractHandler):
         return self._get_balances(curs, balance_f)
 
     def _make_income_transaction(self, curs, data, session, transaction_type):
-        currency = self._get_currency(curs, data['currency_code'])
-        user_id = data['user_id']
-        balance = self._get_balance_for_update(curs, session, user_id, currency)
+        currs_id_idx = self._get_currs_idx(curs, 'id')
+        balance = self._get_balance_for_update(curs, session, data['balance_id'])
+        currency = currs_id_idx[balance.currency_id]
 
         amount_dec = Decimal(data['amount'])
         amount = decimal_to_cents(currency, amount_dec)
@@ -312,7 +312,7 @@ class Handler(AbstractHandler):
         if amount < 0:
             amount *= -1
 
-        trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
+        trans_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
             'balance_id': balance.id, 'currency_code': currency.code,
             'type': transaction_type, 'info': data.get('info', {})}
 
@@ -351,13 +351,8 @@ class Handler(AbstractHandler):
         trans_id = self._make_income_transaction(curs, data, session, 'bonus')
         return response_ok(transaction_id=trans_id)
 
-    def _get_currency(self, curs, currency_code):
-        curr_f = CurrencyFilter({'code': currency_code}, {}, None)
-        return curr_f.filter_one_obj(curs)
-
-    def _get_balance_for_update(self, curs, session, user_id, currency):
-        balance_f = BalanceFilter(session, {'user_id': user_id,
-            'currency_id': currency.id}, {}, None)
+    def _get_balance_for_update(self, curs, session, balance_id):
+        balance_f = BalanceFilter(session, {'id': balance_id}, {}, None)
         balance = balance_f.filter_one_obj(curs, for_update=True)
         if not balance.is_active:
             raise BalanceDisabled()

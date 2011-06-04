@@ -7,19 +7,17 @@ from helixbilling.test.logic import access_granted #@UnusedImport
 
 
 class ReceiptTestCase(ActorLogicTestCase):
+    def test_balance_not_found(self):
+        sess = self.login_actor()
+
+        # checking balance not found
+        req = {'session_id': sess.session_id, 'balance_id': 9999,
+            'amount': '11.12'}
+        self.assertRaises(RequestProcessingError, self.add_receipt, **req)
+
     def test_add_receipt(self):
         sess = self.login_actor()
         subj_user_id = 4242
-
-        # checking currency not found
-        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
-            'currency_code': 'XXX', 'amount': '11.12'}
-        self.assertRaises(RequestProcessingError, self.add_receipt, **req)
-
-        # checking balance not found
-        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
-            'currency_code': 'RUB', 'amount': '11.12'}
-        self.assertRaises(RequestProcessingError, self.add_receipt, **req)
 
         # creating balance
         self.set_used_currencies(sess, ['RUB'])
@@ -30,9 +28,8 @@ class ReceiptTestCase(ActorLogicTestCase):
         balance_id = resp['id']
 
         # adding receipt
-        req = {'session_id': sess.session_id, 'user_id': subj_user_id,
-            'currency_code': 'RUB', 'amount': '11.12',
-            'info': {'payment_system': 'YandexMoney'}}
+        req = {'session_id': sess.session_id, 'balance_id': balance_id,
+            'amount': '11.12', 'info': {'payment_system': 'YandexMoney'}}
         resp = self.add_receipt(**req)
         self.check_response_ok(resp)
 
@@ -43,14 +40,20 @@ class ReceiptTestCase(ActorLogicTestCase):
         self.assertEquals('0.00', balance_info['virtual_amount'])
         self.assertEquals('0.00', balance_info['locked_amount'])
 
-        # checking balance disabled
-        req = {'session_id': sess.session_id, 'ids': [balance_id],
-            'new_is_active': False}
-        resp = self.modify_balances(**req)
+    def test_disabled_balance_failure(self):
+        sess = self.login_actor()
+        subj_user_id = 4242
 
-        self.check_response_ok(resp)
+        # creating balance
+        self.set_used_currencies(sess, ['RUB'])
         req = {'session_id': sess.session_id, 'user_id': subj_user_id,
-            'currency_code': 'RUB', 'amount': '11.12'}
+            'currency_code': 'RUB', 'is_active': False}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_id = resp['id']
+
+        req = {'session_id': sess.session_id, 'balance_id': balance_id,
+            'amount': '11.12'}
         self.assertRaises(RequestProcessingError, self.add_receipt, **req)
 
 
