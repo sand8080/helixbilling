@@ -18,7 +18,8 @@ def access_denied_call(_, __, ___, ____):
 
 
 def login_success(_, __):
-    return resp
+    return {'status': 'ok', 'session_id': GRANTED_SESSION_ID, 'user_id': GRANTED_USER_ID,
+        'environment_id': GRANTED_ENV_ID}
 
 
 def logout_success(_, __):
