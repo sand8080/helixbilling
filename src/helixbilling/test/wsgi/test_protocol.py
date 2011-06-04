@@ -223,10 +223,8 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
     def test_add_receipt(self):
         a_name = 'add_receipt'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 23, 'currency_code': 'YYY', 'amount': '44'})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 23, 'currency_code': 'YYY', 'amount': '44.42',
+        self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 23, 'amount': '44'})
+        self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 23, 'amount': '44.42',
             'info': {'payment_system': 'YaD'}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'transaction_id': 1})
@@ -234,10 +232,8 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
     def test_add_bonus(self):
         a_name = 'add_bonus'
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 23, 'currency_code': 'YYY', 'amount': '44'})
-        self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 23, 'currency_code': 'YYY', 'amount': '44.42',
+        self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 23, 'amount': '44'})
+        self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 23, 'amount': '44.42',
             'info': {'reason': 'beauty eyes'}})
 
         self.api.validate_response(a_name, {'status': 'ok', 'transaction_id': 1})
@@ -246,9 +242,9 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_lock(self):
         a_name = 'lock'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 23, 'currency_code': 'YYY', 'amount': '44'})
+            'balance_id': 23, 'amount': '44'})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'user_id': 23, 'currency_code': 'YYY', 'amount': '44.42',
+            'balance_id': 23, 'amount': '44.42',
             'info': {'reason': 'beauty eyes'}})
 
         self.api.validate_response(a_name, {'status': 'ok',

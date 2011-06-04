@@ -183,8 +183,7 @@ GET_BALANCES_RESPONSE = GET_BALANCES_SELF_RESPONSE
 
 MONEY_OPERATION_REQUEST = dict(
     {
-        'user_id': int,
-        'currency_code': Text(),
+        'balance_id': int,
         'amount': PositiveDecimalText(),
         Optional('info'): ArbitraryDict(),
     },
