@@ -334,9 +334,8 @@ class Handler(AbstractHandler):
     @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
-    @detalize_error(CurrencyNotFound, 'currency_code')
-    @detalize_error(BalanceNotFound, 'currency_code')
-    @detalize_error(BalanceDisabled, 'currency_code')
+    @detalize_error(BalanceNotFound, 'balance_id')
+    @detalize_error(BalanceDisabled, 'balance_id')
     def add_receipt(self, data, session, curs=None):
         trans_id = self._make_income_transaction(curs, data, session, 'receipt')
         return response_ok(transaction_id=trans_id)
@@ -344,9 +343,8 @@ class Handler(AbstractHandler):
     @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
-    @detalize_error(CurrencyNotFound, 'currency_code')
-    @detalize_error(BalanceNotFound, 'currency_code')
-    @detalize_error(BalanceDisabled, 'currency_code')
+    @detalize_error(BalanceNotFound, 'balance_id')
+    @detalize_error(BalanceDisabled, 'balance_id')
     def add_bonus(self, data, session, curs=None):
         trans_id = self._make_income_transaction(curs, data, session, 'bonus')
         return response_ok(transaction_id=trans_id)
@@ -361,15 +359,13 @@ class Handler(AbstractHandler):
     @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
-    @detalize_error(CurrencyNotFound, 'currency_code')
-    @detalize_error(BalanceNotFound, 'currency_code')
-    @detalize_error(BalanceDisabled, 'currency_code')
-    @detalize_error(BalanceDisabled, 'amount')
+    @detalize_error(BalanceNotFound, 'balance_id')
+    @detalize_error(BalanceDisabled, 'balance_id')
     @detalize_error(MoneyNotEnough, 'amount')
     def lock(self, data, session, curs=None):
-        currency = self._get_currency(curs, data['currency_code'])
-        user_id = data['user_id']
-        balance = self._get_balance_for_update(curs, session, user_id, currency)
+        currs_id_idx = self._get_currs_idx(curs, 'id')
+        balance = self._get_balance_for_update(curs, session, data['balance_id'])
+        currency = currs_id_idx[balance.currency_id]
 
         lock_amount_dec = Decimal(data['amount'])
         lock_amount = decimal_to_cents(currency, lock_amount_dec)
@@ -382,12 +378,12 @@ class Handler(AbstractHandler):
         lock_virtual = amounts_to_lock.get('virtual_amount', 0)
         info = data.get('info', {})
 
-        trans_data = {'environment_id': session.environment_id, 'user_id': user_id,
+        trans_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
             'balance_id': balance.id, 'currency_code': currency.code,
             'type': 'lock', 'real_amount': cents_to_decimal(currency, lock_real),
             'virtual_amount': cents_to_decimal(currency, lock_virtual),
             'info': info}
-        lock_data = {'environment_id': session.environment_id, 'user_id': user_id,
+        lock_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
             'balance_id': balance.id, 'real_amount': lock_real,
             'currency_id': currency.id, 'virtual_amount': lock_virtual, 'info': info}
 
