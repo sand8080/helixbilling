@@ -276,20 +276,18 @@ GET_LOCKS_SELF_REQUEST = dict(
 
 GET_LOCKS_SELF_RESPONSE = GET_LOCKS_RESPONSE
 
-## --- unlock ---
-#BALANCE_UNLOCK_DATA = {
-#    'customer_id': Text(),
-#    'order_id': Text(),
-#}
-#
-#BALANCE_UNLOCK = dict(BALANCE_UNLOCK_DATA, **AUTH_INFO)
-#
-#BALANCE_UNLOCK_LIST = dict(
-#    {'unlocks': [BALANCE_UNLOCK_DATA]},
-#    **AUTH_INFO
-#)
-#
-#
+LOCK_RESPONSE = AnyOf(
+    dict({'lock_id': int, 'transaction_id': int}, **RESPONSE_STATUS_OK),
+    RESPONSE_STATUS_ERROR
+)
+
+UNLOCK_REQUEST = dict(
+    {'lock_id': int},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+UNLOCK_RESPONSE = RESPONSE_STATUS_ONLY
+
 ## --- chargeoff ---
 #CHARGEOFF_DATA = {
 #    'customer_id': Text(),
@@ -403,5 +401,8 @@ protocol = [
 
     ApiCall('get_locks_self_request', Scheme(GET_LOCKS_SELF_REQUEST)),
     ApiCall('get_locks_self_response', Scheme(GET_LOCKS_SELF_RESPONSE)),
+
+    ApiCall('unlock_request', Scheme(UNLOCK_REQUEST)),
+    ApiCall('unlock_response', Scheme(UNLOCK_RESPONSE)),
 
 ]

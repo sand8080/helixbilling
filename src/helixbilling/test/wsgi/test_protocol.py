@@ -317,6 +317,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_unlock(self):
+        a_name = 'unlock'
+        self.api.validate_request(a_name, {'session_id': 'i', 'lock_id': 23})
+        self.validate_status_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()
