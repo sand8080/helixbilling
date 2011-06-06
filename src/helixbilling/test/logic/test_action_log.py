@@ -84,25 +84,17 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         action = 'modify_used_currencies'
         req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB', 'BYR']}
         self._logged_action(action, req)
-
         user_id = 4242
-
-        # testing failed action logged
-        action = 'add_receipt'
-        req = {'session_id': self.sess_id, 'user_id': user_id, 'currency_code': 'RUB',
-            'amount': '17.09'}
-        self._logged_action(action, req, check_resp=False)
-        self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
         # testing success action logged
         action = 'add_balance'
         req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
         resp = self.cli.add_balance(**req)
         self.check_response_ok(resp)
+        balance_id = resp['id']
 
         action = 'add_receipt'
-        req = {'session_id': self.sess_id, 'user_id': user_id, 'currency_code': 'RUB',
-            'amount': '17.09'}
+        req = {'session_id': self.sess_id, 'balance_id':balance_id, 'amount': '17.09'}
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
@@ -110,25 +102,17 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         action = 'modify_used_currencies'
         req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB', 'BYR']}
         self._logged_action(action, req)
-
         user_id = 4242
-
-        # testing failed action logged
-        action = 'add_bonus'
-        req = {'session_id': self.sess_id, 'user_id': user_id, 'currency_code': 'RUB',
-            'amount': '17.09'}
-        self._logged_action(action, req, check_resp=False)
-        self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
         # testing success action logged
         action = 'add_balance'
         req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
         resp = self.cli.add_balance(**req)
         self.check_response_ok(resp)
+        balance_id = resp['id']
 
         action = 'add_bonus'
-        req = {'session_id': self.sess_id, 'user_id': user_id, 'currency_code': 'RUB',
-            'amount': '17.09'}
+        req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '17.09'}
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
@@ -144,10 +128,10 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
         resp = self.cli.add_balance(**req)
         self.check_response_ok(resp)
+        balance_id = resp['id']
 
         action = 'add_receipt'
-        req = {'session_id': self.sess_id, 'user_id': user_id, 'currency_code': 'RUB',
-            'amount': '17.09'}
+        req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '17.09'}
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
@@ -167,12 +151,21 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
     def test_failed_actions_logged(self):
         action = 'modify_used_currencies'
         req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB']}
-        self._logged_action(action, req)
+        self._logged_failed_action(action, req)
 
         user_id = 4242
         action = 'add_balance'
         req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
         self._logged_failed_action(action, req)
+
+        fake_balance_id = 9999
+        action = 'add_bonus'
+        req = {'session_id': self.sess_id, 'balance_id': fake_balance_id, 'amount': '17.09'}
+        self._logged_failed_action(action, req)
+
+        action = 'add_receipt'
+        req = {'session_id': self.sess_id, 'balance_id': fake_balance_id, 'amount': '17.09'}
+        self._logged_action(action, req, check_resp=False)
 
 
 if __name__ == '__main__':

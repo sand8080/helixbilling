@@ -301,8 +301,15 @@ class Handler(AbstractHandler):
         return self._get_balances(curs, balance_f)
 
     def _make_income_transaction(self, curs, data, session, transaction_type):
+        balance_f = BalanceFilter(session, {'id': data['balance_id']}, {}, None)
+        balance = balance_f.filter_one_obj(curs, for_update=True)
+        # setting user_id for correct action logging
+        data['user_id'] = balance.user_id
+
+        if not balance.is_active:
+            raise BalanceDisabled()
+
         currs_id_idx = self._get_currs_idx(curs, 'id')
-        balance = self._get_balance_for_update(curs, session, data['balance_id'])
         currency = currs_id_idx[balance.currency_id]
 
         amount_dec = Decimal(data['amount'])
@@ -349,13 +356,6 @@ class Handler(AbstractHandler):
         trans_id = self._make_income_transaction(curs, data, session, 'bonus')
         return response_ok(transaction_id=trans_id)
 
-    def _get_balance_for_update(self, curs, session, balance_id):
-        balance_f = BalanceFilter(session, {'id': balance_id}, {}, None)
-        balance = balance_f.filter_one_obj(curs, for_update=True)
-        if not balance.is_active:
-            raise BalanceDisabled()
-        return balance
-
     @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
@@ -363,8 +363,14 @@ class Handler(AbstractHandler):
     @detalize_error(BalanceDisabled, 'balance_id')
     @detalize_error(MoneyNotEnough, 'amount')
     def lock(self, data, session, curs=None):
+        balance_f = BalanceFilter(session, {'id': data['balance_id']}, {}, None)
+        balance = balance_f.filter_one_obj(curs, for_update=True)
+        # setting user_id for correct action logging
+        data['user_id'] = balance.user_id
+        if not balance.is_active:
+            raise BalanceDisabled()
+
         currs_id_idx = self._get_currs_idx(curs, 'id')
-        balance = self._get_balance_for_update(curs, session, data['balance_id'])
         currency = currs_id_idx[balance.currency_id]
 
         lock_amount_dec = Decimal(data['amount'])
