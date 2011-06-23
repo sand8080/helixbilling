@@ -281,7 +281,7 @@ LOCK_RESPONSE = AnyOf(
 )
 
 UNLOCK_REQUEST = dict(
-    {'lock_id': int},
+    {'balance_id': int, 'lock_id': int},
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 

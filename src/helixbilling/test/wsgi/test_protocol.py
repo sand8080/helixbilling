@@ -315,7 +315,8 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
     def test_unlock(self):
         a_name = 'unlock'
-        self.api.validate_request(a_name, {'session_id': 'i', 'lock_id': 23})
+        self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 1,
+            'lock_id': 23})
         self.validate_status_response(a_name)
 
 
