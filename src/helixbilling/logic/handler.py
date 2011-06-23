@@ -20,7 +20,7 @@ from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
     ActionLogFilter, BalanceFilter, BalanceLockFilter)
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
-    BalanceDisabled, HelixbillingError, MoneyNotEnough)
+    BalanceDisabled, HelixbillingError, MoneyNotEnough, BalanceLockNotFound)
 from helixbilling.logic import (decimal_texts_to_cents, cents_to_decimal,
     decimal_to_cents, compute_locks)
 
@@ -300,14 +300,19 @@ class Handler(AbstractHandler):
             data['paging_params'], data.get('ordering_params'))
         return self._get_balances(curs, balance_f)
 
-    def _make_income_transaction(self, curs, data, session, transaction_type):
+    def _get_active_balance(self, session, curs, data, log_user_id=True, for_update=True):
         balance_f = BalanceFilter(session, {'id': data['balance_id']}, {}, None)
-        balance = balance_f.filter_one_obj(curs, for_update=True)
-        # setting user_id for correct action logging
-        data['user_id'] = balance.user_id
-
+        balance = balance_f.filter_one_obj(curs, for_update=for_update)
+        if log_user_id:
+            # setting user_id for correct action logging
+            data['user_id'] = balance.user_id
         if not balance.is_active:
             raise BalanceDisabled()
+        else:
+            return balance
+
+    def _make_income_transaction(self, curs, data, session, transaction_type):
+        balance = self._get_active_balance(session, curs, data)
 
         currs_id_idx = self._get_currs_idx(curs, 'id')
         currency = currs_id_idx[balance.currency_id]
@@ -363,12 +368,7 @@ class Handler(AbstractHandler):
     @detalize_error(BalanceDisabled, 'balance_id')
     @detalize_error(MoneyNotEnough, 'amount')
     def lock(self, data, session, curs=None):
-        balance_f = BalanceFilter(session, {'id': data['balance_id']}, {}, None)
-        balance = balance_f.filter_one_obj(curs, for_update=True)
-        # setting user_id for correct action logging
-        data['user_id'] = balance.user_id
-        if not balance.is_active:
-            raise BalanceDisabled()
+        balance = self._get_active_balance(session, curs, data)
 
         currs_id_idx = self._get_currs_idx(curs, 'id')
         currency = currs_id_idx[balance.currency_id]
@@ -403,6 +403,40 @@ class Handler(AbstractHandler):
         mapping.insert(curs, lock)
         mapping.insert(curs, trans)
         return response_ok(transaction_id=trans.id, lock_id=lock.id)
+
+    @set_subject_users_ids('user_id')
+    @transaction()
+    @authenticate
+    @detalize_error(BalanceLockNotFound, ['lock_id', 'balance_id'])
+    @detalize_error(BalanceNotFound, 'balance_id')
+    @detalize_error(BalanceDisabled, 'balance_id')
+    def unlock(self, data, session, curs=None):
+        lock_f = BalanceLockFilter(session, {'id': data['lock_id'],
+            'balance_id': data['balance_id']}, {}, None)
+        lock = lock_f.filter_one_obj(curs)
+
+        balance = self._get_active_balance(session, curs, data)
+
+        currs_id_idx = self._get_currs_idx(curs, 'id')
+        currency = currs_id_idx[balance.currency_id]
+
+        info = data.get('info', {})
+
+        trans_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
+            'balance_id': balance.id, 'currency_code': currency.code,
+            'type': 'lock', 'real_amount': cents_to_decimal(currency, lock.real_amount),
+            'virtual_amount': cents_to_decimal(currency, lock.virtual_amount),
+            'info': info}
+
+        balance.real_amount += lock.real_amount
+        balance.virtual_amount += lock.virtual_amount
+        balance.locked_amount -= lock.real_amount + lock.virtual_amount
+        mapping.update(curs, balance)
+
+        trans = Transaction(**trans_data)
+        mapping.delete(curs, lock)
+        mapping.insert(curs, trans)
+        return response_ok(transaction_id=trans.id)
 
     def _f_param_currecncy_code_to_id(self, curs, f_params):
         if 'currency_code' in f_params:

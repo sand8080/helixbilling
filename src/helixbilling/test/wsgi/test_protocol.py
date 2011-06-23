@@ -317,7 +317,12 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         a_name = 'unlock'
         self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 1,
             'lock_id': 23})
-        self.validate_status_response(a_name)
+        self.api.validate_request(a_name, {'session_id': 'i', 'balance_id': 1,
+            'lock_id': 23, 'info': {'reason': 'order canceled'}})
+
+        self.api.validate_response(a_name, {'status': 'ok',
+            'transaction_id': 1})
+        self.validate_error_response(a_name)
 
 
 if __name__ == '__main__':

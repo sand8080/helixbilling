@@ -22,3 +22,25 @@ class ActorLogicTestCase(LogicTestCase):
         self.assertEquals(1, len(resp['balances']))
         balance_info = resp['balances'][0]
         return balance_info
+
+    def create_balance(self, sess, user_id, curr_code, locking_order,
+        real_amount, virtual_amount, overdraft_limit='0'):
+        req = {'session_id': sess.session_id, 'user_id': user_id,
+            'currency_code': curr_code, 'locking_order': locking_order,
+            'overdraft_limit': overdraft_limit}
+        resp = self.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_id = resp['id']
+        # adding receipt
+        if real_amount:
+            req = {'session_id': sess.session_id, 'balance_id': balance_id,
+                'amount': real_amount, 'info': {'payment_system': 'YandexMoney'}}
+            resp = self.add_receipt(**req)
+            self.check_response_ok(resp)
+        # adding bonus
+        if virtual_amount:
+            req = {'session_id': sess.session_id, 'balance_id': balance_id,
+                'amount': virtual_amount, 'info': {'payment_system': 'BonusSystem'}}
+            resp = self.add_bonus(**req)
+            self.check_response_ok(resp)
+        return balance_id

@@ -281,11 +281,18 @@ LOCK_RESPONSE = AnyOf(
 )
 
 UNLOCK_REQUEST = dict(
-    {'balance_id': int, 'lock_id': int},
+    {
+        'balance_id': int,
+        'lock_id': int,
+        Optional('info'): ArbitraryDict(),
+    },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-UNLOCK_RESPONSE = RESPONSE_STATUS_ONLY
+UNLOCK_RESPONSE = AnyOf(
+    dict({'transaction_id': int}, **RESPONSE_STATUS_OK),
+    RESPONSE_STATUS_ERROR
+)
 
 ## --- chargeoff ---
 #CHARGEOFF_DATA = {

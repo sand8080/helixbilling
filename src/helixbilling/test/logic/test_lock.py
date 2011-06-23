@@ -6,28 +6,6 @@ from helixbilling.test.logic import access_granted #@UnusedImport
 
 
 class BalanceLockTestCase(ActorLogicTestCase):
-    def _create_balance(self, sess, user_id, curr_code, locking_order,
-        real_amount, virtual_amount, overdraft_limit='0'):
-        req = {'session_id': sess.session_id, 'user_id': user_id,
-            'currency_code': curr_code, 'locking_order': locking_order,
-            'overdraft_limit': overdraft_limit}
-        resp = self.add_balance(**req)
-        self.check_response_ok(resp)
-        balance_id = resp['id']
-        # adding receipt
-        if real_amount:
-            req = {'session_id': sess.session_id, 'balance_id': balance_id,
-                'amount': real_amount, 'info': {'payment_system': 'YandexMoney'}}
-            resp = self.add_receipt(**req)
-            self.check_response_ok(resp)
-        # adding bonus
-        if virtual_amount:
-            req = {'session_id': sess.session_id, 'balance_id': balance_id,
-                'amount': virtual_amount, 'info': {'payment_system': 'BonusSystem'}}
-            resp = self.add_bonus(**req)
-            self.check_response_ok(resp)
-        return balance_id
-
     def test_balance_not_found(self):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'balance_id': 9999,
@@ -40,7 +18,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self._create_balance(sess, subj_user_id, curr_code, None, '5', None)
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None)
 
         # locking
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
@@ -62,7 +40,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self._create_balance(sess, subj_user_id, curr_code, None, '5', None, '10')
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None, '10')
 
         # locking with overdraft
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
@@ -114,7 +92,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # real, virtual
         subj_user_id = 11
-        balance_id = self._create_balance(sess, subj_user_id, curr_code,
+        balance_id = self.create_balance(sess, subj_user_id, curr_code,
             ['real_amount', 'virtual_amount'], '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
             'amount': '2'}
@@ -129,7 +107,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # virtual, real
         subj_user_id = 12
-        balance_id = self._create_balance(sess, subj_user_id, curr_code,
+        balance_id = self.create_balance(sess, subj_user_id, curr_code,
             ['virtual_amount', 'real_amount'], '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
             'amount': '2.60'}
@@ -144,7 +122,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # real
         subj_user_id = 13
-        balance_id = self._create_balance(sess, subj_user_id, curr_code,
+        balance_id = self.create_balance(sess, subj_user_id, curr_code,
             ['real_amount'], '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
             'amount': '0.60'}
@@ -162,7 +140,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # virtual
         subj_user_id = 14
-        balance_id = self._create_balance(sess, subj_user_id, curr_code,
+        balance_id = self.create_balance(sess, subj_user_id, curr_code,
             ['virtual_amount'], '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
             'amount': '1.70'}
@@ -185,7 +163,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # creating balance
         subj_user_id = 11
-        balance_id = self._create_balance(sess, subj_user_id, curr_code,
+        balance_id = self.create_balance(sess, subj_user_id, curr_code,
             ['real_amount', 'virtual_amount'], '10', '20')
 
         locks = ['1', '2', '3']
