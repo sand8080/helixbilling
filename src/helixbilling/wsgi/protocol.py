@@ -275,11 +275,6 @@ GET_LOCKS_SELF_REQUEST = dict(
 
 GET_LOCKS_SELF_RESPONSE = GET_LOCKS_RESPONSE
 
-LOCK_RESPONSE = AnyOf(
-    dict({'lock_id': int, 'transaction_id': int}, **RESPONSE_STATUS_OK),
-    RESPONSE_STATUS_ERROR
-)
-
 UNLOCK_REQUEST = dict(
     {
         'balance_id': int,
