@@ -46,18 +46,3 @@ class ActionLog(Mapped):
         'subject_users_ids', 'action', 'request_date',
         'remote_addr', 'request', 'response']
     table = 'action_log'
-
-#class Receipt(Mapped):
-#    __slots__ = ['id', 'operator_id', 'customer_id', 'creation_date', 'amount']
-#    table = 'receipt'
-#
-#
-#class Bonus(Mapped):
-#    __slots__ = ['id', 'operator_id',  'customer_id', 'creation_date', 'amount']
-#    table = 'bonus'
-#
-#
-#class ChargeOff(Mapped):
-#    __slots__ = ['id', 'operator_id',  'customer_id', 'order_id', 'order_type',
-#        'real_amount', 'virtual_amount', 'locking_date', 'chargeoff_date']
-#    table = 'chargeoff'
