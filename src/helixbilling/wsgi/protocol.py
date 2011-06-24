@@ -294,6 +294,10 @@ UNLOCK_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+CHARGE_OFF_REQUEST = UNLOCK_REQUEST
+
+CHARGE_OFF_RESPONSE = UNLOCK_RESPONSE
+
 ## --- chargeoff ---
 #CHARGEOFF_DATA = {
 #    'customer_id': Text(),
@@ -410,5 +414,8 @@ protocol = [
 
     ApiCall('unlock_request', Scheme(UNLOCK_REQUEST)),
     ApiCall('unlock_response', Scheme(UNLOCK_RESPONSE)),
+
+    ApiCall('charge_off_request', Scheme(CHARGE_OFF_REQUEST)),
+    ApiCall('charge_off_response', Scheme(CHARGE_OFF_RESPONSE)),
 
 ]
