@@ -12,6 +12,7 @@ from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
 
 
 locking_order_validator = AnyOf(None, [AnyOf('real_amount', 'virtual_amount')])
+transaction_type_validator = AnyOf('receipt', 'bonus', 'lock', 'unlock', 'charge_off')
 
 GET_CURRENCIES_REQUEST = dict(
     {
@@ -293,56 +294,45 @@ CHARGE_OFF_REQUEST = UNLOCK_REQUEST
 
 CHARGE_OFF_RESPONSE = UNLOCK_RESPONSE
 
-## --- chargeoff ---
-#CHARGEOFF_DATA = {
-#    'customer_id': Text(),
-#    'order_id': Text(),
-#}
-#
-#CHARGEOFF = dict(CHARGEOFF_DATA, **AUTH_INFO)
-#
-#CHARGEOFF_LIST = dict(
-#    {'chargeoffs': [CHARGEOFF_DATA]},
-#    **AUTH_INFO
-#)
-#
-#VIEW_CHARGEOFFS = dict(
-#    {
-#        'filter_params': {
-#            Optional('customer_ids'): [Text()],
-#            Optional('order_id'): Text(),
-#            Optional('order_type'): NullableText(),
-#            Optional('from_locking_date'): IsoDatetime(),
-#            Optional('to_locking_date'): IsoDatetime(),
-#            Optional('from_chargeoff_date'): IsoDatetime(),
-#            Optional('to_chargeoff_date'): IsoDatetime(),
-#        },
-#        'paging_params': PAGING_PARAMS,
-#        Optional('ordering_params'): [AnyOf('chargeoff_date', '-chargeoff_date')]
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_CHARGEOFFS_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK,
-#        **{
-#            'chargeoffs': [{
-#                'customer_id': Text(),
-#                'order_id': Text(),
-#                'order_type': NullableText(),
-#                'real_amount': DecimalText(),
-#                'virtual_amount': DecimalText(),
-#                'currency': Text(),
-#                'locking_date': IsoDatetime(),
-#                'chargeoff_date': IsoDatetime(),
-#            }],
-#            'total': NonNegative(int),
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
+TRANSACTION_INFO = {
+    'id': int,
+    'user_id': int,
+    'balance_id': int,
+    'currency_code': Text(),
+    'real_amount': DecimalText(),
+    'virtual_amount': DecimalText(),
+    'creation_date': IsoDatetime(),
+    'type': Text(),
+    'info': ArbitraryDict(),
+}
+
+GET_TRANSACTIONS_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
+            Optional('user_id'): int,
+            Optional('balance_id'): int,
+            Optional('from_creation_date'): IsoDatetime(),
+            Optional('to_creation_date'): IsoDatetime(),
+            Optional('type'): transaction_type_validator,
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+GET_TRANSACTIONS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'transactions': [TRANSACTION_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 protocol = [
 
@@ -396,6 +386,8 @@ protocol = [
     ApiCall('add_bonus_response', Scheme(ADD_BONUS_RESPONSE)),
 
     # transactions
+    ApiCall('get_transactions_request', Scheme(GET_TRANSACTIONS_REQUEST)),
+    ApiCall('get_transactions_response', Scheme(GET_TRANSACTIONS_RESPONSE)),
 
     # locks
     ApiCall('lock_request', Scheme(LOCK_REQUEST)),
