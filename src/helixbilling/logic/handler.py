@@ -17,7 +17,7 @@ from helixbilling.conf.db import transaction
 from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction,
     BalanceLock)
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
-    ActionLogFilter, BalanceFilter, BalanceLockFilter)
+    ActionLogFilter, BalanceFilter, BalanceLockFilter, TransactionsFilter)
 from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
     BalanceDisabled, HelixbillingError, MoneyNotEnough, BalanceLockNotFound)
@@ -174,17 +174,19 @@ class Handler(AbstractHandler):
         return self._get_transactions(data, session, curs)
 
     def _get_transactions(self, data, session, curs):
-        f = ActionLogFilter(session.environment_id, data['filter_params'],
+        f = TransactionsFilter(session.environment_id, data['filter_params'],
             data['paging_params'], data.get('ordering_params'))
-        action_logs, total = f.filter_counted(curs)
+        transactions, total = f.filter_counted(curs)
         def viewer(trn):
             result = deserialize_field(trn.to_dict(), 'serialized_info', 'info')
+            print '### trn', trn
             result.pop('environment_id', None)
             result['creation_date'] = '%s' % result['creation_date']
             result['real_amount'] = '%s' % trn.real_amount
             result['virtual_amount'] = '%s' % trn.virtual_amount
+            print '### trn as dict', result
             return result
-        return response_ok(transactions=self.objects_info(action_logs, viewer),
+        return response_ok(transactions=self.objects_info(transactions, viewer),
             total=total)
 
     def _check_user_exist(self, session, user_id):
