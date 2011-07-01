@@ -168,6 +168,25 @@ class Handler(AbstractHandler):
         return response_ok(action_logs=self.objects_info(action_logs, viewer),
             total=total)
 
+    @transaction()
+    @authenticate
+    def get_transactions(self, data, session, curs=None):
+        return self._get_transactions(data, session, curs)
+
+    def _get_transactions(self, data, session, curs):
+        f = ActionLogFilter(session.environment_id, data['filter_params'],
+            data['paging_params'], data.get('ordering_params'))
+        action_logs, total = f.filter_counted(curs)
+        def viewer(trn):
+            result = deserialize_field(trn.to_dict(), 'serialized_info', 'info')
+            result.pop('environment_id', None)
+            result['creation_date'] = '%s' % result['creation_date']
+            result['real_amount'] = '%s' % trn.real_amount
+            result['virtual_amount'] = '%s' % trn.virtual_amount
+            return result
+        return response_ok(transactions=self.objects_info(action_logs, viewer),
+            total=total)
+
     def _check_user_exist(self, session, user_id):
         auth = CoreAuthenticator(settings.auth_server_url)
         resp = auth.check_user_exist(session.session_id, user_id)

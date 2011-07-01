@@ -20,13 +20,7 @@ class BalanceUnlockTestCase(ActorLogicTestCase):
         self.set_used_currencies(sess, [curr_code])
         balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None)
 
-        # locking
-        req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '3.90', 'info': {'order_type': 'domain_com_reg',
-            'order_id': 4563}}
-        resp = self.lock(**req)
-        self.check_response_ok(resp)
-        lock_id = resp['lock_id']
+        lock_id = self.make_lock(sess, balance_id, '3.90')
 
         req = {'session_id': sess.session_id, 'balance_id': 9999,
             'lock_id': lock_id}
@@ -41,12 +35,7 @@ class BalanceUnlockTestCase(ActorLogicTestCase):
         balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None)
 
         # locking
-        req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '3.90', 'info': {'order_type': 'domain_com_reg',
-            'order_id': 4563}}
-        resp = self.lock(**req)
-        self.check_response_ok(resp)
-        lock_id = resp['lock_id']
+        lock_id = self.make_lock(sess, balance_id, '3.90')
 
         balance_info = self.get_balance(sess, balance_id)
         self.assertEquals(balance_id, balance_info['id'])

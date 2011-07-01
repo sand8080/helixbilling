@@ -44,3 +44,10 @@ class ActorLogicTestCase(LogicTestCase):
             resp = self.add_bonus(**req)
             self.check_response_ok(resp)
         return balance_id
+
+    def make_lock(self, sess, balance_id, amount):
+        req = {'session_id': sess.session_id, 'balance_id': balance_id, 'amount': amount}
+        resp = self.lock(**req)
+        self.check_response_ok(resp)
+        return resp['lock_id']
+

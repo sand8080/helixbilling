@@ -3,7 +3,7 @@ from helixcore.db.filters import (InSessionFilter, ObjectsFilter,
     EnvironmentObjectsFilter)
 
 from helixbilling.db.dataobject import (Currency, UsedCurrency, ActionLog,
-    Balance, BalanceLock)
+    Balance, BalanceLock, Transaction)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 from helixbilling.error import BalanceNotFound, CurrencyNotFound
 
@@ -51,6 +51,22 @@ class ActionLogFilter(EnvironmentObjectsFilter):
     def __init__(self, environment_id, filter_params, paging_params, ordering_params):
         super(ActionLogFilter, self).__init__(environment_id,
             filter_params, paging_params, ordering_params, ActionLog)
+
+
+class TransactionsFilter(EnvironmentObjectsFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+        ('ids', 'id', In),
+        ('user_id', 'user_id', Eq),
+        ('balance_id', 'balance_id', Eq),
+        ('type', 'type', Eq),
+        ('from_creation_date', 'creation_date', MoreEq),
+        ('to_creation_date', 'creation_date', LessEq),
+    ]
+
+    def __init__(self, environment_id, filter_params, paging_params, ordering_params):
+        super(TransactionsFilter, self).__init__(environment_id,
+            filter_params, paging_params, ordering_params, Transaction)
 
 
 class BalanceFilter(InSessionFilter):
