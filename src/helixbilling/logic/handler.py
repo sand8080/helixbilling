@@ -173,6 +173,12 @@ class Handler(AbstractHandler):
     def get_transactions(self, data, session, curs=None):
         return self._get_transactions(data, session, curs)
 
+    @transaction()
+    @authenticate
+    def get_transactions_self(self, data, session, curs=None):
+        data['filter_params']['user_id'] = session.user_id
+        return self._get_transactions(data, session, curs)
+
     def _get_transactions(self, data, session, curs):
         f = TransactionsFilter(session.environment_id, data['filter_params'],
             data['paging_params'], data.get('ordering_params'))
