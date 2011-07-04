@@ -366,6 +366,37 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_get_transactions_self(self):
+        a_name = 'get_transactions_self'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {},
+            'paging_params': {'limit': 0, 'offset': 0,}})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'id': 1, 'ids': [1, 2],
+                'balance_id': 5,
+                'from_creation_date': '2011-02-21 00:00:00',
+                'to_creation_date': '2011-02-21 23:59:59',
+                'type': 'charge_off'},
+            'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'id': 2}, 'paging_params': {},
+            'ordering_params': ['id', '-id']})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'transactions': [
+                {
+                    'id': 22, 'user_id': 4, 'balance_id': 5, 'currency_code': 'RUB',
+                    'creation_date': '2011-02-21 00:00:00',
+                    'real_amount': '3.15', 'virtual_amount': '0.0',
+                    'type': 'bonus',
+                    'info': {'p0': 'v0', 'p1': 'v1'},
+                },
+            ]
+        })
+        self.validate_error_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()

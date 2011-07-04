@@ -306,12 +306,11 @@ TRANSACTION_INFO = {
     'info': ArbitraryDict(),
 }
 
-GET_TRANSACTIONS_REQUEST = dict(
+GET_TRANSACTIONS_SELF_REQUEST = dict(
     {
         'filter_params': {
             Optional('id'): int,
             Optional('ids'): [int],
-            Optional('user_id'): int,
             Optional('balance_id'): int,
             Optional('from_creation_date'): IsoDatetime(),
             Optional('to_creation_date'): IsoDatetime(),
@@ -323,7 +322,7 @@ GET_TRANSACTIONS_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-GET_TRANSACTIONS_RESPONSE = AnyOf(
+GET_TRANSACTIONS_SELF_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
@@ -333,6 +332,11 @@ GET_TRANSACTIONS_RESPONSE = AnyOf(
     ),
     RESPONSE_STATUS_ERROR
 )
+
+GET_TRANSACTIONS_REQUEST = dict(GET_TRANSACTIONS_SELF_REQUEST)
+GET_TRANSACTIONS_REQUEST['filter_params'][Optional('user_id')] = int
+
+GET_TRANSACTIONS_RESPONSE = GET_TRANSACTIONS_SELF_RESPONSE
 
 protocol = [
 
@@ -388,6 +392,9 @@ protocol = [
     # transactions
     ApiCall('get_transactions_request', Scheme(GET_TRANSACTIONS_REQUEST)),
     ApiCall('get_transactions_response', Scheme(GET_TRANSACTIONS_RESPONSE)),
+
+    ApiCall('get_transactions_self_request', Scheme(GET_TRANSACTIONS_SELF_REQUEST)),
+    ApiCall('get_transactions_self_response', Scheme(GET_TRANSACTIONS_SELF_RESPONSE)),
 
     # locks
     ApiCall('lock_request', Scheme(LOCK_REQUEST)),
