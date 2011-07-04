@@ -179,12 +179,10 @@ class Handler(AbstractHandler):
         transactions, total = f.filter_counted(curs)
         def viewer(trn):
             result = deserialize_field(trn.to_dict(), 'serialized_info', 'info')
-            print '### trn', trn
             result.pop('environment_id', None)
             result['creation_date'] = '%s' % result['creation_date']
             result['real_amount'] = '%s' % trn.real_amount
             result['virtual_amount'] = '%s' % trn.virtual_amount
-            print '### trn as dict', result
             return result
         return response_ok(transactions=self.objects_info(transactions, viewer),
             total=total)
@@ -345,8 +343,9 @@ class Handler(AbstractHandler):
         if amount < 0:
             amount *= -1
 
-        trans_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
-            'balance_id': balance.id, 'currency_code': currency.code,
+        trans_data = {'environment_id': session.environment_id,
+            'user_id': balance.user_id, 'balance_id': balance.id,
+            'currency_code': currency.code, 'real_amount': 0, 'virtual_amount': 0,
             'type': transaction_type, 'info': data.get('info', {})}
 
         if transaction_type == 'receipt':

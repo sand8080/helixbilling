@@ -15,8 +15,8 @@ class TransactionsTestCase(ActorLogicTestCase):
         balance_id = self.create_balance(sess, subj_user_id, curr_code, None,
             '10', '5', '3')
 
-        req = {'session_id': sess.session_id, 'filter_params': {'user_id': subj_user_id},
-            'paging_params': {}}
+        req = {'session_id': sess.session_id, 'filter_params': {'user_id': subj_user_id, 'type': 'lock'
+            }, 'paging_params': {}}
         resp = self.get_transactions(**req)
         self.check_response_ok(resp)
 
@@ -25,16 +25,14 @@ class TransactionsTestCase(ActorLogicTestCase):
         lock_id_0 = self.make_lock(sess, balance_id, '9')
         lock_id_1 = self.make_lock(sess, balance_id, '3')
         lock_id_2 = self.make_lock(sess, balance_id, '4')
+        lock_ids = (lock_id_0, lock_id_1, lock_id_2)
 
-        req = {'session_id': sess.session_id, 'filter_params': {'user_id': subj_user_id},
-            'paging_params': {}}
-        req = {'session_id': sess.session_id, 'filter_params': {'balance_id': balance_id},
-            'paging_params': {}}
+        req = {'session_id': sess.session_id, 'filter_params': {'user_id': subj_user_id,
+            'type': 'lock'},
+            'paging_params': {}, 'ordering_params': ['-id']}
         resp = self.get_transactions(**req)
         self.check_response_ok(resp)
-        print '###', resp
-
-        self.assertEquals(len_before + 3, len(resp['transactions']))
+        self.assertEquals(len_before + len(lock_ids), len(resp['transactions']))
         for d_trn in resp['transactions']:
             self.assertEquals('lock', d_trn['type'])
 
