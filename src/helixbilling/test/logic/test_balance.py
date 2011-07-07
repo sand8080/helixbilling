@@ -50,10 +50,9 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(0, balance.real_amount)
         self.assertEquals(0, balance.virtual_amount)
         self.assertEquals(0, balance.locked_amount)
-        self.assertEquals(['real_amount', 'virtual_amount'], balance.locking_order)
 
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'BZD',
-            'overdraft_limit': '102.30', 'locking_order': ['real_amount']}
+            'overdraft_limit': '102.30'}
         resp = self.add_balance(**req)
         self.check_response_ok(resp)
         balance_f = BalanceFilter(sess, {'id': resp['id']}, {}, {})
@@ -64,7 +63,6 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(0, balance.real_amount)
         self.assertEquals(0, balance.virtual_amount)
         self.assertEquals(0, balance.locked_amount)
-        self.assertEquals(['real_amount'], balance.locking_order)
 
         # wrong currency code
         req = {'session_id': sess.session_id, 'user_id': user_id, 'currency_code': 'XXX'}
@@ -110,14 +108,11 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals('0.00', balance['real_amount'])
         self.assertEquals('0.00', balance['virtual_amount'])
         self.assertEquals('0.00', balance['locked_amount'])
-        self.assertEquals(['real_amount', 'virtual_amount'], balance['locking_order'])
 
         # Balances modification
         req = {'session_id': sess.session_id, 'ids': [balance_rub_id, balance_byr_id,
-            balance_cny_id, 10000],
-            'new_is_active': False, 'new_overdraft_limit': '100.0',
-            'new_locking_order': ['real_amount',
-            'virtual_amount']}
+            balance_cny_id, 10000], 'new_is_active': False,
+            'new_overdraft_limit': '100.0'}
         resp = self.modify_balances(**req)
         self.check_response_ok(resp)
 
@@ -137,8 +132,6 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals('0.00', balance['real_amount'])
         self.assertEquals('0.00', balance['virtual_amount'])
         self.assertEquals('0.00', balance['locked_amount'])
-        self.assertEquals(['real_amount', 'virtual_amount'],
-            balance['locking_order'])
 
         req = {'session_id': sess.session_id,
             'filter_params': {'id': balance_byr_id}, 'paging_params': {}}
@@ -155,8 +148,6 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals('0.0', balance['real_amount'])
         self.assertEquals('0.0', balance['virtual_amount'])
         self.assertEquals('0.0', balance['locked_amount'])
-        self.assertEquals(['real_amount', 'virtual_amount'],
-            balance['locking_order'])
 
         req = {'session_id': sess.session_id,
             'filter_params': {'id': balance_cny_id}, 'paging_params': {}}
@@ -173,13 +164,10 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals('0.0', balance['real_amount'])
         self.assertEquals('0.0', balance['virtual_amount'])
         self.assertEquals('0.0', balance['locked_amount'])
-        self.assertEquals(['real_amount', 'virtual_amount'],
-            balance['locking_order'])
 
         # Modification without changing overdraft limit
         req = {'session_id': sess.session_id, 'ids': [balance_rub_id],
-            'new_is_active': True, 'new_overdraft_limit': '100.0',
-            'new_locking_order': ['real_amount']}
+            'new_is_active': True, 'new_overdraft_limit': '100.0'}
         resp = self.modify_balances(**req)
         self.check_response_ok(resp)
 
@@ -198,8 +186,6 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals('0.00', balance['real_amount'])
         self.assertEquals('0.00', balance['virtual_amount'])
         self.assertEquals('0.00', balance['locked_amount'])
-        self.assertEquals(['real_amount'],
-            balance['locking_order'])
 
     def test_get_balances_self(self):
         sess = self.login_actor()
@@ -229,7 +215,6 @@ class BalanceTestCase(ActorLogicTestCase):
         self.assertEquals(True, balance['is_active'])
         self.assertEquals('0.00', balance['overdraft_limit'])
         self.assertEquals('0.00', balance['locked_amount'])
-        self.assertEquals(['real_amount', 'virtual_amount'], balance['locking_order'])
         self.assertEquals('0.00', balance['real_amount'])
         self.assertEquals('0.00', balance['virtual_amount'])
         self.assertEquals('RUB', balance['currency_code'])
