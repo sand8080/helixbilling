@@ -111,7 +111,6 @@ ADD_BALANCE_REQUEST = dict(
         'currency_code': Text(),
         Optional('is_active'): bool,
         Optional('overdraft_limit'): DecimalText(),
-        Optional('locking_order'): locking_order_validator,
         Optional('check_user_exist'): bool,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
@@ -124,7 +123,6 @@ MODIFY_BALANCES_REQUEST = dict(
         'ids': [int],
         Optional('new_is_active'): bool,
         Optional('new_overdraft_limit'): DecimalText(),
-        Optional('new_locking_order'): locking_order_validator
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
@@ -140,7 +138,6 @@ BALANCE_INFO = {
     'virtual_amount': DecimalText(),
     'overdraft_limit': DecimalText(),
     'locked_amount': DecimalText(),
-    'locking_order': locking_order_validator,
 }
 
 GET_BALANCES_SELF_REQUEST = AUTHORIZED_REQUEST_AUTH_INFO
@@ -204,7 +201,8 @@ ADD_BONUS_REQUEST = MONEY_OPERATION_REQUEST
 
 ADD_BONUS_RESPONSE = TRANSACTION_CREATION_RESPONSE
 
-LOCK_REQUEST = MONEY_OPERATION_REQUEST
+LOCK_REQUEST = dict(MONEY_OPERATION_REQUEST)
+LOCK_REQUEST['locking_order'] = locking_order_validator
 
 LOCK_RESPONSE = AnyOf(
     dict({'lock_id': int, 'transaction_id': int}, **RESPONSE_STATUS_OK),

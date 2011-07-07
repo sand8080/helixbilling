@@ -142,17 +142,13 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'overdraft_limit': '500.50'})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': True, 'currency_code': 'YYY',
-            'overdraft_limit': '500.50', 'locking_order': [
-                'real_amount', 'virtual_amount'
-            ]})
+            'overdraft_limit': '500.50'})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
-            'overdraft_limit': '500.50', 'locking_order': [
-                'real_amount'
-            ]})
+            'overdraft_limit': '500.50'})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
-            'overdraft_limit': '500.50', 'locking_order': None})
+            'overdraft_limit': '500.50'})
         self.api.validate_request(a_name, {'session_id': 'i',
             'user_id': 23, 'is_active': False, 'currency_code': 'YYY',
             'overdraft_limit': '500.50', 'check_user_exist': True})
@@ -164,10 +160,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         a_name = 'modify_balances'
         self.api.validate_request(a_name, {'session_id': 'i',
             'ids': [2], 'new_is_active': True,
-            'new_overdraft_limit': '500.50', 'new_locking_order': None})
+            'new_overdraft_limit': '500.50'})
         self.api.validate_request(a_name, {'session_id': 'i',
             'ids': [2, 3, 4], 'new_is_active': True,
-            'new_overdraft_limit': '500.50', 'new_locking_order': None})
+            'new_overdraft_limit': '500.50'})
 
         self.validate_status_response(a_name)
 
@@ -178,8 +174,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'balances': [
                 {'id': 2, 'user_id': 3, 'is_active': True, 'currency_code': 'RUB',
                 'real_amount': '3.15', 'virtual_amount': '0.0',
-                'locked_amount': '14.09', 'overdraft_limit': '0.14',
-                'locking_order': ['real_amount', 'virtual_amount']}
+                'locked_amount': '14.09', 'overdraft_limit': '0.14',}
             ],
             'total': 1,
         })
@@ -215,7 +210,6 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                     'currency_code': 'RU', 'real_amount': '3.15',
                     'virtual_amount': '0.0',
                     'locked_amount': '14.09', 'overdraft_limit': '0.14',
-                    'locking_order': ['real_amount', 'virtual_amount'],
                 },
             ]
         })
@@ -242,10 +236,12 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_lock(self):
         a_name = 'lock'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'balance_id': 23, 'amount': '44'})
+            'balance_id': 23, 'amount': '44', 'locking_order': [
+                'real_amount', 'virtual_amount'
+            ]})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'balance_id': 23, 'amount': '44.42',
-            'info': {'reason': 'beauty eyes'}})
+            'balance_id': 23, 'amount': '44.42', 'locking_order': [
+            'real_amount'], 'info': {'reason': 'beauty eyes'}})
 
         self.api.validate_response(a_name, {'status': 'ok',
             'transaction_id': 1, 'lock_id': 2})
