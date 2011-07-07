@@ -400,10 +400,12 @@ class Handler(AbstractHandler):
         if lock_amount < 0:
             lock_amount *= -1
 
-        amounts_to_lock = compute_locks(balance, lock_amount)
+        locking_order = data['locking_order']
+        amounts_to_lock = compute_locks(balance, lock_amount, locking_order)
         lock_real = amounts_to_lock.get('real_amount', 0)
         lock_virtual = amounts_to_lock.get('virtual_amount', 0)
         info = data.get('info', {})
+        info['locking_order'] = locking_order
 
         trans_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
             'balance_id': balance.id, 'currency_code': currency.code,

@@ -15,7 +15,7 @@ class LogicTestCase(ActorLogicTestCase):
     def _initial_balance(self):
         return Balance(environment_id=1, user_id=1, currency_id=1,
             real_amount=0, virtual_amount=0, overdraft_limit=0,
-            locking_order=None, locked_amount=0, is_active=True)
+            locked_amount=0, is_active=True)
 
     def test_get_available_resources(self):
         balance = self._initial_balance()
@@ -31,47 +31,41 @@ class LogicTestCase(ActorLogicTestCase):
             get_lockable_amounts(balance))
 
     def test_compute_locks(self):
-        # default locking order
         balance = self._initial_balance()
         balance.real_amount = 10
         balance.virtual_amount = 20
         self.assertEqual({'real_amount': 10, 'virtual_amount': 5},
-            compute_locks(balance, 15))
-
-        # defined locking order
-        balance.locking_order = ['virtual_amount', 'real_amount']
+            compute_locks(balance, 15, ['real_amount', 'virtual_amount']))
         self.assertEqual({'virtual_amount': 15, 'real_amount': 0},
-            compute_locks(balance, 15))
-
-        balance.locking_order = ['real_amount', 'virtual_amount']
+            compute_locks(balance, 15, ['virtual_amount', 'real_amount']))
         self.assertEqual({'real_amount': 10, 'virtual_amount': 11},
-            compute_locks(balance, 21))
-
-        balance.locking_order = ['virtual_amount']
+            compute_locks(balance, 21, ['real_amount', 'virtual_amount']))
         self.assertEqual({'virtual_amount': 10},
-            compute_locks(balance, 10))
+            compute_locks(balance, 10, ['virtual_amount']))
+
+    def test_wrong_lock_name_compute_locks(self):
+        balance = self._initial_balance()
+        balance.real_amount = 10
+        balance.virtual_amount = 20
+        self.assertRaises(KeyError, compute_locks, balance, 15, ['real_amount', 'brhmr_amount'])
 
     def test_compute_locks_with_overdraft(self):
         balance = self._initial_balance()
         balance.real_amount = 10
         balance.virtual_amount = 20
         balance.overdraft_limit = 10
-        balance.locking_order = ['virtual_amount', 'real_amount']
-
         self.assertEqual({'real_amount': 15, 'virtual_amount': 20},
-            compute_locks(balance, 35))
-
-        balance.locking_order = ['real_amount', 'virtual_amount']
+            compute_locks(balance, 35, ['virtual_amount', 'real_amount']))
         self.assertEqual({'real_amount': 15, 'virtual_amount': 0},
-            compute_locks(balance, 15))
+            compute_locks(balance, 15, ['real_amount', 'virtual_amount']))
 
     def test_compute_locks_failure(self):
         balance = self._initial_balance()
         balance.real_amount = 10
         balance.virtual_amount = 20
         balance.overdraft_limit = 0
-        balance.locking_order = ['virtual_amount', 'real_amount']
-        self.assertRaises(MoneyNotEnough, compute_locks, balance, 40)
+        self.assertRaises(MoneyNotEnough, compute_locks, balance, 40,
+            ['virtual_amount', 'real_amount'])
 
     def _get_currencies_idx(self):
         sess = self.login_actor()
