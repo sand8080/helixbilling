@@ -41,21 +41,15 @@ def get_lockable_amounts(balance):
     }
 
 
-def compute_locks(balance, lock_amount):
+def compute_locks(balance, lock_amount, locking_order):
     """
     Returns {field_name: locked_amount}. field_names are from locking_order.
-    If locking_order is None, then default locking order used: [real_amount, real_amount].
 
     If balance has overdraft_limit > 0 and real_amount is in locking_order or locking_order is None,
     then we can decrease real_amount until reach -overdraft_limit value.
 
     ActionNotAllowedError exception raises if money not enough.
     """
-    if balance.locking_order is None:
-        locking_order = ['real_amount', 'virtual_amount']
-    else:
-        locking_order = balance.locking_order
-
     amounts_to_lock = dict([(a, 0) for a in locking_order])
     lockable_amounts = get_lockable_amounts(balance)
 
