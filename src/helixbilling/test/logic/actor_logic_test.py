@@ -23,11 +23,10 @@ class ActorLogicTestCase(LogicTestCase):
         balance_info = resp['balances'][0]
         return balance_info
 
-    def create_balance(self, sess, user_id, curr_code, locking_order,
+    def create_balance(self, sess, user_id, curr_code,
         real_amount, virtual_amount, overdraft_limit='0'):
         req = {'session_id': sess.session_id, 'user_id': user_id,
-            'currency_code': curr_code, 'locking_order': locking_order,
-            'overdraft_limit': overdraft_limit}
+            'currency_code': curr_code, 'overdraft_limit': overdraft_limit}
         resp = self.add_balance(**req)
         self.check_response_ok(resp)
         balance_id = resp['id']
@@ -45,8 +44,9 @@ class ActorLogicTestCase(LogicTestCase):
             self.check_response_ok(resp)
         return balance_id
 
-    def make_lock(self, sess, balance_id, amount):
-        req = {'session_id': sess.session_id, 'balance_id': balance_id, 'amount': amount}
+    def make_lock(self, sess, balance_id, amount, locking_order):
+        req = {'session_id': sess.session_id, 'balance_id': balance_id,
+            'amount': amount, 'locking_order': locking_order}
         resp = self.lock(**req)
         self.check_response_ok(resp)
         return resp['lock_id']

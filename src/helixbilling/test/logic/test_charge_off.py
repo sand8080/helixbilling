@@ -18,8 +18,8 @@ class BalanceChargeOffTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None)
-        lock_id = self.make_lock(sess, balance_id, '3.90')
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, '5', None)
+        lock_id = self.make_lock(sess, balance_id, '3.90', ['real_amount'])
 
         req = {'session_id': sess.session_id, 'balance_id': 9999,
             'lock_id': lock_id}
@@ -31,8 +31,8 @@ class BalanceChargeOffTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None)
-        lock_id = self.make_lock(sess, balance_id, '3.90')
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, '5', None)
+        lock_id = self.make_lock(sess, balance_id, '3.90', ['real_amount'])
 
         balance_info = self.get_balance(sess, balance_id)
         self.assertEquals(balance_id, balance_info['id'])

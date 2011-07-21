@@ -11,8 +11,7 @@ class TransactionsTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self.create_balance(sess, subj_user_id, curr_code, None,
-            '10', '5', '3')
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, '10', '5', '3')
 
         req = {'session_id': sess.session_id, 'filter_params': {'user_id': subj_user_id,
             'type': 'lock'}, 'paging_params': {}}
@@ -21,9 +20,10 @@ class TransactionsTestCase(ActorLogicTestCase):
 
         len_before = len(resp['transactions'])
 
-        lock_id_0 = self.make_lock(sess, balance_id, '9')
-        lock_id_1 = self.make_lock(sess, balance_id, '3')
-        lock_id_2 = self.make_lock(sess, balance_id, '4')
+        locking_order = ['real_amount', 'virtual_amount']
+        lock_id_0 = self.make_lock(sess, balance_id, '9', locking_order)
+        lock_id_1 = self.make_lock(sess, balance_id, '3', locking_order)
+        lock_id_2 = self.make_lock(sess, balance_id, '4', locking_order)
         lock_ids = (lock_id_0, lock_id_1, lock_id_2)
 
         req = {'session_id': sess.session_id, 'filter_params': {'user_id': subj_user_id,
@@ -40,8 +40,7 @@ class TransactionsTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self.create_balance(sess, sess.user_id, curr_code, None,
-            '10', '5', '3')
+        balance_id = self.create_balance(sess, sess.user_id, curr_code, '10', '5', '3')
 
         req = {'session_id': sess.session_id, 'filter_params': {'type': 'lock'},
             'paging_params': {}}
@@ -50,9 +49,10 @@ class TransactionsTestCase(ActorLogicTestCase):
 
         len_before = len(resp['transactions'])
 
-        lock_id_0 = self.make_lock(sess, balance_id, '9')
-        lock_id_1 = self.make_lock(sess, balance_id, '3')
-        lock_id_2 = self.make_lock(sess, balance_id, '4')
+        locking_order = ['real_amount', 'virtual_amount']
+        lock_id_0 = self.make_lock(sess, balance_id, '9', locking_order)
+        lock_id_1 = self.make_lock(sess, balance_id, '3', locking_order)
+        lock_id_2 = self.make_lock(sess, balance_id, '4', locking_order)
         lock_ids = (lock_id_0, lock_id_1, lock_id_2)
 
         req = {'session_id': sess.session_id, 'filter_params': {'type': 'lock'},
@@ -69,13 +69,12 @@ class TransactionsTestCase(ActorLogicTestCase):
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
         u_id = sess.user_id + 1
-        balance_id = self.create_balance(sess, sess.user_id, curr_code, None,
-            '10', '5', '3')
-        balance_u_id = self.create_balance(sess, u_id, curr_code, None,
-            '11', '7')
+        balance_id = self.create_balance(sess, sess.user_id, curr_code, '10', '5', '3')
+        balance_u_id = self.create_balance(sess, u_id, curr_code, '11', '7')
 
-        self.make_lock(sess, balance_id, '9')
-        self.make_lock(sess, balance_u_id, '3')
+        locking_order = ['real_amount', 'virtual_amount']
+        self.make_lock(sess, balance_id, '9', locking_order)
+        self.make_lock(sess, balance_u_id, '3', locking_order)
 
         # getting own transactions
         req = {'session_id': sess.session_id, 'filter_params': {'type': 'lock',
