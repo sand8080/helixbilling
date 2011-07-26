@@ -200,6 +200,70 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         req = {'session_id': self.sess_id, 'balance_id': fake_balance_id, 'amount': '17.09'}
         self._logged_action(action, req, check_resp=False)
 
+    def test_get_locks(self):
+        action = 'modify_used_currencies'
+        req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB']}
+        self._logged_action(action, req)
+        user_id = 4242
+
+        # testing success action logged
+        action = 'add_balance'
+        req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
+        resp = self.cli.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_id = resp['id']
+
+        action = 'add_receipt'
+        req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '17.09'}
+        self._logged_action(action, req)
+        self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
+        action = 'lock'
+        req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '10',
+            'locking_order': ['real_amount']}
+        resp = self._logged_action(action, req)
+        self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
+        action = 'get_locks'
+        req = {'session_id': self.sess_id, 'filter_params': {'user_id': user_id},
+            'paging_params': {}}
+        resp = self._not_logged_action(action, self.sess_id, req)
+        self.assertTrue(len(resp['locks']) > 0)
+
+        action = 'get_locks_self'
+        req = {'session_id': self.sess_id, 'filter_params': {}, 'paging_params': {}}
+        resp = self._not_logged_action(action, self.sess_id, req)
+        self.assertTrue(len(resp['locks']) == 0)
+
+    def test_get_transactions(self):
+        action = 'modify_used_currencies'
+        req = {'session_id': self.sess_id, 'new_currencies_codes': ['RUB']}
+        self._logged_action(action, req)
+        user_id = 4242
+
+        # testing success action logged
+        action = 'add_balance'
+        req = {'session_id': self.sess_id, 'currency_code': 'RUB', 'user_id': user_id}
+        resp = self.cli.add_balance(**req)
+        self.check_response_ok(resp)
+        balance_id = resp['id']
+
+        action = 'add_receipt'
+        req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '17.09'}
+        self._logged_action(action, req)
+        self._check_subject_users_ids_set(self.sess_id, action, user_id)
+
+        action = 'get_transactions'
+        req = {'session_id': self.sess_id, 'filter_params': {'user_id': user_id},
+            'paging_params': {}}
+        resp = self._not_logged_action(action, self.sess_id, req)
+        self.assertTrue(len(resp['transactions']) > 0)
+
+        action = 'get_transactions_self'
+        req = {'session_id': self.sess_id, 'filter_params': {}, 'paging_params': {}}
+        resp = self._not_logged_action(action, self.sess_id, req)
+        self.assertTrue(len(resp['transactions']) == 0)
+
 
 if __name__ == '__main__':
     unittest.main()
