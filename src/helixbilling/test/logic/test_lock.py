@@ -18,12 +18,12 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None)
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, '5', None)
 
         # locking
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '3.90', 'info': {'order_type': 'domain_com_reg',
-            'order_id': 4563}}
+            'amount': '3.90', 'locking_order': ['real_amount', 'virtual_amount'],
+            'info': {'order_type': 'domain_com_reg', 'order_id': 4563}}
         resp = self.lock(**req)
         self.check_response_ok(resp)
 
@@ -40,12 +40,12 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         curr_code = 'RUB'
         self.set_used_currencies(sess, [curr_code])
-        balance_id = self.create_balance(sess, subj_user_id, curr_code, None, '5', None, '10')
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, '5', None, '10')
 
         # locking with overdraft
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '5.90', 'info': {'order_type': 'domain_ru_reg',
-            'order_id': 4564}}
+            'amount': '5.90', 'locking_order': ['real_amount'],
+            'info': {'order_type': 'domain_ru_reg', 'order_id': 4564}}
         resp = self.lock(**req)
         self.check_response_ok(resp)
 
@@ -58,8 +58,8 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # overdraft exhausted
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '9.11', 'info': {'order_type': 'domain_tel_reg',
-            'order_id': 4565}}
+            'amount': '9.11', 'locking_order': ['real_amount'],
+            'info': {'order_type': 'domain_tel_reg', 'order_id': 4565}}
         self.assertRaises(RequestProcessingError, self.lock, **req)
 
         balance_info = self.get_balance(sess, balance_id)
@@ -82,7 +82,7 @@ class BalanceLockTestCase(ActorLogicTestCase):
         balance_id = resp['id']
 
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '11.12'}
+            'amount': '11.12', 'locking_order': ['real_amount']}
         self.assertRaises(RequestProcessingError, self.lock, **req)
 
     def test_locking_order(self):
@@ -93,9 +93,9 @@ class BalanceLockTestCase(ActorLogicTestCase):
         # real, virtual
         subj_user_id = 11
         balance_id = self.create_balance(sess, subj_user_id, curr_code,
-            ['real_amount', 'virtual_amount'], '1', '2')
+            '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '2'}
+            'amount': '2', 'locking_order': ['real_amount', 'virtual_amount']}
         resp = self.lock(**req)
         self.check_response_ok(resp)
         balance_info = self.get_balance(sess, balance_id)
@@ -108,9 +108,9 @@ class BalanceLockTestCase(ActorLogicTestCase):
         # virtual, real
         subj_user_id = 12
         balance_id = self.create_balance(sess, subj_user_id, curr_code,
-            ['virtual_amount', 'real_amount'], '1', '2')
+            '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '2.60'}
+            'amount': '2.60', 'locking_order': ['virtual_amount', 'real_amount']}
         resp = self.lock(**req)
         self.check_response_ok(resp)
         balance_info = self.get_balance(sess, balance_id)
@@ -123,9 +123,9 @@ class BalanceLockTestCase(ActorLogicTestCase):
         # real
         subj_user_id = 13
         balance_id = self.create_balance(sess, subj_user_id, curr_code,
-            ['real_amount'], '1', '2')
+            '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '0.60'}
+            'amount': '0.60', 'locking_order': ['real_amount']}
         resp = self.lock(**req)
         self.check_response_ok(resp)
         balance_info = self.get_balance(sess, balance_id)
@@ -141,9 +141,9 @@ class BalanceLockTestCase(ActorLogicTestCase):
         # virtual
         subj_user_id = 14
         balance_id = self.create_balance(sess, subj_user_id, curr_code,
-            ['virtual_amount'], '1', '2')
+            '1', '2')
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': '1.70'}
+            'amount': '1.70', 'locking_order': ['virtual_amount']}
         resp = self.lock(**req)
         self.check_response_ok(resp)
         balance_info = self.get_balance(sess, balance_id)
@@ -163,13 +163,12 @@ class BalanceLockTestCase(ActorLogicTestCase):
 
         # creating balance
         subj_user_id = 11
-        balance_id = self.create_balance(sess, subj_user_id, curr_code,
-            ['real_amount', 'virtual_amount'], '10', '20')
+        balance_id = self.create_balance(sess, subj_user_id, curr_code, '10', '20')
 
         locks = ['1', '2', '3']
         for l in locks:
             req = {'session_id': sess.session_id, 'balance_id': balance_id,
-                'amount': l}
+                'amount': l, 'locking_order': ['real_amount', 'virtual_amount']}
             resp = self.lock(**req)
             self.check_response_ok(resp)
 

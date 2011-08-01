@@ -413,7 +413,7 @@ class Handler(AbstractHandler):
             'virtual_amount': cents_to_decimal(currency, lock_virtual),
             'info': info}
         lock_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
-            'balance_id': balance.id, 'real_amount': lock_real,
+            'balance_id': balance.id, 'real_amount': lock_real, 'locking_order': locking_order,
             'currency_id': currency.id, 'virtual_amount': lock_virtual, 'info': info}
 
         lock = BalanceLock(**lock_data)

@@ -13,6 +13,7 @@ def apply(curs):
             FOREIGN KEY(currency_id) REFERENCES currency(id),
             real_amount DECIMAL,
             virtual_amount DECIMAL,
+            locking_order varchar[] NOT NULL,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
             serialized_info varchar NOT NULL
         )
