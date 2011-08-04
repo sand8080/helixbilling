@@ -189,6 +189,7 @@ class Handler(AbstractHandler):
             result['creation_date'] = '%s' % result['creation_date']
             result['real_amount'] = '%s' % trn.real_amount
             result['virtual_amount'] = '%s' % trn.virtual_amount
+            result['order_id'] = trn.order_id
             return result
         return response_ok(transactions=self.objects_info(transactions, viewer),
             total=total)
@@ -404,6 +405,7 @@ class Handler(AbstractHandler):
         amounts_to_lock = compute_locks(balance, lock_amount, locking_order)
         lock_real = amounts_to_lock.get('real_amount', 0)
         lock_virtual = amounts_to_lock.get('virtual_amount', 0)
+        order_id = data['order_id']
         info = data.get('info', {})
         info['locking_order'] = locking_order
 
@@ -411,10 +413,11 @@ class Handler(AbstractHandler):
             'balance_id': balance.id, 'currency_code': currency.code,
             'type': 'lock', 'real_amount': cents_to_decimal(currency, lock_real),
             'virtual_amount': cents_to_decimal(currency, lock_virtual),
-            'info': info}
+            'order_id': order_id, 'info': info}
         lock_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
             'balance_id': balance.id, 'real_amount': lock_real, 'locking_order': locking_order,
-            'currency_id': currency.id, 'virtual_amount': lock_virtual, 'info': info}
+            'order_id': order_id, 'currency_id': currency.id, 'virtual_amount': lock_virtual,
+            'info': info}
 
         lock = BalanceLock(**lock_data)
         balance.real_amount -= lock_real
@@ -440,10 +443,10 @@ class Handler(AbstractHandler):
         info = data.get('info', {})
 
         trans_data = {'environment_id': session.environment_id, 'user_id': balance.user_id,
-            'balance_id': balance.id, 'currency_code': currency.code,
-            'type': operation, 'real_amount': cents_to_decimal(currency, lock.real_amount),
+            'balance_id': balance.id, 'currency_code': currency.code, 'type': operation,
+            'real_amount': cents_to_decimal(currency, lock.real_amount),
             'virtual_amount': cents_to_decimal(currency, lock.virtual_amount),
-            'info': info}
+            'order_id': lock.order_id, 'info': info}
 
         balance_updater(balance, lock)
         mapping.update(curs, balance)
@@ -502,6 +505,7 @@ class Handler(AbstractHandler):
                 'creation_date': '%s' % lock.creation_date,
                 'real_amount': '%s' % cents_to_decimal(currency, lock.real_amount),
                 'virtual_amount': '%s' % cents_to_decimal(currency, lock.virtual_amount),
+                'order_id': lock.order_id,
                 'info': lock_info['info'],
             }
         return response_ok(locks=self.objects_info(locks, viewer), total=total)

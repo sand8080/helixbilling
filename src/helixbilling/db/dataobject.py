@@ -19,7 +19,7 @@ class Balance(Mapped):
 
 
 class Transaction(Mapped):
-    __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'real_amount',
+    __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'real_amount', 'order_id',
         'virtual_amount', 'creation_date', 'currency_code', 'type', 'serialized_info'
     ]
     table = 'transaction'
@@ -30,7 +30,7 @@ class Transaction(Mapped):
 
 
 class BalanceLock(Mapped):
-    __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'creation_date',
+    __slots__ = ['id', 'environment_id', 'user_id', 'balance_id', 'creation_date', 'order_id',
         'currency_id', 'real_amount', 'virtual_amount', 'locking_order', 'serialized_info']
     table = 'balance_lock'
 

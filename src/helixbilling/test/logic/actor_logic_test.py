@@ -46,7 +46,8 @@ class ActorLogicTestCase(LogicTestCase):
 
     def make_lock(self, sess, balance_id, amount, locking_order):
         req = {'session_id': sess.session_id, 'balance_id': balance_id,
-            'amount': amount, 'locking_order': locking_order}
+            'amount': amount, 'locking_order': locking_order,
+            'order_id': '%s_%s' % (balance_id, amount)}
         resp = self.lock(**req)
         self.check_response_ok(resp)
         return resp['lock_id']

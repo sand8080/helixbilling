@@ -236,12 +236,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_lock(self):
         a_name = 'lock'
         self.api.validate_request(a_name, {'session_id': 'i',
-            'balance_id': 23, 'amount': '44', 'locking_order': [
-                'real_amount', 'virtual_amount'
-            ]})
+            'balance_id': 23, 'amount': '44', 'order_id': 'o_44',
+            'locking_order': ['real_amount', 'virtual_amount']})
         self.api.validate_request(a_name, {'session_id': 'i',
-            'balance_id': 23, 'amount': '44.42', 'locking_order': [
-            'real_amount'], 'info': {'reason': 'beauty eyes'}})
+            'balance_id': 23, 'amount': '44.42', 'order_id': 'o_45',
+            'locking_order': ['real_amount'], 'info': {'reason': 'beauty eyes'}})
 
         self.api.validate_response(a_name, {'status': 'ok',
             'transaction_id': 1, 'lock_id': 2})
@@ -256,7 +255,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'paging_params': {'limit': 0, 'offset': 0,}})
         self.api.validate_request(a_name, {'session_id': 'i',
             'filter_params': {'id': 1, 'ids': [1, 2], 'user_id': 3,
-                'balance_id': 5, 'currency_code': 'XXX',
+                'balance_id': 5, 'currency_code': 'XXX', 'order_id': 'o1',
                 'from_real_amount': '1.0', 'to_real_amount': '2.01',
                 'from_virtual_amount': '7.10', 'to_virtual_amount': '19.01',
                 'from_creation_date': '2011-02-21 00:00:00',
@@ -272,7 +271,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                     'id': 22, 'user_id': 4, 'balance_id': 5, 'currency_code': 'RUB',
                     'creation_date': '2011-02-21 00:00:00',
                     'real_amount': '3.15', 'virtual_amount': '0.0',
-                    'info': {'p0': 'v0', 'p1': 'v1'},
+                    'info': {'p0': 'v0', 'p1': 'v1'}, 'order_id': 'o4'
                 },
             ]
         })
@@ -287,7 +286,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'paging_params': {'limit': 0, 'offset': 0,}})
         self.api.validate_request(a_name, {'session_id': 'i',
             'filter_params': {'id': 1, 'ids': [1, 2],
-                'balance_id': 5, 'currency_code': 'XXX',
+                'balance_id': 5, 'currency_code': 'XXX', 'order_id': 'o1',
                 'from_real_amount': '1.0', 'to_real_amount': '2.01',
                 'from_virtual_amount': '7.10', 'to_virtual_amount': '19.01',
                 'from_creation_date': '2011-02-21 00:00:00',
@@ -303,7 +302,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                     'id': 22, 'user_id': 4, 'balance_id': 5, 'currency_code': 'RUB',
                     'creation_date': '2011-02-21 00:00:00',
                     'real_amount': '3.15', 'virtual_amount': '0.0',
-                    'info': {'p0': 'v0', 'p1': 'v1'},
+                    'info': {'p0': 'v0', 'p1': 'v1'}, 'order_id': '555'
                 },
             ]
         })
@@ -355,7 +354,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                     'id': 22, 'user_id': 4, 'balance_id': 5, 'currency_code': 'RUB',
                     'creation_date': '2011-02-21 00:00:00',
                     'real_amount': '3.15', 'virtual_amount': '0.0',
-                    'type': 'bonus',
+                    'type': 'bonus', 'order_id': '5',
                     'info': {'p0': 'v0', 'p1': 'v1'},
                 },
             ]
@@ -386,7 +385,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                     'id': 22, 'user_id': 4, 'balance_id': 5, 'currency_code': 'RUB',
                     'creation_date': '2011-02-21 00:00:00',
                     'real_amount': '3.15', 'virtual_amount': '0.0',
-                    'type': 'bonus',
+                    'type': 'bonus', 'order_id': '5',
                     'info': {'p0': 'v0', 'p1': 'v1'},
                 },
             ]

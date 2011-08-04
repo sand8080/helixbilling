@@ -203,31 +203,11 @@ ADD_BONUS_RESPONSE = TRANSACTION_CREATION_RESPONSE
 
 LOCK_REQUEST = dict(MONEY_OPERATION_REQUEST)
 LOCK_REQUEST['locking_order'] = locking_order_validator
+LOCK_REQUEST['order_id'] = NullableText()
 
 LOCK_RESPONSE = AnyOf(
     dict({'lock_id': int, 'transaction_id': int}, **RESPONSE_STATUS_OK),
     RESPONSE_STATUS_ERROR
-)
-
-GET_LOCKS_REQUEST = dict(
-    {
-        'filter_params': {
-            Optional('id'): int,
-            Optional('ids'): [int],
-            Optional('user_id'): int,
-            Optional('balance_id'): int,
-            Optional('currency_code'): Text(),
-            Optional('from_creation_date'): IsoDatetime(),
-            Optional('to_creation_date'): IsoDatetime(),
-            Optional('from_real_amount'): DecimalText(),
-            Optional('to_real_amount'): DecimalText(),
-            Optional('from_virtual_amount'): DecimalText(),
-            Optional('to_virtual_amount'): DecimalText(),
-        },
-        'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('id', '-id')]
-    },
-    **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
 LOCK_INFO = {
@@ -238,19 +218,9 @@ LOCK_INFO = {
     'creation_date': IsoDatetime(),
     'real_amount': DecimalText(),
     'virtual_amount': DecimalText(),
+    'order_id': NullableText(),
     'info': ArbitraryDict(),
 }
-
-GET_LOCKS_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{
-            'locks': [LOCK_INFO],
-            'total': NonNegative(int),
-        }
-    ),
-    RESPONSE_STATUS_ERROR
-)
 
 GET_LOCKS_SELF_REQUEST = dict(
     {
@@ -258,6 +228,7 @@ GET_LOCKS_SELF_REQUEST = dict(
             Optional('id'): int,
             Optional('ids'): [int],
             Optional('balance_id'): int,
+            Optional('order_id'): Text(),
             Optional('currency_code'): Text(),
             Optional('from_creation_date'): IsoDatetime(),
             Optional('to_creation_date'): IsoDatetime(),
@@ -272,7 +243,21 @@ GET_LOCKS_SELF_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-GET_LOCKS_SELF_RESPONSE = GET_LOCKS_RESPONSE
+GET_LOCKS_SELF_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'locks': [LOCK_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+GET_LOCKS_REQUEST = GET_LOCKS_SELF_REQUEST
+GET_LOCKS_REQUEST['filter_params'][Optional('user_id')] = int
+
+GET_LOCKS_RESPONSE = GET_LOCKS_SELF_RESPONSE
 
 UNLOCK_REQUEST = dict(
     {
@@ -299,6 +284,7 @@ TRANSACTION_INFO = {
     'currency_code': Text(),
     'real_amount': DecimalText(),
     'virtual_amount': DecimalText(),
+    'order_id': NullableText(),
     'creation_date': IsoDatetime(),
     'type': Text(),
     'info': ArbitraryDict(),
