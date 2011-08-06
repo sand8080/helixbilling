@@ -1,4 +1,4 @@
-from helixcore.db.sql import Eq, MoreEq, LessEq, Any, In
+from helixcore.db.sql import Eq, MoreEq, LessEq, Any, In, Like
 from helixcore.db.filters import (InSessionFilter, ObjectsFilter,
     EnvironmentObjectsFilter)
 
@@ -104,6 +104,7 @@ class BalanceLockFilter(InSessionFilter):
         ('id', 'id', Eq),
         ('ids', 'id', In),
         ('user_id', 'user_id', Eq),
+        ('order_id', 'order_id', Like),
         ('balance_id', 'balance_id', Eq),
         ('currency_id', 'currency_id', Eq),
         ('from_creation_date', 'creation_date', MoreEq),
