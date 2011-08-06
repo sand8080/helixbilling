@@ -13,6 +13,7 @@ def apply(curs):
             FOREIGN KEY(currency_id) REFERENCES currency(id),
             real_amount DECIMAL,
             virtual_amount DECIMAL,
+            order_id varchar,
             locking_order varchar[] NOT NULL,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
             serialized_info varchar NOT NULL
@@ -49,8 +50,17 @@ def apply(curs):
         CREATE INDEX balance_lock_creation_date_idx ON balance_lock(creation_date)
     ''')
 
+    print 'Creating index balance_lock_order_id_idx on balance_lock'
+    curs.execute(
+    '''
+        CREATE INDEX balance_lock_order_id_idx ON balance_lock(order_id)
+    ''')
+
 
 def revert(curs):
+    print 'Dropping index balance_lock_order_id_idx on balance_lock'
+    curs.execute('DROP INDEX IF EXISTS balance_lock_order_id_idx')
+
     print 'Dropping index balance_lock_creation_date_idx on balance_lock'
     curs.execute('DROP INDEX IF EXISTS balance_lock_creation_date_idx')
 

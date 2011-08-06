@@ -11,6 +11,7 @@ def apply(curs):
             FOREIGN KEY(balance_id) REFERENCES balance(id),
             real_amount DECIMAL,
             virtual_amount DECIMAL,
+            order_id varchar,
             creation_date timestamp with time zone NOT NULL DEFAULT now(),
             currency_code varchar NOT NULL,
             type varchar CHECK (type IN ('receipt', 'bonus', 'lock', 'unlock', 'charge_off')),
@@ -42,18 +43,27 @@ def apply(curs):
         CREATE INDEX transaction_creation_date_idx ON transaction(creation_date)
     ''')
 
+    print 'Creating index transaction_order_id_idx on transaction'
+    curs.execute(
+    '''
+        CREATE INDEX transaction_order_id_idx ON transaction(order_id)
+    ''')
+
 
 def revert(curs):
-    print 'Dropping index transaction_environment_id_idx on balance'
+    print 'Dropping index transaction_environment_order_id_idx on transaction'
+    curs.execute('DROP INDEX IF EXISTS transaction_order_id_idx')
+
+    print 'Dropping index transaction_environment_id_idx on transaction'
     curs.execute('DROP INDEX IF EXISTS transaction_environment_id_idx')
 
-    print 'Dropping index transaction_user_id_idx on balance'
+    print 'Dropping index transaction_user_id_idx on transaction'
     curs.execute('DROP INDEX IF EXISTS transaction_user_id_idx')
 
-    print 'Dropping index transaction_balance_id_idx on balance'
+    print 'Dropping index transaction_balance_id_idx on transaction'
     curs.execute('DROP INDEX IF EXISTS transaction_balance_id_idx')
 
-    print 'Dropping index transaction_creation_date_idx on balance'
+    print 'Dropping index transaction_creation_date_idx on transaction'
     curs.execute('DROP INDEX IF EXISTS transaction_creation_date_idx')
 
     print 'Dropping table transaction'

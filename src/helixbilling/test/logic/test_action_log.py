@@ -137,7 +137,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
         action = 'lock'
         req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '17.09',
-            'locking_order': ['real_amount']}
+            'order_id': 'ord_id_4', 'locking_order': ['real_amount'], 'order_id': '1'}
         self._logged_action(action, req, check_resp=False)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
@@ -162,7 +162,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
         action = 'lock'
         req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '10',
-            'locking_order': ['real_amount']}
+            'locking_order': ['real_amount'], 'order_id': '2'}
         resp = self._logged_action(action, req)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
         lock_id = resp['lock_id']
@@ -220,7 +220,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
         action = 'lock'
         req = {'session_id': self.sess_id, 'balance_id': balance_id, 'amount': '10',
-            'locking_order': ['real_amount']}
+            'locking_order': ['real_amount'], 'order_id': '4'}
         resp = self._logged_action(action, req)
         self._check_subject_users_ids_set(self.sess_id, action, user_id)
 
