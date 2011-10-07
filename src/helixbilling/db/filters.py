@@ -60,6 +60,7 @@ class TransactionsFilter(EnvironmentObjectsFilter):
         ('user_id', 'user_id', Eq),
         ('balance_id', 'balance_id', Eq),
         ('type', 'type', Eq),
+        ('order_id', 'order_id', Like),
         ('from_creation_date', 'creation_date', MoreEq),
         ('to_creation_date', 'creation_date', LessEq),
     ]

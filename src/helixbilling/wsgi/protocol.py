@@ -296,6 +296,7 @@ GET_TRANSACTIONS_SELF_REQUEST = dict(
             Optional('id'): int,
             Optional('ids'): [int],
             Optional('balance_id'): int,
+            Optional('order_id'): Text(),
             Optional('from_creation_date'): IsoDatetime(),
             Optional('to_creation_date'): IsoDatetime(),
             Optional('type'): transaction_type_validator,
