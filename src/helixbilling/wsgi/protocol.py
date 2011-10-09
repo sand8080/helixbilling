@@ -381,7 +381,7 @@ protocol = [
     ApiCall('get_transactions_self_request', Scheme(GET_TRANSACTIONS_SELF_REQUEST)),
     ApiCall('get_transactions_self_response', Scheme(GET_TRANSACTIONS_SELF_RESPONSE)),
 
-    # locks
+    # balance amount decreasing
     ApiCall('lock_request', Scheme(LOCK_REQUEST)),
     ApiCall('lock_response', Scheme(LOCK_RESPONSE)),
 
