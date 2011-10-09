@@ -1,7 +1,7 @@
 import unittest
 
+from helixcore.test.logic import access_granted #@UnusedImport
 from helixbilling.test.logic.logic_test import LogicTestCase
-from helixbilling.test.logic import access_granted #@UnusedImport
 
 
 class LoginTestCase(LogicTestCase):

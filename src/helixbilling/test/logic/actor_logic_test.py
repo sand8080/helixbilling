@@ -1,8 +1,9 @@
 from helixcore.security import Session
+from helixcore.test.logic import access_granted #@UnusedImport
+from helixcore.test.logic.access_granted import (GRANTED_ENV_ID,
+    GRANTED_USER_ID)
 
 from helixbilling.test.logic.logic_test import LogicTestCase
-from helixbilling.test.logic.access_granted import (GRANTED_ENV_ID,
-    GRANTED_USER_ID)
 
 
 class ActorLogicTestCase(LogicTestCase):

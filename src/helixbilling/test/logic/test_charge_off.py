@@ -2,7 +2,6 @@ import unittest
 
 from helixcore.error import RequestProcessingError
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
-from helixbilling.test.logic import access_granted #@UnusedImport
 
 
 class BalanceChargeOffTestCase(ActorLogicTestCase):

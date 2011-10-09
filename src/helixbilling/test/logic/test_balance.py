@@ -1,12 +1,12 @@
 import unittest
 
 from helixcore.error import RequestProcessingError, HelixcoreException
+from helixcore.test.logic import access_granted #@UnusedImport
+from helixcore.security.auth import CoreAuthenticator
 
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
-from helixbilling.test.logic import access_granted #@UnusedImport
 from helixbilling.conf.db import transaction
 from helixbilling.db.filters import BalanceFilter
-from helixcore.security.auth import CoreAuthenticator
 
 
 class BalanceTestCase(ActorLogicTestCase):

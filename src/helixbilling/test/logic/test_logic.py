@@ -4,7 +4,6 @@ from decimal import Decimal
 from helixcore.db import filters
 
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
-from helixbilling.test.logic import access_granted #@UnusedImport
 from helixbilling.db.dataobject import Currency, Balance
 from helixbilling.logic import (decimal_to_cents, cents_to_decimal,
     get_lockable_amounts, compute_locks)

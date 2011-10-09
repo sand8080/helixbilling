@@ -63,7 +63,7 @@ class Handler(AbstractHandler):
     Handles all API actions. Method names are called like actions.
     '''
 
-    def ping(self, data): #IGNORE:W0613
+    def ping(self, _):
         return response_ok()
 
     def login(self, data):

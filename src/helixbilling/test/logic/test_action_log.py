@@ -2,13 +2,12 @@
 import unittest
 
 from helixcore.test.utils_for_testing import ActionsLogTester
+from helixcore.security.auth import CoreAuthenticator
+from helixcore.test.logic.access_granted import (access_denied_call,
+    access_granted_call)
 
 from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 from helixbilling.test.wsgi.client import Client
-from helixbilling.test.logic import access_granted #@UnusedImport
-from helixcore.security.auth import CoreAuthenticator
-from helixbilling.test.logic.access_granted import (access_denied_call,
-    access_granted_call)
 
 
 class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):

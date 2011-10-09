@@ -3,6 +3,7 @@ from psycopg2 import IntegrityError
 from helixcore.error import UnknownActionError, DataIntegrityError
 from helixbilling.logic.handler import Handler
 
+
 def handle_action(action_name, data):
     '''
     Handles API action.
