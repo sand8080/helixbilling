@@ -126,24 +126,3 @@ class BalanceLockFilter(InSessionFilter):
                 for_update=for_update)
         except (ObjectNotFound, SelectedMoreThanOneRow):
             raise BalanceNotFound(**self.filter_params)
-
-
-#class ChargeOffFilter(ObjectsFilter):
-#    cond_map = [
-#        ('customer_id', 'customer_id', Eq),
-#        ('customer_ids', 'customer_id', In),
-#        ('order_id', 'order_id', Eq),
-#        ('order_ids', 'order_id', In),
-#        ('order_type', 'order_type', Eq),
-#        ('order_types', 'order_type', In),
-#        ('from_locking_date', 'locking_date', MoreEq),
-#        ('to_locking_date', 'locking_date', LessEq),
-#        ('from_chargeoff_date', 'chargeoff_date', MoreEq),
-#        ('to_chargeoff_date', 'chargeoff_date', LessEq),
-#    ]
-#
-#    def __init__(self, operator, filter_params, paging_params, ordering_params):
-#        if ordering_params is None:
-#            ordering_params = '-chargeoff_date'
-#        super(ChargeOffFilter, self).__init__(operator, filter_params, paging_params,
-#            ordering_params, ChargeOff)
