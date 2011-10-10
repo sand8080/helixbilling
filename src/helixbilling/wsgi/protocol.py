@@ -8,7 +8,9 @@ from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
     ADDING_OBJECT_RESPONSE,
     PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE,
-    LOGOUT_REQUEST, LOGOUT_RESPONSE)
+    LOGOUT_REQUEST, LOGOUT_RESPONSE, GET_ACTION_LOGS_REQUEST,
+    GET_ACTION_LOGS_RESPONSE, GET_ACTION_LOGS_SELF_REQUEST,
+    GET_ACTION_LOGS_SELF_RESPONSE)
 
 
 locking_order_validator = AnyOf(None, [AnyOf('real_amount', 'virtual_amount')])
@@ -49,61 +51,6 @@ MODIFY_USED_CURRENCIES_REQUEST = dict(
 )
 
 MODIFY_USED_CURRENCIES_RESPONSE = RESPONSE_STATUS_ONLY
-
-ACTION_LOG_INFO = {
-    'id': int,
-    'session_id': NullableText(),
-    'custom_actor_info': NullableText(),
-    'actor_user_id': AnyOf(int, None),
-    'subject_users_ids': [int],
-    'action': Text(),
-    'request_date': IsoDatetime(),
-    'remote_addr': Text(),
-    'request': Text(),
-    'response': Text(),
-}
-
-GET_ACTION_LOGS_REQUEST = dict(
-    {
-        'filter_params': {
-            Optional('from_request_date'): IsoDatetime(),
-            Optional('to_request_date'): IsoDatetime(),
-            Optional('action'): Text(),
-            Optional('session_id'): Text(),
-            Optional('user_id'): int,
-        },
-        'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('request_date', '-request_date', 'id', '-id')]
-    },
-    **AUTHORIZED_REQUEST_AUTH_INFO
-)
-
-GET_ACTION_LOGS_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{
-            'action_logs': [ACTION_LOG_INFO],
-            'total': NonNegative(int),
-        }
-    ),
-    RESPONSE_STATUS_ERROR
-)
-
-GET_ACTION_LOGS_SELF_REQUEST = dict(
-    {
-        'filter_params': {
-            Optional('from_request_date'): IsoDatetime(),
-            Optional('to_request_date'): IsoDatetime(),
-            Optional('action'): Text(),
-            Optional('session_id'): Text(),
-        },
-        'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('request_date', '-request_date', 'id', '-id')]
-    },
-    **AUTHORIZED_REQUEST_AUTH_INFO
-)
-
-GET_ACTION_LOGS_SELF_RESPONSE = GET_ACTION_LOGS_RESPONSE
 
 ADD_BALANCE_REQUEST = dict(
     {
