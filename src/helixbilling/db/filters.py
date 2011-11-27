@@ -1,10 +1,10 @@
-from helixcore.db.sql import Eq, MoreEq, LessEq, Any, In, Like
-from helixcore.db.filters import (InSessionFilter,
-    EnvironmentObjectsFilter, CurrencyFilter) #@UnusedImport
+from helixcore.db.sql import Eq, MoreEq, LessEq, In, Like
+from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter,
+    CurrencyFilter, ActionLogFilter) #@UnusedImport
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 
-from helixbilling.db.dataobject import (UsedCurrency, ActionLog,
-    Balance, BalanceLock, Transaction)
+from helixbilling.db.dataobject import (UsedCurrency, Balance,
+    BalanceLock, Transaction)
 from helixbilling.error import BalanceNotFound
 
 
@@ -16,23 +16,6 @@ class UsedCurrencyFilter(InSessionFilter):
     def __init__(self, session, filter_params, paging_params, ordering_params):
         super(UsedCurrencyFilter, self).__init__(session, filter_params,
             paging_params, ordering_params, UsedCurrency)
-
-
-class ActionLogFilter(EnvironmentObjectsFilter):
-    cond_map = [
-        ('action', 'action', Eq),
-        ('session_id', 'session_id', Eq),
-        ('actor_user_id', 'actor_user_id', Eq),
-        ('from_request_date', 'request_date', MoreEq),
-        ('to_request_date', 'request_date', LessEq),
-        # OR condition
-        (('subject_users_ids', 'actor_user_id'),
-            ('subject_users_ids', 'actor_user_id'), (Any, Eq)),
-    ]
-
-    def __init__(self, environment_id, filter_params, paging_params, ordering_params):
-        super(ActionLogFilter, self).__init__(environment_id,
-            filter_params, paging_params, ordering_params, ActionLog)
 
 
 class TransactionsFilter(EnvironmentObjectsFilter):
