@@ -1,5 +1,5 @@
-from helixcore import security
-from helixcore.db.wrapper import ObjectNotFound, ObjectCreationError
+from helixcore.db.wrapper import ObjectCreationError
+from helixcore.error import HelixcoreObjectNotFound
 
 from helixbilling import error_code
 
@@ -8,11 +8,9 @@ class HelixbillingError(Exception):
     code = error_code.HELIXBILLING_ERROR
 
 
-class HelixbillingObjectNotFound(HelixbillingError, ObjectNotFound):
+class HelixbillingObjectNotFound(HelixbillingError, HelixcoreObjectNotFound):
     def __init__(self, class_name, **kwargs):
-        sanitized_kwargs = security.sanitize_credentials(kwargs)
-        super(HelixbillingObjectNotFound, self).__init__('%s not found by params: %s' %
-            (class_name, sanitized_kwargs))
+        super(HelixbillingObjectNotFound, self).__init__(class_name, **kwargs)
         self.code = error_code.HELIXBILLING_OBJECT_NOT_FOUND
 
 
@@ -20,11 +18,6 @@ class HelixbillingObjectAlreadyExists(HelixbillingError, ObjectCreationError):
     def __init__(self, *args, **kwargs):
         super(HelixbillingObjectAlreadyExists, self).__init__(*args, **kwargs)
         self.code = error_code.HELIXBILLING_OBJECT_ALREADY_EXISTS
-
-
-class CurrencyNotFound(HelixbillingObjectNotFound):
-    def __init__(self, **kwargs):
-        super(CurrencyNotFound, self).__init__('Currency', **kwargs)
 
 
 class UsedCurrencyNotFound(HelixbillingObjectNotFound):

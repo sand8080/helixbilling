@@ -1,5 +1,5 @@
 from helixcore.server.api import ApiCall
-from helixcore.json_validator import (Optional, AnyOf, NonNegative, Positive,
+from helixcore.json_validator import (Optional, AnyOf, NonNegative,
     Scheme, Text, NullableText, IsoDatetime, DecimalText, PositiveDecimalText,
     ArbitraryDict)
 from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
@@ -10,34 +10,13 @@ from helixcore.server.protocol_primitives import (REQUEST_PAGING_PARAMS,
     LOGIN_REQUEST, LOGIN_RESPONSE,
     LOGOUT_REQUEST, LOGOUT_RESPONSE, GET_ACTION_LOGS_REQUEST,
     GET_ACTION_LOGS_RESPONSE, GET_ACTION_LOGS_SELF_REQUEST,
-    GET_ACTION_LOGS_SELF_RESPONSE)
+    GET_ACTION_LOGS_SELF_RESPONSE, GET_CURRENCIES_REQUEST,
+    GET_CURRENCIES_RESPONSE)
 
 
 locking_order_validator = AnyOf(None, [AnyOf('real_amount', 'virtual_amount')])
 transaction_type_validator = AnyOf('receipt', 'bonus', 'lock', 'unlock', 'charge_off')
 
-GET_CURRENCIES_REQUEST = dict(
-    {
-        Optional('ordering_params'): [AnyOf('code', '-code')],
-    },
-    **AUTHORIZED_REQUEST_AUTH_INFO
-)
-
-CURRENCY_INFO = {
-    'id': int,
-    'code': Text(),
-    'cent_factor': Positive(int),
-    'name': Text(),
-    'location': Text(),
-}
-
-GET_CURRENCIES_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{'currencies': [CURRENCY_INFO]}
-    ),
-    RESPONSE_STATUS_ERROR
-)
 
 GET_USED_CURRENCIES_REQUEST = GET_CURRENCIES_REQUEST
 

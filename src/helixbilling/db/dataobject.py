@@ -1,9 +1,5 @@
 from helixcore.mapping.objects import Mapped, serialize_field
-
-
-class Currency(Mapped):
-    __slots__ = ['id', 'code', 'cent_factor', 'name', 'location']
-    table = 'currency'
+from helixcore.db.dataobject import Currency, ActionLog #@UnusedImport
 
 
 class UsedCurrency(Mapped):
@@ -37,11 +33,3 @@ class BalanceLock(Mapped):
     def __init__(self, **kwargs):
         d = serialize_field(kwargs, 'info', 'serialized_info')
         super(BalanceLock, self).__init__(**d)
-
-
-class ActionLog(Mapped):
-    __slots__ = ['id', 'environment_id', 'session_id',
-        'custom_actor_info', 'actor_user_id',
-        'subject_users_ids', 'action', 'request_date',
-        'remote_addr', 'request', 'response']
-    table = 'action_log'

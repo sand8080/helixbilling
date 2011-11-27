@@ -11,6 +11,7 @@ from helixcore.mapping.objects import deserialize_field
 from helixcore.server.response import response_ok
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
+from helixcore.error import CurrencyNotFound
 
 from helixbilling.conf import settings
 from helixbilling.conf.db import transaction
@@ -18,7 +19,7 @@ from helixbilling.db.dataobject import (UsedCurrency, Balance, Transaction,
     BalanceLock)
 from helixbilling.db.filters import (CurrencyFilter, UsedCurrencyFilter,
     ActionLogFilter, BalanceFilter, BalanceLockFilter, TransactionsFilter)
-from helixbilling.error import (CurrencyNotFound, UsedCurrencyNotFound,
+from helixbilling.error import (UsedCurrencyNotFound,
     UserNotExists, UserCheckingError, BalanceAlreadyExists, BalanceNotFound,
     BalanceDisabled, HelixbillingError, MoneyNotEnough, BalanceLockNotFound)
 from helixbilling.logic import (decimal_texts_to_cents, cents_to_decimal,
