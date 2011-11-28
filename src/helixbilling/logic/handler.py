@@ -95,14 +95,6 @@ class Handler(AbstractHandler):
     def get_currencies(self, data, session, curs=None):
         f = CurrencyFilter({}, {}, data.get('ordering_params'))
         currencies = f.filter_objs(curs)
-        def viewer(currency):
-            return {
-                'id': currency.id,
-                'code': currency.code,
-                'cent_factor': currency.cent_factor,
-                'name': currency.name,
-                'location': currency.location,
-            }
         return response_ok(currencies=self._currencies_info(currencies))
 
     @transaction()
