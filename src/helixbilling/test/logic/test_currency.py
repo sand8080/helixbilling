@@ -8,13 +8,15 @@ from helixbilling.test.logic.actor_logic_test import ActorLogicTestCase
 class CurrencyTestCase(ActorLogicTestCase):
     def test_get_currencies(self):
         sess = self.login_actor()
-        req = {'session_id': sess.session_id}
+        req = {'session_id': sess.session_id,
+            'filter_params': {}, 'paging_params': {}}
         resp = self.get_currencies(**req)
         self.check_response_ok(resp)
 
     def test_get_used_currencies(self):
         sess = self.login_actor()
-        req = {'session_id': sess.session_id}
+        req = {'session_id': sess.session_id,
+            'filter_params': {}, 'paging_params': {}}
         resp = self.get_used_currencies(**req)
         self.check_response_ok(resp)
         self.assertEquals([], resp['currencies'])
@@ -25,7 +27,8 @@ class CurrencyTestCase(ActorLogicTestCase):
         resp = self.modify_used_currencies(**req)
         self.check_response_ok(resp)
         # checking used currencies not added
-        req = {'session_id': sess.session_id}
+        req = {'session_id': sess.session_id,
+            'filter_params': {}, 'paging_params': {}}
         resp = self.get_used_currencies(**req)
         self.check_response_ok(resp)
         self.assertEquals(0, len(resp['currencies']))
@@ -34,7 +37,8 @@ class CurrencyTestCase(ActorLogicTestCase):
         resp = self.modify_used_currencies(**req)
         self.check_response_ok(resp)
         # checking used currencies added
-        req = {'session_id': sess.session_id}
+        req = {'session_id': sess.session_id,
+            'filter_params': {}, 'paging_params': {}}
         resp = self.get_used_currencies(**req)
         self.check_response_ok(resp)
         self.assertEquals(0, len(resp['currencies']))
@@ -48,7 +52,8 @@ class CurrencyTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
 
         # checking in used currencies modified
-        req = {'session_id': sess.session_id}
+        req = {'session_id': sess.session_id,
+            'filter_params': {}, 'paging_params': {}}
         resp = self.get_used_currencies(**req)
         self.check_response_ok(resp)
         self.assertEquals(2, len(resp['currencies']))
