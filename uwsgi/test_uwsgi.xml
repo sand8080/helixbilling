@@ -1,0 +1,10 @@
+<uwsgi>
+    <http>127.0.0.1:10998</http>
+    <auto-procname/>
+    <procname-prefix>helixbilling</procname-prefix>
+    <master/>
+    <plugins>python</plugins>
+    <virtualenv>../../.venv_helix</virtualenv>
+    <workers>1</workers>
+    <module>helixbilling.wsgi.uwsgi_app_test</module>
+</uwsgi>

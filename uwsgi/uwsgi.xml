@@ -1,0 +1,10 @@
+<uwsgi>
+    <socket>127.0.0.1:10998</socket>
+    <auto-procname/>
+    <procname-prefix>helixbilling</procname-prefix>
+    <master/>
+    <plugins>python</plugins>
+    <virtualenv>PATH_TO_HELIXPROJECT_VIRTUALEVN</virtualenv>
+    <workers>1</workers>
+    <module>helixbilling.wsgi.uwsgi_app</module>
+</uwsgi>
