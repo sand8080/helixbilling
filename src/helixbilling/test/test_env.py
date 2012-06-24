@@ -15,7 +15,7 @@ settings.server_host = 'localhost'
 settings.server_port = 10998
 
 settings.log_filename = os.path.join(os.path.realpath(os.path.dirname(__file__)),
-    'helixbilling.log')
+    '..', '..', '..', 'log', 'helixbilling_test.log')
 settings.log_level = logging.DEBUG
 settings.log_console = True
 settings.auth_server_url = 'http://localhost:10999'
