@@ -68,7 +68,8 @@ class LogicTestCase(ActorLogicTestCase):
 
     def _get_currencies_idx(self):
         sess = self.login_actor()
-        req = {'session_id': sess.session_id}
+        req = {'session_id': sess.session_id,
+            'filter_params': {}, 'paging_params': {}}
         resp = self.get_currencies(**req)
         self.check_response_ok(resp)
         currs = [Currency(**d) for d in resp['currencies']]
